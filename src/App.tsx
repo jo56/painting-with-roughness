@@ -47,6 +47,9 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
 type Direction = 'up' | 'down' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion' | 'flow' | 'jitter' | 'vortex' | 'strobe' | 'scramble' | 'ripple';
 
+type BrushType = 'square' | 'circle' | 'diagonal' | 'spray'; // BRUSH PATCH
+
+
 export default function ModularSettingsPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
@@ -126,6 +129,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [autoShapesEnabled, setAutoShapesEnabled] = useState(true);
   const [blendMode, setBlendMode] = useState(defaults.blendMode);
   const [tool, setTool] = useState('brush');
+  const [brushType, setBrushType] = useState<BrushType>('square'); // BRUSH PATCH
   const [panelMinimized, setPanelMinimized] = useState(false);
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
@@ -360,6 +364,23 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           const nr = r + dr;
           const nc = c + dc;
           if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+            let shouldPaint = false; // BRUSH PATCH
+            switch (brushType) {
+              case 'square':
+                shouldPaint = true;
+                break;
+              case 'circle':
+                shouldPaint = dr*dr + dc*dc <= (brushSize/2) ** 2;
+                break;
+              case 'diagonal':
+                shouldPaint = Math.abs(dr) === Math.abs(dc);
+                break;
+              case 'spray':
+                shouldPaint = Math.random() < 0.3;
+                break;
+            }
+            if (!shouldPaint) continue;
+
             if (blendMode === 'replace' || ng[nr][nc] === 0) {
               ng[nr][nc] = color;
             } else if (blendMode === 'overlay' && color > 0) {
@@ -2143,7 +2164,22 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             {showOptions && showVisualSettings && (
               <>
                 <div style={{ marginBottom: '10px' }}>
-                  <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
+                  
+        <div style={{ marginBottom: '12px' }}> {/* BRUSH PATCH */}
+          <label style={{ fontSize: '0.9rem', fontWeight: 500, display: 'block', marginBottom: '6px' }}>Brush Type</label>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {(['square', 'circle', 'diagonal', 'spray'] as BrushType[]).map(type => (
+              <button
+                key={type}
+                onClick={() => setBrushType(type)}
+                style={{ padding: '6px 12px', borderRadius: '6px', background: brushType === type ? '#8b5cf6' : '#3a3a3c', color: '#fff', border: 'none', cursor: 'pointer' }}
+              >
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+<label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
                   <select
                     value={blendMode}
                     onChange={(e) => setBlendMode(e.target.value)}
