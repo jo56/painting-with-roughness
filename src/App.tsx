@@ -71,10 +71,13 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     blendMode: 'replace',
     spreadPattern: 'random',
     pulseSpeed: 10,
+    pulseOvertakes: true,
     directionalBias: 'right',
     conwayRules: { born: [3], survive: [2,3] },
     tendrilsRules: { born: [1], survive: [1,2] },
     directionalBiasStrength: 0.8,
+    randomWalkSpreadCount: 1,
+    randomWalkMode: 'any' as const,
   };
 
   const [palette, setPalette] = useState([
@@ -119,6 +122,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [conwayRules, setConwayRules] = useState(defaults.conwayRules);
   const [tendrilsRules, setTendrilsRules] = useState(defaults.tendrilsRules);
   const [directionalBiasStrength, setDirectionalBiasStrength] = useState(defaults.directionalBiasStrength);
+  const [pulseOvertakes, setPulseOvertakes] = useState(defaults.pulseOvertakes);
+  const [randomWalkSpreadCount, setRandomWalkSpreadCount] = useState(defaults.randomWalkSpreadCount);
+  const [randomWalkMode, setRandomWalkMode] = useState<'any' | 'cardinal'>(defaults.randomWalkMode);
 
 
   const generativeColorIndicesRef = useRef(generativeColorIndices);
@@ -134,6 +140,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const conwayRulesRef = useRef(conwayRules);
   const tendrilsRulesRef = useRef(tendrilsRules);
   const directionalBiasStrengthRef = useRef(directionalBiasStrength);
+  const pulseOvertakesRef = useRef(pulseOvertakes);
+  const randomWalkSpreadCountRef = useRef(randomWalkSpreadCount);
+  const randomWalkModeRef = useRef(randomWalkMode);
   
   useEffect(() => { spreadProbabilityRef.current = spreadProbability; }, [spreadProbability]);
   useEffect(() => { autoSpreadSpeedRef.current = autoSpreadSpeed; }, [autoSpreadSpeed]);
@@ -148,6 +157,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   useEffect(() => { conwayRulesRef.current = conwayRules; }, [conwayRules]);
   useEffect(() => { tendrilsRulesRef.current = tendrilsRules; }, [tendrilsRules]);
   useEffect(() => { directionalBiasStrengthRef.current = directionalBiasStrength; }, [directionalBiasStrength]);
+  useEffect(() => { pulseOvertakesRef.current = pulseOvertakes; }, [pulseOvertakes]);
+  useEffect(() => { randomWalkSpreadCountRef.current = randomWalkSpreadCount; }, [randomWalkSpreadCount]);
+  useEffect(() => { randomWalkModeRef.current = randomWalkMode; }, [randomWalkMode]);
 
 
   const isDragging = useRef(false);
@@ -380,11 +392,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                                     if (dr === 0 && dc === 0) continue;
                                     const nr = r + dr;
                                     const nc = c + dc;
-                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr]?.[nc] === 0) {
+                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && (g[nr]?.[nc] === 0 || pulseOvertakesRef.current)) {
                                         const key = `${nr},${nc}`;
-                                        if (!changes.has(key)) {
-                                            changes.set(key, currentColor);
-                                        }
+                                        changes.set(key, currentColor);
                                     }
                                 }
                             }
@@ -396,10 +406,48 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     const [r, c] = key.split(',').map(Number);
                     ng[r][c] = color;
                 });
-
-                return ng;
+                break;
             }
-            case 'random':
+            case 'random': {
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        const currentColor = g[r]?.[c];
+                        if (currentColor === undefined || currentColor === 0) continue;
+
+                        if (Math.random() < spreadProbabilityRef.current) {
+                            let neighbors: { r: number, c: number }[] = [];
+                            const mode = randomWalkModeRef.current;
+
+                            for (let dr = -1; dr <= 1; dr++) {
+                                for (let dc = -1; dc <= 1; dc++) {
+                                    if (dr === 0 && dc === 0) continue;
+                                    if (mode === 'cardinal' && dr !== 0 && dc !== 0) continue;
+                                    
+                                    const nr = r + dr;
+                                    const nc = c + dc;
+                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols) {
+                                        neighbors.push({ r: nr, c: nc });
+                                    }
+                                }
+                            }
+                            
+                            if (neighbors.length > 0) {
+                                for (let i = neighbors.length - 1; i > 0; i--) {
+                                    const j = Math.floor(Math.random() * (i + 1));
+                                    [neighbors[i], neighbors[j]] = [neighbors[j], neighbors[i]];
+                                }
+                                
+                                const count = randomWalkSpreadCountRef.current;
+                                for(let i=0; i < Math.min(count, neighbors.length); i++) {
+                                    const randomNeighbor = neighbors[i];
+                                    ng[randomNeighbor.r][randomNeighbor.c] = currentColor;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
             case 'directional': {
                 for (let r = 0; r < currentRows; r++) {
                     for (let c = 0; c < currentCols; c++) {
@@ -419,7 +467,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                                 }
                             }
 
-                            if (pattern === 'directional' && directionalBiasRef.current !== 'none' && Math.random() < directionalBiasStrengthRef.current) {
+                            if (directionalBiasRef.current !== 'none' && Math.random() < directionalBiasStrengthRef.current) {
                                 const bias = directionalBiasRef.current;
                                 const biasedNeighbor = {
                                     r: r + (bias === 'down' ? 1 : bias === 'up' ? -1 : 0),
@@ -733,6 +781,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     setConwayRules(defaults.conwayRules);
     setTendrilsRules(defaults.tendrilsRules);
     setDirectionalBiasStrength(defaults.directionalBiasStrength);
+    setPulseOvertakes(defaults.pulseOvertakes);
+    setRandomWalkSpreadCount(defaults.randomWalkSpreadCount);
+    setRandomWalkMode(defaults.randomWalkMode);
   };
 
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
@@ -1224,6 +1275,33 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     Reset
                   </button>
                 </div>
+                
+                {spreadPattern === 'random' && (
+                    <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                        <div style={{ marginBottom: '10px' }}>
+                            <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Walk Mode:</label>
+                            <select
+                                value={randomWalkMode}
+                                onChange={(e) => setRandomWalkMode(e.target.value as any)}
+                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                            >
+                                <option value="any">8 Directions (Any)</option>
+                                <option value="cardinal">4 Directions (Cardinal)</option>
+                            </select>
+                        </div>
+                        <div style={{ marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                            <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Spread Count:</label>
+                            <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{randomWalkSpreadCount}</span>
+                            </div>
+                            <input
+                            type="range" min={1} max={8} step={1} value={randomWalkSpreadCount}
+                            onChange={(e) => setRandomWalkSpreadCount(Number(e.target.value))}
+                            style={{ width: '100%', height: '6px' }}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {spreadPattern === 'conway' && (
                   <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
@@ -1242,23 +1320,36 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
                 
                 {spreadPattern === 'pulse' && (
-                    <div style={{ marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                        <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Pulse Speed:</label>
-                        <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{pulseSpeed}</span>
+                    <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                        <div style={{ marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                            <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Pulse Speed:</label>
+                            <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{pulseSpeed}</span>
+                            </div>
+                            <input
+                            type="range" min={1} max={60} value={pulseSpeed}
+                            onChange={(e) => setPulseSpeed(Number(e.target.value))}
+                            style={{ width: '100%', height: '6px' }}
+                            />
                         </div>
-                        <input
-                        type="range" min={1} max={50} value={pulseSpeed}
-                        onChange={(e) => setPulseSpeed(Number(e.target.value))}
-                        style={{ width: '100%', height: '6px' }}
-                        />
+                        <div style={{ fontWeight: 500, marginTop: '10px', fontSize: '0.85rem' }}>
+                            <label>
+                                <input 
+                                    type="checkbox" 
+                                    checked={pulseOvertakes} 
+                                    onChange={e => setPulseOvertakes(e.target.checked)} 
+                                    style={{ marginRight: '6px' }}
+                                /> 
+                                New Drops Overtake Existing
+                            </label>
+                        </div>
                     </div>
                 )}
 
                 {spreadPattern === 'directional' && (
-                    <>
+                    <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
                       <div style={{ marginBottom: '10px' }}>
-                          <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Bias:</label>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Bias Direction:</label>
                           <select
                               value={directionalBias}
                               onChange={(e) => setDirectionalBias(e.target.value as any)}
@@ -1281,7 +1372,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                           style={{ width: '100%', height: '6px' }}
                           />
                       </div>
-                    </>
+                    </div>
                 )}
 
                 <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb', marginTop: '12px' }}>
@@ -1381,4 +1472,3 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     </div>
   );
 }
-
