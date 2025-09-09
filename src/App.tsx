@@ -129,7 +129,21 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [autoShapesEnabled, setAutoShapesEnabled] = useState(true);
   const [blendMode, setBlendMode] = useState(defaults.blendMode);
   const [tool, setTool] = useState('brush');
-  const [brushType, setBrushType] = useState<BrushType>('square'); // BRUSH PATCH
+  const [brushType, setBrushType] = useState<BrushType>('square');
+  const [circleRadius, setCircleRadius] = useState(brushSize); // BRUSH PATCH
+  const [sprayDensity, setSprayDensity] = useState(0.3); // BRUSH PATCH
+  const [diagonalThickness, setDiagonalThickness] = useState(1);
+  const brushTypeRef = useRef<BrushType>('square'); // BRUSH PATCH
+  const circleRadiusRef = useRef(circleRadius); // BRUSH PATCH
+  const sprayDensityRef = useRef(sprayDensity); // BRUSH PATCH
+  const diagonalThicknessRef = useRef(diagonalThickness); // BRUSH PATCH
+
+  useEffect(() => { brushTypeRef.current = brushType; }, [brushType]); // BRUSH PATCH
+  useEffect(() => { circleRadiusRef.current = circleRadius; }, [circleRadius]); // BRUSH PATCH
+  useEffect(() => { sprayDensityRef.current = sprayDensity; }, [sprayDensity]); // BRUSH PATCH
+  useEffect(() => { diagonalThicknessRef.current = diagonalThickness; }, [diagonalThickness]); // BRUSH PATCH
+ // BRUSH PATCH
+ // BRUSH PATCH
   const [panelMinimized, setPanelMinimized] = useState(false);
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
@@ -364,25 +378,25 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           const nr = r + dr;
           const nc = c + dc;
           if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-            let shouldPaint = false;
-            switch (brushType) {
+            let shouldPaint = false; // BRUSH PATCH
+            switch (brushTypeRef.current) { // BRUSH PATCH
               case 'square':
                 shouldPaint = true;
                 break;
               case 'circle': {
-                const radius = Math.floor(brushSize / 2);
+                const radius = Math.floor(circleRadiusRef.current / 2);
                 shouldPaint = dr * dr + dc * dc <= radius * radius;
                 break;
               }
               case 'diagonal':
-                shouldPaint = Math.abs(dr) === Math.abs(dc);
+                shouldPaint = Math.abs(dr) === Math.abs(dc) && Math.abs(dr) <= diagonalThicknessRef.current;
                 break;
               case 'spray':
-                shouldPaint = Math.random() < 0.3;
+                shouldPaint = Math.random() < sprayDensityRef.current;
                 break;
             }
             if (!shouldPaint) continue;
-            
+
             if (blendMode === 'replace' || ng[nr][nc] === 0) {
               ng[nr][nc] = color;
             } else if (blendMode === 'overlay' && color > 0) {
@@ -2181,6 +2195,25 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             ))}
           </div>
         </div>
+
+        {brushType === 'circle' && (
+          <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
+            <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Circle Radius: {circleRadius}</label>
+            <input type="range" min={1} max={50} value={circleRadius} onChange={e => setCircleRadius(Number(e.target.value))} />
+          </div>
+        )}
+        {brushType === 'spray' && (
+          <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
+            <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Spray Density: {sprayDensity.toFixed(2)}</label>
+            <input type="range" step={0.05} min={0.05} max={1} value={sprayDensity} onChange={e => setSprayDensity(Number(e.target.value))} />
+          </div>
+        )}
+        {brushType === 'diagonal' && (
+          <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
+            <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Diagonal Thickness: {diagonalThickness}</label>
+            <input type="range" min={1} max={10} value={diagonalThickness} onChange={e => setDiagonalThickness(Number(e.target.value))} />
+          </div>
+        )}
 <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
                   <select
                     value={blendMode}
