@@ -1784,7 +1784,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   </div>
                 )}
 
-                {showCanvasSettings && (
+{showCanvasSettings && (
   <div>
     <label
       style={{
@@ -1815,23 +1815,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>
             {label}:
           </label>
-          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
-            {`${value}${unit}`}
-          </span>
-        </div>
 
-        {/* For Rows and Cols: render slider + number box */}
-        {label === 'Rows' || label === 'Cols' ? (
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <input
-              type="range"
-              min={min as number}
-              max={max as number}
-              step={step as number}
-              value={value as number}
-              onChange={(e) => (setter as any)(Number(e.target.value))}
-              style={{ flex: 1, height: '6px' }}
-            />
+          {/* Rows/Cols: editable number input instead of static span */}
+          {label === 'Rows' || label === 'Cols' ? (
             <input
               type="number"
               min={min as number}
@@ -1841,30 +1827,58 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               onChange={(e) => {
                 let newValue = Number(e.target.value);
                 if (isNaN(newValue)) return;
-                // Clamp automatically
+                // Clamp immediately while typing
                 if (newValue < (min as number)) newValue = min as number;
                 if (newValue > (max as number)) newValue = max as number;
                 (setter as any)(newValue);
               }}
-              style={{ width: '70px' }}
+              style={{
+                width: '60px',
+                fontSize: '0.8rem',
+                color: '#9ca3af',
+                textAlign: 'right',
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                appearance: 'textfield',
+                MozAppearance: 'textfield'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.color = '#fff';
+                e.currentTarget.style.background = '#1f2937';
+                e.currentTarget.style.border = '1px solid #4b5563';
+                e.currentTarget.style.borderRadius = '4px';
+                e.currentTarget.style.padding = '2px 4px';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.color = '#9ca3af';
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.border = 'none';
+                e.currentTarget.style.padding = '0';
+              }}
             />
-          </div>
-        ) : (
-          // Default case: just a slider
-          <input
-            type="range"
-            min={min as number}
-            max={max as number}
-            step={step as number}
-            value={value as number}
-            onChange={(e) => (setter as any)(Number(e.target.value))}
-            style={{ width: '100%', height: '6px' }}
-          />
-        )}
+          ) : (
+            <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+              {`${value}${unit}`}
+            </span>
+          )}
+        </div>
+
+        {/* Slider stays for all */}
+        <input
+          type="range"
+          min={min as number}
+          max={max as number}
+          step={step as number}
+          value={value as number}
+          onChange={(e) => (setter as any)(Number(e.target.value))}
+          style={{ width: '100%', height: '6px' }}
+        />
       </div>
     ))}
   </div>
 )}
+
 
               </div>
             )}
