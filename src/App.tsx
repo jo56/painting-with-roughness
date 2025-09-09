@@ -641,35 +641,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               </div>
             </div>
 
-            <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Enable Auto Modes:</label>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                  <input
-                    type="checkbox"
-                    checked={autoSpreadEnabled}
-                    onChange={(e) => setAutoSpreadEnabled(e.target.checked)}
-                  />
-                  Spread
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                  <input
-                    type="checkbox"
-                    checked={autoDotsEnabled}
-                    onChange={(e) => setAutoDotsEnabled(e.target.checked)}
-                  />
-                  Dots
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                  <input
-                    type="checkbox"
-                    checked={autoShapesEnabled}
-                    onChange={(e) => setAutoShapesEnabled(e.target.checked)}
-                  />
-                  Shapes
-                </label>
-              </div>
-            </div>
+           
 
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
