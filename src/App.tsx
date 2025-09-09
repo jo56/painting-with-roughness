@@ -130,17 +130,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [blendMode, setBlendMode] = useState(defaults.blendMode);
   const [tool, setTool] = useState('brush');
   const [brushType, setBrushType] = useState<BrushType>('square');
-  const [circleRadius, setCircleRadius] = useState(brushSize); // BRUSH PATCH
-  const [sprayDensity, setSprayDensity] = useState(0.3); // BRUSH PATCH
+    const [sprayDensity, setSprayDensity] = useState(0.3); // BRUSH PATCH
   const [diagonalThickness, setDiagonalThickness] = useState(1);
   const brushTypeRef = useRef<BrushType>('square'); // BRUSH PATCH
-  const circleRadiusRef = useRef(circleRadius); // BRUSH PATCH
-  const sprayDensityRef = useRef(sprayDensity); // BRUSH PATCH
+    const sprayDensityRef = useRef(sprayDensity); // BRUSH PATCH
   const diagonalThicknessRef = useRef(diagonalThickness); // BRUSH PATCH
 
   useEffect(() => { brushTypeRef.current = brushType; }, [brushType]); // BRUSH PATCH
-  useEffect(() => { circleRadiusRef.current = circleRadius; }, [circleRadius]); // BRUSH PATCH
-  useEffect(() => { sprayDensityRef.current = sprayDensity; }, [sprayDensity]); // BRUSH PATCH
+    useEffect(() => { sprayDensityRef.current = sprayDensity; }, [sprayDensity]); // BRUSH PATCH
   useEffect(() => { diagonalThicknessRef.current = diagonalThickness; }, [diagonalThickness]); // BRUSH PATCH
  // BRUSH PATCH
  // BRUSH PATCH
@@ -384,10 +381,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 shouldPaint = true;
                 break;
               case 'circle': {
-  const radiusPx = circleRadius; // slider now directly represents pixels
-  const dx = dc * cellSize;
-  const dy = dr * cellSize;
-  shouldPaint = dx * dx + dy * dy <= radiusPx * radiusPx;
+  const radius = Math.floor(brushSize / 2);
+  shouldPaint = dr * dr + dc * dc <= radius * radius;
   break;
 }
               case 'diagonal':
