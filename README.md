@@ -1,4 +1,4 @@
-# Painting with Roughness — React + TypeScript
+# painting-with-roughness — React + TypeScript
 
 ### Quick Start
 
