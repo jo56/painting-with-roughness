@@ -70,10 +70,13 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const [showVisualSettings, setShowVisualSettings] = useState(false);
+  const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
   const [showAutoControls, setShowAutoControls] = useState(true);
   const [showOptions, setShowOptions] = useState(false);
   const [customColor, setCustomColor] = useState('#ffffff');
   const [isSavingColor, setIsSavingColor] = useState(false);
+  const [generativeColorIndices, setGenerativeColorIndices] = useState(() => palette.slice(1).map((_, index) => index + 1));
+
 
   const spreadProbabilityRef = useRef(spreadProbability);
   const autoSpreadSpeedRef = useRef(autoSpreadSpeed);
@@ -286,66 +289,70 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
 
   const addRandomDots = useCallback(() => {
     setGrid(g => {
-      const ng = cloneGrid(g);
-      
-      const numDots = Math.floor(Math.random() * 6) + 5;
-      for (let i = 0; i < numDots; i++) {
-        const r = Math.floor(Math.random() * rows);
-        const c = Math.floor(Math.random() * cols);
-        const color = Math.floor(Math.random() * (palette.length - 1)) + 1;
-        ng[r][c] = color;
-      }
-      
-      return ng;
+        const ng = cloneGrid(g);
+        const availableColors = generativeColorIndices.length > 0 ? generativeColorIndices : palette.slice(1).map((_, i) => i + 1);
+        if (availableColors.length === 0) return ng;
+
+        const numDots = Math.floor(Math.random() * 6) + 5;
+        for (let i = 0; i < numDots; i++) {
+            const r = Math.floor(Math.random() * rows);
+            const c = Math.floor(Math.random() * cols);
+            const color = availableColors[Math.floor(Math.random() * availableColors.length)];
+            ng[r][c] = color;
+        }
+        
+        return ng;
     });
-  }, [rows, cols, palette.length]);
+  }, [rows, cols, palette, generativeColorIndices]);
 
   const addRandomShapes = useCallback(() => {
     setGrid(g => {
-      const ng = cloneGrid(g);
-      
-      const numShapes = Math.floor(Math.random() * 2) + 1;
-      for (let i = 0; i < numShapes; i++) {
-        const color = Math.floor(Math.random() * (palette.length - 1)) + 1;
-        const shapeType = Math.random() > 0.5 ? 'rect' : 'line';
-        
-        if (shapeType === 'rect') {
-          const startR = Math.floor(Math.random() * (rows - 5));
-          const startC = Math.floor(Math.random() * (cols - 5));
-          const width = Math.floor(Math.random() * 6) + 3;
-          const height = Math.floor(Math.random() * 6) + 3;
-          
-          for (let r = startR; r < Math.min(startR + height, rows); r++) {
-            for (let c = startC; c < Math.min(startC + width, cols); c++) {
-              ng[r][c] = color;
-            }
-          }
-        } else {
-          const startR = Math.floor(Math.random() * rows);
-          const startC = Math.floor(Math.random() * cols);
-          const isHorizontal = Math.random() > 0.5;
-          const length = Math.floor(Math.random() * 10) + 5;
-          
-          for (let i = 0; i < length; i++) {
-            let r = startR;
-            let c = startC;
+        const ng = cloneGrid(g);
+        const availableColors = generativeColorIndices.length > 0 ? generativeColorIndices : palette.slice(1).map((_, i) => i + 1);
+        if (availableColors.length === 0) return ng;
+
+        const numShapes = Math.floor(Math.random() * 2) + 1;
+        for (let i = 0; i < numShapes; i++) {
+            const color = availableColors[Math.floor(Math.random() * availableColors.length)];
+            const shapeType = Math.random() > 0.5 ? 'rect' : 'line';
             
-            if (isHorizontal) {
-              c += i;
+            if (shapeType === 'rect') {
+                const startR = Math.floor(Math.random() * (rows - 5));
+                const startC = Math.floor(Math.random() * (cols - 5));
+                const width = Math.floor(Math.random() * 6) + 3;
+                const height = Math.floor(Math.random() * 6) + 3;
+                
+                for (let r = startR; r < Math.min(startR + height, rows); r++) {
+                    for (let c = startC; c < Math.min(startC + width, cols); c++) {
+                        ng[r][c] = color;
+                    }
+                }
             } else {
-              r += i;
+                const startR = Math.floor(Math.random() * rows);
+                const startC = Math.floor(Math.random() * cols);
+                const isHorizontal = Math.random() > 0.5;
+                const length = Math.floor(Math.random() * 10) + 5;
+                
+                for (let i = 0; i < length; i++) {
+                    let r = startR;
+                    let c = startC;
+                    
+                    if (isHorizontal) {
+                        c += i;
+                    } else {
+                        r += i;
+                    }
+                    
+                    if (r >= 0 && r < rows && c >= 0 && c < cols) {
+                        ng[r][c] = color;
+                    }
+                }
             }
-            
-            if (r >= 0 && r < rows && c >= 0 && c < cols) {
-              ng[r][c] = color;
-            }
-          }
         }
-      }
-      
-      return ng;
+        
+        return ng;
     });
-  }, [rows, cols, palette.length]);
+  }, [rows, cols, palette, generativeColorIndices]);
 
   const runAutoSpread = useCallback(() => {
     let lastTime = performance.now();
@@ -534,6 +541,16 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     } else {
       setSelectedColor(index);
     }
+  };
+  
+  const handleGenerativeColorToggle = (colorIndex: number) => {
+    setGenerativeColorIndices(prev => {
+        if (prev.includes(colorIndex)) {
+            return prev.filter(i => i !== colorIndex);
+        } else {
+            return [...prev, colorIndex];
+        }
+    });
   };
 
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
@@ -870,7 +887,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 {[
                   { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#059669' : '#374151' },
                   { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#059669' : '#374151' },
-                  { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#059669' : '#374151' }
+                  { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#059669' : '#374151' },
+                  { label: 'Generative', onClick: () => setShowGenerativeSettings(prev => !prev), bg: showGenerativeSettings ? '#059669' : '#374151' }
                 ].map(({ label, onClick, bg }) => (
                   <button
                     key={label}
@@ -963,6 +981,29 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+            
+            {showOptions && showGenerativeSettings && (
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb' }}>
+                    Allowed Generative Colors
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {palette.slice(1).map((color, index) => {
+                        const colorIndex = index + 1;
+                        return (
+                            <label key={colorIndex} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={generativeColorIndices.includes(colorIndex)}
+                                    onChange={() => handleGenerativeColorToggle(colorIndex)}
+                                />
+                                <div style={{ width: '20px', height: '20px', background: color, borderRadius: '4px' }} />
+                            </label>
+                        );
+                    })}
+                </div>
               </div>
             )}
 
