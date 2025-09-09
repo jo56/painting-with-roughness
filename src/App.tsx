@@ -14,12 +14,11 @@ function cloneGrid(grid: number[][]): number[][] {
   return grid.map(row => [...row]);
 }
 
-export default function DigitalPaintApp(): JSX.Element {
+export default function PaintSpreadApp(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const isMouseDown = useRef(false);
-  const currentTool = useRef('brush');
 
   const defaults = {
     cellSize: 20,
@@ -29,8 +28,7 @@ export default function DigitalPaintApp(): JSX.Element {
     backgroundColor: '#0a0a0a',
     brushSize: 1,
     selectedColor: 1,
-    randomIntensity: 0.3,
-    randomRadius: 2,
+    spreadProbability: 0.3,
     blendMode: 'replace'
   };
 
@@ -55,8 +53,7 @@ export default function DigitalPaintApp(): JSX.Element {
   const [backgroundColor, setBackgroundColor] = useState(defaults.backgroundColor);
   const [brushSize, setBrushSize] = useState(defaults.brushSize);
   const [selectedColor, setSelectedColor] = useState(defaults.selectedColor);
-  const [randomIntensity, setRandomIntensity] = useState(defaults.randomIntensity);
-  const [randomRadius, setRandomRadius] = useState(defaults.randomRadius);
+  const [spreadProbability, setSpreadProbability] = useState(defaults.spreadProbability);
   const [blendMode, setBlendMode] = useState(defaults.blendMode);
   const [tool, setTool] = useState('brush');
 
@@ -183,44 +180,38 @@ export default function DigitalPaintApp(): JSX.Element {
     setGrid(createEmptyGrid(rows, cols));
   };
 
-  const applyRandomness = () => {
+  const colorSpread = () => {
     setGrid(g => {
       const ng = cloneGrid(g);
       
-      // Get all currently used colors
-      const usedColors = new Set<number>();
+      // For each colored cell, give it a chance to flip one of its neighbors
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-          if (g[r][c] > 0) usedColors.add(g[r][c]);
-        }
-      }
-      
-      if (usedColors.size === 0) return ng;
-      
-      const colorsArray = Array.from(usedColors);
-      
-      // Apply randomness
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          if (Math.random() < randomIntensity) {
-            // Find nearby colored cells within radius
-            const nearbyColors = new Set<number>();
-            for (let dr = -randomRadius; dr <= randomRadius; dr++) {
-              for (let dc = -randomRadius; dc <= randomRadius; dc++) {
-                const nr = r + dr;
-                const nc = c + dc;
-                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && g[nr][nc] > 0) {
-                  nearbyColors.add(g[nr][nc]);
+          const currentColor = g[r][c];
+          
+          // Only colored cells can spread
+          if (currentColor > 0) {
+            // Check if this cell gets to spread (based on probability)
+            if (Math.random() < spreadProbability) {
+              
+              // Find all 8 neighbors (including diagonals)
+              const neighbors: { r: number, c: number }[] = [];
+              for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                  if (dr === 0 && dc === 0) continue; // Skip center cell
+                  const nr = r + dr;
+                  const nc = c + dc;
+                  if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                    neighbors.push({ r: nr, c: nc });
+                  }
                 }
               }
-            }
-            
-            if (nearbyColors.size > 0) {
-              const nearbyArray = Array.from(nearbyColors);
-              ng[r][c] = nearbyArray[Math.floor(Math.random() * nearbyArray.length)];
-            } else if (Math.random() < 0.3) {
-              // Sometimes use any color from the palette
-              ng[r][c] = colorsArray[Math.floor(Math.random() * colorsArray.length)];
+              
+              // Pick a random neighbor to flip to this color
+              if (neighbors.length > 0) {
+                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                ng[randomNeighbor.r][randomNeighbor.c] = currentColor;
+              }
             }
           }
         }
@@ -230,16 +221,17 @@ export default function DigitalPaintApp(): JSX.Element {
     });
   };
 
-  const applyNoise = () => {
+  const addRandomDots = () => {
     setGrid(g => {
       const ng = cloneGrid(g);
       
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          if (Math.random() < 0.1) {
-            ng[r][c] = Math.floor(Math.random() * colorPalette.length);
-          }
-        }
+      // Add 10-20 random colored dots
+      const numDots = Math.floor(Math.random() * 10) + 10;
+      for (let i = 0; i < numDots; i++) {
+        const r = Math.floor(Math.random() * rows);
+        const c = Math.floor(Math.random() * cols);
+        const color = Math.floor(Math.random() * (colorPalette.length - 1)) + 1;
+        ng[r][c] = color;
       }
       
       return ng;
@@ -360,7 +352,7 @@ export default function DigitalPaintApp(): JSX.Element {
             gap: '0px'
           }}
         >
-          <span>Digital Paint Studio</span>
+          <span>Color Spread Studio</span>
           <button
             onClick={() => setPanelMinimized(prev => !prev)}
             style={{
@@ -420,7 +412,7 @@ export default function DigitalPaintApp(): JSX.Element {
             {/* Color Palette */}
             <div style={{ marginBottom: '12px' }}>
               <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Colors:</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                 {colorPalette.slice(1).map((color, index) => (
                   <button
                     key={index + 1}
@@ -441,8 +433,8 @@ export default function DigitalPaintApp(): JSX.Element {
             {/* Action Buttons */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
-                { label: 'Randomize', onClick: applyRandomness, bg: '#9333ea' },
-                { label: 'Noise', onClick: applyNoise, bg: '#ea580c' },
+                { label: 'Spread', onClick: colorSpread, bg: '#9333ea' },
+                { label: 'Random Dots', onClick: addRandomDots, bg: '#ea580c' },
                 { label: 'Clear', onClick: clear, bg: '#dc2626' },
                 { label: 'Adv.', onClick: () => setShowAdvanced(prev => !prev), bg: '#374151' },
               ].map(({ label, onClick, bg }) => (
@@ -491,40 +483,28 @@ export default function DigitalPaintApp(): JSX.Element {
               </div>
             ))}
 
+            {/* Spread Probability */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+              <label style={{ width: '100px', fontWeight: 600 }}>Spread Rate:</label>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={spreadProbability}
+                  onChange={(e) => setSpreadProbability(Number(e.target.value))}
+                  style={{ flex: 1, height: '8px', borderRadius: '4px' }}
+                />
+                <span style={{ minWidth: '50px', textAlign: 'right', fontSize: '0.95rem' }}>
+                  {`${Math.round(spreadProbability * 100)}%`}
+                </span>
+              </div>
+            </div>
+
             {/* Advanced Settings */}
             {showAdvanced && (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                  <label style={{ width: '100px', fontWeight: 600 }}>Random Int:</label>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={randomIntensity}
-                    onChange={(e) => setRandomIntensity(Number(e.target.value))}
-                    style={{ flex: 1, marginRight: '8px', height: '8px', borderRadius: '4px' }}
-                  />
-                  <div style={{ width: '50px', textAlign: 'right', fontSize: '0.95rem' }}>
-                    {`${Math.round(randomIntensity * 100)}%`}
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                  <label style={{ width: '100px', fontWeight: 600 }}>Rand Radius:</label>
-                  <input
-                    type="range"
-                    min={1}
-                    max={10}
-                    value={randomRadius}
-                    onChange={(e) => setRandomRadius(Number(e.target.value))}
-                    style={{ flex: 1, marginRight: '8px', height: '8px', borderRadius: '4px' }}
-                  />
-                  <div style={{ width: '50px', textAlign: 'right', fontSize: '0.95rem' }}>
-                    {randomRadius}
-                  </div>
-                </div>
-
                 <div style={{ marginBottom: '10px' }}>
                   <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
                   <select
