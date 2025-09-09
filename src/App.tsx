@@ -1227,15 +1227,17 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
 
                 {spreadPattern === 'conway' && (
                   <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
-                    <RuleEditor label="Born" rules={conwayRules.born} onChange={(newBorn) => setConwayRules(r => ({ ...r, born: newBorn }))} />
-                    <RuleEditor label="Survive" rules={conwayRules.survive} onChange={(newSurvive) => setConwayRules(r => ({ ...r, survive: newSurvive }))} />
+                    <RuleEditor label="Survive Counts" rules={conwayRules.survive} onChange={(newSurvive) => setConwayRules(r => ({ ...r, survive: newSurvive }))} />
+
+                    <RuleEditor label="Birth Counts" rules={conwayRules.born} onChange={(newBorn) => setConwayRules(r => ({ ...r, born: newBorn }))} />
                   </div>
                 )}
                 
                 {spreadPattern === 'tendrils' && (
                   <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
-                     <RuleEditor label="Born" rules={tendrilsRules.born} onChange={(newBorn) => setTendrilsRules(r => ({ ...r, born: newBorn }))} />
-                    <RuleEditor label="Survive" rules={tendrilsRules.survive} onChange={(newSurvive) => setTendrilsRules(r => ({ ...r, survive: newSurvive }))} />
+                     <RuleEditor label="Survive Counts" rules={tendrilsRules.survive} onChange={(newSurvive) => setTendrilsRules(r => ({ ...r, survive: newSurvive }))} />
+
+                     <RuleEditor label="Birth Counts" rules={tendrilsRules.born} onChange={(newBorn) => setTendrilsRules(r => ({ ...r, born: newBorn }))} />
                   </div>
                 )}
                 
