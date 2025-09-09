@@ -641,79 +641,6 @@ export default function MasterControlPaintStudio(): JSX.Element {
               </div>
             </div>
 
-            {/* Master Control Section */}
-            <div style={{ 
-              marginBottom: '12px', 
-              padding: '12px', 
-              background: 'rgba(55,65,81,0.3)', 
-              borderRadius: '8px',
-              border: '1px solid rgba(75,85,99,0.4)'
-            }}>
-              <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', color: '#e5e7eb' }}>
-                Auto Control
-              </label>
-              
-              {/* Enable/Disable Toggle Grid */}
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(3, 1fr)', 
-                gap: '8px', 
-                marginBottom: '12px' 
-              }}>
-                {[
-                  { label: 'Spread', enabled: autoSpreadEnabled, setter: setAutoSpreadEnabled, color: '#16a34a' },
-                  { label: 'Dots', enabled: autoDotsEnabled, setter: setAutoDotsEnabled, color: '#f59e0b' },
-                  { label: 'Shapes', enabled: autoShapesEnabled, setter: setAutoShapesEnabled, color: '#8b5cf6' }
-                ].map(({ label, enabled, setter, color }) => (
-                  <button
-                    key={label}
-                    onClick={() => setter(!enabled)}
-                    style={{
-                      padding: '8px 6px',
-                      borderRadius: '6px',
-                      background: enabled ? color : 'rgba(107,114,128,0.5)',
-                      color: '#fff',
-                      border: enabled ? `2px solid ${color}` : '2px solid rgba(107,114,128,0.3)',
-                      cursor: 'pointer',
-                      fontWeight: 500,
-                      fontSize: '0.85rem',
-                      transition: 'all 0.2s ease',
-                      textAlign: 'center'
-                    }}
-                  >
-                    {enabled ? '✓' : '○'} {label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Master Start/Stop Button */}
-              <button
-                onClick={isAnyRunning ? stopAll : startAllEnabled}
-                disabled={!anyEnabled && !isAnyRunning}
-                style={{
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  background: isAnyRunning 
-                    ? 'linear-gradient(135deg, #dc2626, #b91c1c)' 
-                    : anyEnabled 
-                      ? 'linear-gradient(135deg, #16a34a, #15803d)' 
-                      : '#6b7280',
-                  color: '#fff',
-                  border: 'none',
-                  cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  width: '100%',
-                  boxShadow: anyEnabled || isAnyRunning ? '0 2px 4px rgba(0,0,0,0.2)' : 'none',
-                  transition: 'all 0.2s ease',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
-                }}
-              >
-                {isAnyRunning ? '⏹ Stop All' : anyEnabled ? '▶ Start Enabled' : 'No Modes Enabled'}
-              </button>
-            </div>
-
             {/* Individual Control Buttons */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
@@ -756,6 +683,61 @@ export default function MasterControlPaintStudio(): JSX.Element {
                   {label}
                 </button>
               ))}
+              
+              {/* Master Control Button */}
+              <button
+                onClick={isAnyRunning ? stopAll : startAllEnabled}
+                disabled={!anyEnabled && !isAnyRunning}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  background: isAnyRunning 
+                    ? '#dc2626' 
+                    : anyEnabled 
+                      ? '#16a34a' 
+                      : '#6b7280',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  whiteSpace: 'nowrap',
+                  opacity: anyEnabled || isAnyRunning ? 1 : 0.6
+                }}
+              >
+                {isAnyRunning ? 'Stop All' : 'Start All'}
+              </button>
+            </div>
+
+            {/* Enable/Disable Checkboxes */}
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Enable Auto Modes:</label>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                  <input
+                    type="checkbox"
+                    checked={autoSpreadEnabled}
+                    onChange={(e) => setAutoSpreadEnabled(e.target.checked)}
+                  />
+                  Spread
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                  <input
+                    type="checkbox"
+                    checked={autoDotsEnabled}
+                    onChange={(e) => setAutoDotsEnabled(e.target.checked)}
+                  />
+                  Dots
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                  <input
+                    type="checkbox"
+                    checked={autoShapesEnabled}
+                    onChange={(e) => setAutoShapesEnabled(e.target.checked)}
+                  />
+                  Shapes
+                </label>
+              </div>
             </div>
 
             {/* Manual Generation */}
