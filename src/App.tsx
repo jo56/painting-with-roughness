@@ -72,6 +72,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [showVisualSettings, setShowVisualSettings] = useState(false);
   const [showAutoControls, setShowAutoControls] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [customColor, setCustomColor] = useState('#ffffff');
 
   const spreadProbabilityRef = useRef(spreadProbability);
   const autoSpreadSpeedRef = useRef(autoSpreadSpeed);
@@ -653,24 +654,44 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               </div>
             </div>
 
+
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
-                {colorPalette.slice(1).map((color, index) => (
-                  <button
-                    key={index + 1}
-                    onClick={() => setSelectedColor(index + 1)}
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      background: color,
-                      border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
-                      borderRadius: '6px',
-                      cursor: 'pointer'
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
+  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+    {[colorPalette.slice(1).map((color, index) => (
+      <button
+        key={index + 1}
+        onClick={() => setSelectedColor(index + 1)}
+        style={{
+          width: '32px',
+          height: '32px',
+          background: color,
+          border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
+          borderRadius: '6px',
+          cursor: 'pointer'
+        }}
+      />
+    ))]}
+
+    {/* Custom Color Picker Button */}
+    <input
+      type="color"
+      value={customColor}
+      onChange={(e) => {
+        setCustomColor(e.target.value);
+        setSelectedColor(colorPalette.length); // last index reserved for custom color
+      }}
+      style={{
+        width: '32px',
+        height: '32px',
+        padding: 0,
+        border: selectedColor === colorPalette.length ? '3px solid #fff' : '1px solid #666',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        background: customColor
+      }}
+    />
+  </div>
+</div>
 
             {showAutoControls && (
               <>
