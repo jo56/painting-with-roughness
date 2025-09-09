@@ -14,13 +14,17 @@ function cloneGrid(grid: number[][]): number[][] {
   return grid.map(row => [...row]);
 }
 
-export default function PaintFillSpreadApp(): JSX.Element {
+export default function InfinitePaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const isMouseDown = useRef(false);
   const rafRef = useRef<number | null>(null);
   const runningRef = useRef(false);
+  const autoDotsRef = useRef<number | null>(null);
+  const autoShapesRef = useRef<number | null>(null);
+  const dotsRunningRef = useRef(false);
+  const shapesRunningRef = useRef(false);
 
   const defaults = {
     cellSize: 20,
@@ -32,20 +36,14 @@ export default function PaintFillSpreadApp(): JSX.Element {
     selectedColor: 1,
     spreadProbability: 0.2,
     autoSpreadSpeed: 3,
+    autoDotsSpeed: 2,
+    autoShapesSpeed: 1,
     blendMode: 'replace'
   };
 
-  // Color palette - index 0 is transparent/eraser, 1-8 are colors
   const colorPalette = [
-    '#000000', // 0: transparent/eraser
-    '#ff6b6b', // 1: red
-    '#4ecdc4', // 2: teal
-    '#45b7d1', // 3: blue
-    '#96ceb4', // 4: green
-    '#feca57', // 5: yellow
-    '#ff9ff3', // 6: pink
-    '#54a0ff', // 7: light blue
-    '#5f27cd', // 8: purple
+    '#000000', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', 
+    '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'
   ];
 
   const [cellSize, setCellSize] = useState(defaults.cellSize);
@@ -58,30 +56,30 @@ export default function PaintFillSpreadApp(): JSX.Element {
   const [selectedColor, setSelectedColor] = useState(defaults.selectedColor);
   const [spreadProbability, setSpreadProbability] = useState(defaults.spreadProbability);
   const [autoSpreadSpeed, setAutoSpreadSpeed] = useState(defaults.autoSpreadSpeed);
+  const [autoDotsSpeed, setAutoDotsSpeed] = useState(defaults.autoDotsSpeed);
+  const [autoShapesSpeed, setAutoShapesSpeed] = useState(defaults.autoShapesSpeed);
   const [autoSpreading, setAutoSpreading] = useState(false);
+  const [autoDots, setAutoDots] = useState(false);
+  const [autoShapes, setAutoShapes] = useState(false);
   const [blendMode, setBlendMode] = useState(defaults.blendMode);
   const [tool, setTool] = useState('brush');
-
   const [panelMinimized, setPanelMinimized] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Refs for accessing current values in animation loop
   const spreadProbabilityRef = useRef(spreadProbability);
   const autoSpreadSpeedRef = useRef(autoSpreadSpeed);
+  const autoDotsSpeedRef = useRef(autoDotsSpeed);
+  const autoShapesSpeedRef = useRef(autoShapesSpeed);
   
-  useEffect(() => { 
-    spreadProbabilityRef.current = spreadProbability; 
-  }, [spreadProbability]);
-  
-  useEffect(() => { 
-    autoSpreadSpeedRef.current = autoSpreadSpeed; 
-  }, [autoSpreadSpeed]);
+  useEffect(() => { spreadProbabilityRef.current = spreadProbability; }, [spreadProbability]);
+  useEffect(() => { autoSpreadSpeedRef.current = autoSpreadSpeed; }, [autoSpreadSpeed]);
+  useEffect(() => { autoDotsSpeedRef.current = autoDotsSpeed; }, [autoDotsSpeed]);
+  useEffect(() => { autoShapesSpeedRef.current = autoShapesSpeed; }, [autoShapesSpeed]);
 
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
   const [panelPos, setPanelPos] = useState({ x: 20, y: 20 });
   const mousePos = useRef({ x: 0, y: 0 });
-
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -105,11 +103,9 @@ export default function PaintFillSpreadApp(): JSX.Element {
     canvas.width = cols * cellSize;
     canvas.height = rows * cellSize;
 
-    // Draw background
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw cells
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const colorIndex = grid[r][c];
@@ -120,7 +116,6 @@ export default function PaintFillSpreadApp(): JSX.Element {
       }
     }
 
-    // Draw grid lines
     if (showGrid) {
       ctx.strokeStyle = GRID_COLOR;
       ctx.lineWidth = 0.5;
@@ -146,8 +141,6 @@ export default function PaintFillSpreadApp(): JSX.Element {
     
     setGrid(g => {
       const ng = cloneGrid(g);
-      
-      // Apply brush size
       for (let dr = -Math.floor(brushSize/2); dr <= Math.floor(brushSize/2); dr++) {
         for (let dc = -Math.floor(brushSize/2); dc <= Math.floor(brushSize/2); dc++) {
           const nr = r + dr;
@@ -170,10 +163,8 @@ export default function PaintFillSpreadApp(): JSX.Element {
       const ng = cloneGrid(g);
       const originalColor = g[startR][startC];
       
-      // Don't fill if the color is already the target color
       if (originalColor === newColor) return ng;
       
-      // Flood fill algorithm using a queue
       const queue: [number, number][] = [[startR, startC]];
       const visited = new Set<string>();
       
@@ -181,25 +172,21 @@ export default function PaintFillSpreadApp(): JSX.Element {
         const [r, c] = queue.shift()!;
         const key = `${r},${c}`;
         
-        // Skip if out of bounds or already visited
         if (r < 0 || r >= rows || c < 0 || c >= cols || visited.has(key)) {
           continue;
         }
         
-        // Skip if this cell doesn't match the original color
         if (ng[r][c] !== originalColor) {
           continue;
         }
         
-        // Fill this cell
         ng[r][c] = newColor;
         visited.add(key);
         
-        // Add neighbors to queue (4-directional for cleaner fill)
-        queue.push([r - 1, c]); // up
-        queue.push([r + 1, c]); // down
-        queue.push([r, c - 1]); // left
-        queue.push([r, c + 1]); // right
+        queue.push([r - 1, c]);
+        queue.push([r + 1, c]);
+        queue.push([r, c - 1]);
+        queue.push([r, c + 1]);
       }
       
       return ng;
@@ -214,8 +201,7 @@ export default function PaintFillSpreadApp(): JSX.Element {
     const y = Math.floor((e.clientY - rect.top) / cellSize);
     
     if (tool === 'fill') {
-      const colorToUse = selectedColor;
-      floodFill(y, x, colorToUse);
+      floodFill(y, x, selectedColor);
     } else {
       isMouseDown.current = true;
       const colorToUse = tool === 'eraser' ? 0 : selectedColor;
@@ -247,21 +233,16 @@ export default function PaintFillSpreadApp(): JSX.Element {
     setGrid(g => {
       const ng = cloneGrid(g);
       
-      // For each colored cell, give it a chance to flip one of its neighbors
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           const currentColor = g[r][c];
           
-          // Only colored cells can spread
           if (currentColor > 0) {
-            // Check if this cell gets to spread (based on probability)
             if (Math.random() < spreadProbabilityRef.current) {
-              
-              // Find all 8 neighbors (including diagonals)
               const neighbors: { r: number, c: number }[] = [];
               for (let dr = -1; dr <= 1; dr++) {
                 for (let dc = -1; dc <= 1; dc++) {
-                  if (dr === 0 && dc === 0) continue; // Skip center cell
+                  if (dr === 0 && dc === 0) continue;
                   const nr = r + dr;
                   const nc = c + dc;
                   if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
@@ -270,7 +251,6 @@ export default function PaintFillSpreadApp(): JSX.Element {
                 }
               }
               
-              // Pick a random neighbor to flip to this color
               if (neighbors.length > 0) {
                 const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
                 ng[randomNeighbor.r][randomNeighbor.c] = currentColor;
@@ -284,36 +264,11 @@ export default function PaintFillSpreadApp(): JSX.Element {
     });
   }, [rows, cols]);
 
-  const runAutoSpread = useCallback(() => {
-    let lastTime = performance.now();
-    const loop = (time: number) => {
-      if (!runningRef.current) return;
-      const interval = 1000 / Math.max(0.25, autoSpreadSpeedRef.current);
-      if (time - lastTime >= interval) {
-        colorSpread();
-        lastTime = time;
-      }
-      rafRef.current = requestAnimationFrame(loop);
-    };
-    rafRef.current = requestAnimationFrame(loop);
-  }, [colorSpread]);
-
-  const toggleAutoSpread = () => {
-    runningRef.current = !runningRef.current;
-    setAutoSpreading(runningRef.current);
-    if (runningRef.current) {
-      runAutoSpread();
-    } else if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-    }
-  };
-
-  const addRandomDots = () => {
+  const addRandomDots = useCallback(() => {
     setGrid(g => {
       const ng = cloneGrid(g);
       
-      // Add 15-25 random colored dots
-      const numDots = Math.floor(Math.random() * 10) + 15;
+      const numDots = Math.floor(Math.random() * 6) + 5;
       for (let i = 0; i < numDots; i++) {
         const r = Math.floor(Math.random() * rows);
         const c = Math.floor(Math.random() * cols);
@@ -323,24 +278,22 @@ export default function PaintFillSpreadApp(): JSX.Element {
       
       return ng;
     });
-  };
+  }, [rows, cols, colorPalette.length]);
 
-  const addRandomShapes = () => {
+  const addRandomShapes = useCallback(() => {
     setGrid(g => {
       const ng = cloneGrid(g);
       
-      // Add 3-5 random shapes (rectangles and lines)
-      const numShapes = Math.floor(Math.random() * 3) + 3;
+      const numShapes = Math.floor(Math.random() * 2) + 1;
       for (let i = 0; i < numShapes; i++) {
         const color = Math.floor(Math.random() * (colorPalette.length - 1)) + 1;
         const shapeType = Math.random() > 0.5 ? 'rect' : 'line';
         
         if (shapeType === 'rect') {
-          // Draw rectangle
           const startR = Math.floor(Math.random() * (rows - 5));
           const startC = Math.floor(Math.random() * (cols - 5));
-          const width = Math.floor(Math.random() * 8) + 3;
-          const height = Math.floor(Math.random() * 8) + 3;
+          const width = Math.floor(Math.random() * 6) + 3;
+          const height = Math.floor(Math.random() * 6) + 3;
           
           for (let r = startR; r < Math.min(startR + height, rows); r++) {
             for (let c = startC; c < Math.min(startC + width, cols); c++) {
@@ -348,11 +301,10 @@ export default function PaintFillSpreadApp(): JSX.Element {
             }
           }
         } else {
-          // Draw line
           const startR = Math.floor(Math.random() * rows);
           const startC = Math.floor(Math.random() * cols);
           const isHorizontal = Math.random() > 0.5;
-          const length = Math.floor(Math.random() * 15) + 5;
+          const length = Math.floor(Math.random() * 10) + 5;
           
           for (let i = 0; i < length; i++) {
             let r = startR;
@@ -373,6 +325,78 @@ export default function PaintFillSpreadApp(): JSX.Element {
       
       return ng;
     });
+  }, [rows, cols, colorPalette.length]);
+
+  const runAutoSpread = useCallback(() => {
+    let lastTime = performance.now();
+    const loop = (time: number) => {
+      if (!runningRef.current) return;
+      const interval = 1000 / Math.max(0.25, autoSpreadSpeedRef.current);
+      if (time - lastTime >= interval) {
+        colorSpread();
+        lastTime = time;
+      }
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+  }, [colorSpread]);
+
+  const runAutoDots = useCallback(() => {
+    let lastTime = performance.now();
+    const loop = (time: number) => {
+      if (!dotsRunningRef.current) return;
+      const interval = 1000 / Math.max(0.1, autoDotsSpeedRef.current);
+      if (time - lastTime >= interval) {
+        addRandomDots();
+        lastTime = time;
+      }
+      autoDotsRef.current = requestAnimationFrame(loop);
+    };
+    autoDotsRef.current = requestAnimationFrame(loop);
+  }, [addRandomDots]);
+
+  const runAutoShapes = useCallback(() => {
+    let lastTime = performance.now();
+    const loop = (time: number) => {
+      if (!shapesRunningRef.current) return;
+      const interval = 1000 / Math.max(0.1, autoShapesSpeedRef.current);
+      if (time - lastTime >= interval) {
+        addRandomShapes();
+        lastTime = time;
+      }
+      autoShapesRef.current = requestAnimationFrame(loop);
+    };
+    autoShapesRef.current = requestAnimationFrame(loop);
+  }, [addRandomShapes]);
+
+  const toggleAutoSpread = () => {
+    runningRef.current = !runningRef.current;
+    setAutoSpreading(runningRef.current);
+    if (runningRef.current) {
+      runAutoSpread();
+    } else if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
+  };
+
+  const toggleAutoDots = () => {
+    dotsRunningRef.current = !dotsRunningRef.current;
+    setAutoDots(dotsRunningRef.current);
+    if (dotsRunningRef.current) {
+      runAutoDots();
+    } else if (autoDotsRef.current) {
+      cancelAnimationFrame(autoDotsRef.current);
+    }
+  };
+
+  const toggleAutoShapes = () => {
+    shapesRunningRef.current = !shapesRunningRef.current;
+    setAutoShapes(shapesRunningRef.current);
+    if (shapesRunningRef.current) {
+      runAutoShapes();
+    } else if (autoShapesRef.current) {
+      cancelAnimationFrame(autoShapesRef.current);
+    }
   };
 
   const handleHeaderMouseDown = (e: React.MouseEvent) => {
@@ -474,7 +498,6 @@ export default function PaintFillSpreadApp(): JSX.Element {
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
         }}
       >
-        {/* Header */}
         <div
           onMouseDown={handleHeaderMouseDown}
           style={{
@@ -482,18 +505,17 @@ export default function PaintFillSpreadApp(): JSX.Element {
             textAlign: 'center',
             marginBottom: '12px',
             cursor: 'move',
-            padding: '1px 1px',
+            padding: '4px',
             background: 'rgba(55,65,81,0.8)',
             borderRadius: '6px',
             fontSize: '1rem',
             userSelect: 'none',
             display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: '0px'
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}
         >
-          <span>Paint Studio Pro</span>
+          <span>Infinite Paint Studio</span>
           <button
             onClick={() => setPanelMinimized(prev => !prev)}
             style={{
@@ -510,7 +532,6 @@ export default function PaintFillSpreadApp(): JSX.Element {
           </button>
         </div>
 
-        {/* Panel contents */}
         <div style={{
           maxHeight: panelMinimized ? '0px' : '2000px',
           overflow: 'hidden',
@@ -522,7 +543,6 @@ export default function PaintFillSpreadApp(): JSX.Element {
             pointerEvents: panelMinimized ? 'none' : 'auto'
           }}>
             
-            {/* Tool Selection */}
             <div style={{ marginBottom: '12px' }}>
               <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Tool:</label>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -551,7 +571,6 @@ export default function PaintFillSpreadApp(): JSX.Element {
               </div>
             </div>
 
-            {/* Color Palette */}
             <div style={{ marginBottom: '12px' }}>
               <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Colors:</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
@@ -572,19 +591,23 @@ export default function PaintFillSpreadApp(): JSX.Element {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
                 { 
-                  label: autoSpreading ? 'Stop Auto' : 'Auto Spread', 
+                  label: autoSpreading ? 'Stop Spread' : 'Auto Spread', 
                   onClick: toggleAutoSpread, 
                   bg: autoSpreading ? '#dc2626' : '#16a34a' 
                 },
-                { label: 'Spread Once', onClick: colorSpread, bg: '#7c3aed' },
-                { label: 'Random Dots', onClick: addRandomDots, bg: '#ea580c' },
-                { label: 'Random Shapes', onClick: addRandomShapes, bg: '#f59e0b' },
-                { label: 'Clear', onClick: clear, bg: '#991b1b' },
-                { label: 'Adv.', onClick: () => setShowAdvanced(prev => !prev), bg: '#374151' },
+                { 
+                  label: autoDots ? 'Stop Dots' : 'Auto Dots', 
+                  onClick: toggleAutoDots, 
+                  bg: autoDots ? '#dc2626' : '#f59e0b' 
+                },
+                { 
+                  label: autoShapes ? 'Stop Shapes' : 'Auto Shapes', 
+                  onClick: toggleAutoShapes, 
+                  bg: autoShapes ? '#dc2626' : '#8b5cf6' 
+                }
               ].map(({ label, onClick, bg }) => (
                 <button
                   key={label}
@@ -598,7 +621,7 @@ export default function PaintFillSpreadApp(): JSX.Element {
                     cursor: 'pointer',
                     fontWeight: 'normal',
                     fontSize: '0.95rem',
-                    whiteSpace: 'nowrap',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   {label}
@@ -606,50 +629,44 @@ export default function PaintFillSpreadApp(): JSX.Element {
               ))}
             </div>
 
-            {/* Spread Controls */}
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-              <label style={{ width: '100px', fontWeight: 600 }}>Spread Rate:</label>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={spreadProbability}
-                  onChange={(e) => setSpreadProbability(Number(e.target.value))}
-                  style={{ flex: 1, height: '8px', borderRadius: '4px' }}
-                />
-                <span style={{ minWidth: '50px', textAlign: 'right', fontSize: '0.95rem' }}>
-                  {`${Math.round(spreadProbability * 100)}%`}
-                </span>
-              </div>
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              {[
+                { label: 'Spread Once', onClick: colorSpread, bg: '#7c3aed' },
+                { label: 'Add Dots', onClick: addRandomDots, bg: '#ea580c' },
+                { label: 'Add Shapes', onClick: addRandomShapes, bg: '#f59e0b' },
+                { label: 'Clear', onClick: clear, bg: '#991b1b' },
+                { label: 'Adv.', onClick: () => setShowAdvanced(prev => !prev), bg: '#374151' }
+              ].map(({ label, onClick, bg }) => (
+                <button
+                  key={label}
+                  onClick={onClick}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    background: bg,
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 'normal',
+                    fontSize: '0.95rem',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-              <label style={{ width: '100px', fontWeight: 600 }}>Auto Speed:</label>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input
-                  type="range"
-                  min={0.25}
-                  max={20}
-                  step={0.25}
-                  value={autoSpreadSpeed}
-                  onChange={(e) => setAutoSpreadSpeed(Number(e.target.value))}
-                  style={{ flex: 1, height: '8px', borderRadius: '4px' }}
-                />
-                <span style={{ minWidth: '60px', textAlign: 'right', fontSize: '0.95rem' }}>
-                  {`${autoSpreadSpeed} gen/s`}
-                </span>
-              </div>
-            </div>
-
-            {/* Basic Settings */}
             {[
-              ['Brush Size', brushSize, 1, 10, setBrushSize, ''],
-              ['Cell Size', cellSize, 5, 50, setCellSize, ' px'],
-              ['Rows', rows, 10, 100, handleRowsChange, ''],
-              ['Cols', cols, 10, 100, handleColsChange, '']
-            ].map(([label, value, min, max, setter, unit], idx) => (
+              ['Spread Rate', spreadProbability, 0, 1, 0.01, setSpreadProbability, '%'],
+              ['Spread Speed', autoSpreadSpeed, 0.25, 20, 0.25, setAutoSpreadSpeed, '/s'],
+              ['Dots Speed', autoDotsSpeed, 0.1, 10, 0.1, setAutoDotsSpeed, '/s'],
+              ['Shapes Speed', autoShapesSpeed, 0.1, 5, 0.1, setAutoShapesSpeed, '/s'],
+              ['Brush Size', brushSize, 1, 10, 1, setBrushSize, ''],
+              ['Cell Size', cellSize, 5, 50, 1, setCellSize, ' px'],
+              ['Rows', rows, 10, 100, 1, handleRowsChange, ''],
+              ['Cols', cols, 10, 100, 1, handleColsChange, '']
+            ].map(([label, value, min, max, step, setter, unit], idx) => (
               <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                 <label style={{ width: '100px', fontWeight: 600 }}>{label}:</label>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -657,18 +674,18 @@ export default function PaintFillSpreadApp(): JSX.Element {
                     type="range"
                     min={min as number}
                     max={max as number}
+                    step={step as number}
                     value={value as number}
                     onChange={(e) => setter(Number(e.target.value))}
                     style={{ flex: 1, height: '8px', borderRadius: '4px' }}
                   />
-                  <span style={{ minWidth: '50px', textAlign: 'right', fontSize: '0.95rem' }}>
-                    {`${value}${unit}`}
+                  <span style={{ minWidth: '60px', textAlign: 'right', fontSize: '0.95rem' }}>
+                    {label === 'Spread Rate' ? `${Math.round((value as number) * 100)}${unit}` : `${value}${unit}`}
                   </span>
                 </div>
               </div>
             ))}
 
-            {/* Advanced Settings */}
             {showAdvanced && (
               <>
                 <div style={{ marginBottom: '10px' }}>
