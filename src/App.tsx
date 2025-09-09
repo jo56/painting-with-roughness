@@ -41,10 +41,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     blendMode: 'replace'
   };
 
-  const colorPalette = [
+  const [palette, setPalette] = useState([
     '#000000', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', 
     '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'
-  ];
+  ]);
 
   const [cellSize, setCellSize] = useState(defaults.cellSize);
   const [rows, setRows] = useState(defaults.rows);
@@ -73,6 +73,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [showAutoControls, setShowAutoControls] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [customColor, setCustomColor] = useState('#ffffff');
+  const [isSavingColor, setIsSavingColor] = useState(false);
 
   const spreadProbabilityRef = useRef(spreadProbability);
   const autoSpreadSpeedRef = useRef(autoSpreadSpeed);
@@ -118,7 +119,11 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
       for (let c = 0; c < cols; c++) {
         const colorIndex = grid[r][c];
         if (colorIndex > 0) {
-          ctx.fillStyle = colorPalette[colorIndex];
+          if (colorIndex === palette.length) {
+            ctx.fillStyle = customColor;
+          } else {
+            ctx.fillStyle = palette[colorIndex];
+          }
           ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
         }
       }
@@ -140,7 +145,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         ctx.stroke();
       }
     }
-  }, [grid, rows, cols, cellSize, backgroundColor, showGrid, colorPalette]);
+  }, [grid, rows, cols, cellSize, backgroundColor, showGrid, palette, customColor]);
 
   useEffect(() => draw(), [draw]);
 
@@ -204,6 +209,12 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const handleMouseDown = (e: React.MouseEvent) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    if (isSavingColor) {
+      setIsSavingColor(false);
+      return;
+    }
+    
     const rect = canvas.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / cellSize);
     const y = Math.floor((e.clientY - rect.top) / cellSize);
@@ -235,6 +246,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
 
   const clear = () => {
     setGrid(createEmptyGrid(rows, cols));
+    setIsSavingColor(false);
   };
 
   const colorSpread = useCallback(() => {
@@ -280,13 +292,13 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
       for (let i = 0; i < numDots; i++) {
         const r = Math.floor(Math.random() * rows);
         const c = Math.floor(Math.random() * cols);
-        const color = Math.floor(Math.random() * (colorPalette.length - 1)) + 1;
+        const color = Math.floor(Math.random() * (palette.length - 1)) + 1;
         ng[r][c] = color;
       }
       
       return ng;
     });
-  }, [rows, cols, colorPalette.length]);
+  }, [rows, cols, palette.length]);
 
   const addRandomShapes = useCallback(() => {
     setGrid(g => {
@@ -294,7 +306,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
       
       const numShapes = Math.floor(Math.random() * 2) + 1;
       for (let i = 0; i < numShapes; i++) {
-        const color = Math.floor(Math.random() * (colorPalette.length - 1)) + 1;
+        const color = Math.floor(Math.random() * (palette.length - 1)) + 1;
         const shapeType = Math.random() > 0.5 ? 'rect' : 'line';
         
         if (shapeType === 'rect') {
@@ -333,7 +345,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
       
       return ng;
     });
-  }, [rows, cols, colorPalette.length]);
+  }, [rows, cols, palette.length]);
 
   const runAutoSpread = useCallback(() => {
     let lastTime = performance.now();
@@ -510,6 +522,20 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     }));
   };
 
+  const handlePaletteClick = (index: number) => {
+    if (isSavingColor) {
+      setPalette(p => {
+        const newPalette = [...p];
+        newPalette[index] = customColor;
+        return newPalette;
+      });
+      setIsSavingColor(false);
+      setSelectedColor(index);
+    } else {
+      setSelectedColor(index);
+    }
+  };
+
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
   const anyEnabled = autoSpreadEnabled || autoDotsEnabled || autoShapesEnabled;
 
@@ -529,6 +555,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseUp}
           style={{ 
             display: 'block', 
             cursor: tool === 'fill' ? 'pointer' : 'crosshair', 
@@ -543,10 +570,11 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           position: isMobile ? 'relative' : 'fixed',
           top: isMobile ? undefined : panelPos.y,
           left: isMobile ? undefined : panelPos.x,
-          marginTop: isMobile ? '10px' : undefined,
+          margin: isMobile ? '0 auto' : undefined,
           background: 'rgba(17,24,39,0.95)',
           padding: '12px',
           borderRadius: '10px',
+          width: isMobile ? 'calc(100% - 20px)': 'auto',
           maxWidth: '430px',
           zIndex: 1000,
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
@@ -606,7 +634,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 ].map(({ label, value }) => (
                   <button
                     key={value}
-                    onClick={() => setTool(value)}
+                    onClick={() => { setTool(value); setIsSavingColor(false); }}
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
@@ -656,42 +684,67 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
 
 
             <div style={{ marginBottom: '12px' }}>
-  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-    {[colorPalette.slice(1).map((color, index) => (
-      <button
-        key={index + 1}
-        onClick={() => setSelectedColor(index + 1)}
-        style={{
-          width: '32px',
-          height: '32px',
-          background: color,
-          border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
-          borderRadius: '6px',
-          cursor: 'pointer'
-        }}
-      />
-    ))]}
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {palette.slice(1).map((color, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => handlePaletteClick(index + 1)}
+                    title={isSavingColor ? `Save ${customColor} to this slot` : `Select ${color}`}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      background: color,
+                      border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      outline: isSavingColor ? '2px dashed #059669' : 'none',
+                      outlineOffset: '2px',
+                      transition: 'outline 0.2s'
+                    }}
+                  />
+                ))}
 
-    {/* Custom Color Picker Button */}
-    <input
-      type="color"
-      value={customColor}
-      onChange={(e) => {
-        setCustomColor(e.target.value);
-        setSelectedColor(colorPalette.length); // last index reserved for custom color
-      }}
-      style={{
-        width: '32px',
-        height: '32px',
-        padding: 0,
-        border: selectedColor === colorPalette.length ? '3px solid #fff' : '1px solid #666',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        background: customColor
-      }}
-    />
-  </div>
-</div>
+                <input
+                  type="color"
+                  value={customColor}
+                  onChange={(e) => {
+                    setCustomColor(e.target.value);
+                    setSelectedColor(palette.length);
+                    setIsSavingColor(false);
+                  }}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    padding: 0,
+                    border: selectedColor === palette.length ? '3px solid #fff' : '1px solid #666',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    background: 'transparent'
+                  }}
+                />
+                 {selectedColor === palette.length && (
+                    <button
+                        onClick={() => setIsSavingColor(prev => !prev)}
+                        title={isSavingColor ? "Cancel saving" : "Save this color to a slot"}
+                        style={{
+                            padding: '0 10px',
+                            height: '32px',
+                            borderRadius: '6px',
+                            background: isSavingColor ? '#f59e0b' : '#374151',
+                            color: '#fff',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            fontWeight: 'normal',
+                            whiteSpace: 'nowrap'
+                        }}
+                    >
+                        {isSavingColor ? 'Cancel' : 'Save Color'}
+                    </button>
+                )}
+              </div>
+              {isSavingColor && <div style={{fontSize: '0.8rem', color: '#9ca3af', marginTop: '6px'}}>Select a color slot to replace it.</div>}
+            </div>
 
             {showAutoControls && (
               <>
@@ -718,7 +771,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   ].map(({ label, onClick, bg, enabled }) => (
                     <button
                       key={label}
-                      onClick={onClick}
+                      onClick={() => { onClick(); setIsSavingColor(false); }}
                       disabled={!enabled}
                       style={{
                         padding: '6px 12px',
@@ -738,7 +791,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   ))}
                   
                   <button
-                    onClick={isAnyRunning ? stopAll : startAllEnabled}
+                    onClick={() => { isAnyRunning ? stopAll() : startAllEnabled(); setIsSavingColor(false); }}
                     disabled={!anyEnabled && !isAnyRunning}
                     style={{
                       padding: '6px 12px',
@@ -772,7 +825,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               ].map(({ label, onClick, bg }) => (
                 <button
                   key={label}
-                  onClick={onClick}
+                  onClick={() => { onClick(); setIsSavingColor(false); }}
                   style={{
                     padding: '6px 12px',
                     borderRadius: '6px',
@@ -818,7 +871,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               </div>
             )}
 
-            {/* Conditional Settings Display */}
             {showOptions && (showSpeedSettings || showCanvasSettings) && (
               <div style={{ 
                 display: 'grid', 
@@ -826,7 +878,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 gap: '12px', 
                 marginBottom: '12px' 
               }}>
-                {/* Speed Settings Column */}
                 {showSpeedSettings && (
                   <div>
                     <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb' }}>
@@ -859,7 +910,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   </div>
                 )}
 
-                {/* Canvas Settings Column */}
                 {showCanvasSettings && (
                   <div>
                     <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb' }}>
