@@ -79,7 +79,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     spreadPattern: 'random' as SpreadPattern,
     pulseSpeed: 10,
     pulseOvertakes: true,
-    pulseDirection: 'down' as Direction,
+    pulseDirection: 'bottom-right' as Direction,
     directionalBias: 'bottom-right' as Direction,
     conwayRules: { born: [3], survive: [2,3] },
     tendrilsRules: { born: [1], survive: [1,2] },
@@ -259,10 +259,15 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         else if (keys.has('KeyD')) newDirection = 'right';
         
         if (newDirection) {
-            if (spreadPattern === 'pulse') {
+            const isDiagonal = newDirection.includes('-');
+            const isCardinal = !isDiagonal;
+
+            if (spreadPattern === 'pulse' && isDiagonal) {
                 setPulseDirection(newDirection);
             } else if (spreadPattern === 'directional') {
                 setDirectionalBias(newDirection);
+            } else if (spreadPattern === 'flow' && isCardinal) {
+                setFlowDirection(newDirection);
             }
         }
     };
@@ -273,7 +278,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     const relevantCodes = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
 
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (!showGenerativeSettings || (spreadPattern !== 'pulse' && spreadPattern !== 'directional')) {
+        if (!showGenerativeSettings || (spreadPattern !== 'pulse' && spreadPattern !== 'directional' && spreadPattern !== 'flow')) {
             return;
         }
 
@@ -299,7 +304,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [showGenerativeSettings, spreadPattern, setPulseDirection, setDirectionalBias]);
+  }, [showGenerativeSettings, spreadPattern, setPulseDirection, setDirectionalBias, setFlowDirection]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -1912,10 +1917,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                               <option value="up">Up</option>
                               <option value="left">Left</option>
                               <option value="right">Right</option>
-                              <option value="bottom-right">Bottom-Right</option>
-                              <option value="bottom-left">Bottom-Left</option>
-                              <option value="top-right">Top-Right</option>
-                              <option value="top-left">Top-Left</option>
                           </select>
                       </div>
                       <div>
@@ -2041,10 +2042,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                                 onChange={(e) => setPulseDirection(e.target.value as any)}
                                 style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
                             >
-                                <option value="up">Up</option>
-                                <option value="down">Down</option>
-                                <option value="left">Left</option>
-                                <option value="right">Right</option>
                                 <option value="top-left">Top-Left</option>
                                 <option value="top-right">Top-Right</option>
                                 <option value="bottom-left">Bottom-Left</option>
