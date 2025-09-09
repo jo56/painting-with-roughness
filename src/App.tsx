@@ -44,6 +44,8 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
     );
 }
 
+type Direction = 'up' | 'down' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
 export default function ModularSettingsPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
@@ -73,7 +75,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     pulseSpeed: 10,
     pulseOvertakes: true,
     pulseDirection: 'bottom-right' as const,
-    directionalBias: 'right',
+    directionalBias: 'down' as const,
     conwayRules: { born: [3], survive: [2,3] },
     tendrilsRules: { born: [1], survive: [1,2] },
     directionalBiasStrength: 0.8,
@@ -119,12 +121,12 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [generativeColorIndices, setGenerativeColorIndices] = useState(() => palette.slice(1).map((_, index) => index + 1));
   const [spreadPattern, setSpreadPattern] = useState<'random' | 'conway' | 'pulse' | 'directional' | 'tendrils'>(defaults.spreadPattern);
   const [pulseSpeed, setPulseSpeed] = useState(defaults.pulseSpeed);
-  const [directionalBias, setDirectionalBias] = useState<'none' | 'up' | 'down' | 'left' | 'right'>(defaults.directionalBias);
+  const [directionalBias, setDirectionalBias] = useState<'none' | Direction>(defaults.directionalBias);
   const [conwayRules, setConwayRules] = useState(defaults.conwayRules);
   const [tendrilsRules, setTendrilsRules] = useState(defaults.tendrilsRules);
   const [directionalBiasStrength, setDirectionalBiasStrength] = useState(defaults.directionalBiasStrength);
   const [pulseOvertakes, setPulseOvertakes] = useState(defaults.pulseOvertakes);
-  const [pulseDirection, setPulseDirection] = useState<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'>(defaults.pulseDirection);
+  const [pulseDirection, setPulseDirection] = useState<Direction>(defaults.pulseDirection);
   const [randomWalkSpreadCount, setRandomWalkSpreadCount] = useState(defaults.randomWalkSpreadCount);
   const [randomWalkMode, setRandomWalkMode] = useState<'any' | 'cardinal'>(defaults.randomWalkMode);
 
@@ -389,15 +391,29 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 let r_start = 0, r_end = currentRows, r_inc = 1;
                 let c_start = 0, c_end = currentCols, c_inc = 1;
 
-                if (direction === 'top-left') {
-                    r_start = currentRows - 1; r_end = -1; r_inc = -1;
-                    c_start = currentCols - 1; c_end = -1; c_inc = -1;
-                } else if (direction === 'top-right') {
-                    r_start = currentRows - 1; r_end = -1; r_inc = -1;
-                    c_start = 0; c_end = currentCols; c_inc = 1;
-                } else if (direction === 'bottom-left') {
-                    r_start = 0; r_end = currentRows; r_inc = 1;
-                    c_start = currentCols - 1; c_end = -1; c_inc = -1;
+                switch (direction) {
+                    case 'up':
+                        r_start = currentRows - 1; r_end = -1; r_inc = -1;
+                        break;
+                    case 'down':
+                        break;
+                    case 'left':
+                        c_start = currentCols - 1; c_end = -1; c_inc = -1;
+                        break;
+                    case 'right':
+                        break;
+                    case 'top-left':
+                        r_start = currentRows - 1; r_end = -1; r_inc = -1;
+                        c_start = currentCols - 1; c_end = -1; c_inc = -1;
+                        break;
+                    case 'top-right':
+                        r_start = currentRows - 1; r_end = -1; r_inc = -1;
+                        break;
+                    case 'bottom-left':
+                        c_start = currentCols - 1; c_end = -1; c_inc = -1;
+                        break;
+                    case 'bottom-right':
+                        break;
                 }
 
                 for (let r = r_start; r !== r_end; r += r_inc) {
@@ -486,10 +502,21 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
 
                             if (directionalBiasRef.current !== 'none' && Math.random() < directionalBiasStrengthRef.current) {
                                 const bias = directionalBiasRef.current;
-                                const biasedNeighbor = {
-                                    r: r + (bias === 'down' ? 1 : bias === 'up' ? -1 : 0),
-                                    c: c + (bias === 'right' ? 1 : bias === 'left' ? -1 : 0),
-                                };
+                                let dr = 0, dc = 0;
+                                
+                                switch (bias) {
+                                    case 'up':          dr = -1; dc =  0; break;
+                                    case 'down':        dr =  1; dc =  0; break;
+                                    case 'left':        dr =  0; dc = -1; break;
+                                    case 'right':       dr =  0; dc =  1; break;
+                                    case 'top-left':    dr = -1; dc = -1; break;
+                                    case 'top-right':   dr = -1; dc =  1; break;
+                                    case 'bottom-left': dr =  1; dc = -1; break;
+                                    case 'bottom-right':dr =  1; dc =  1; break;
+                                }
+        
+                                const biasedNeighbor = { r: r + dr, c: c + dc };
+                                
                                 if (biasedNeighbor.r >= 0 && biasedNeighbor.r < currentRows && biasedNeighbor.c >= 0 && biasedNeighbor.c < currentCols) {
                                     ng[biasedNeighbor.r][biasedNeighbor.c] = currentColor;
                                     continue;
@@ -1370,10 +1397,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                                 onChange={(e) => setPulseDirection(e.target.value as any)}
                                 style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
                             >
-                                <option value="bottom-right">From Bottom-Right</option>
-                                <option value="bottom-left">From Bottom-Left</option>
-                                <option value="top-right">From Top-Right</option>
-                                <option value="top-left">From Top-Left</option>
+                                <option value="up">Up</option>
+                                <option value="down">Down</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                                <option value="top-left">Top-Left</option>
+                                <option value="top-right">Top-Right</option>
+                                <option value="bottom-left">Bottom-Left</option>
+                                <option value="bottom-right">Bottom-Right</option>
                             </select>
                         </div>
                         <div style={{ fontWeight: 500, marginTop: '10px', fontSize: '0.85rem' }}>
@@ -1399,10 +1430,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                               onChange={(e) => setDirectionalBias(e.target.value as any)}
                               style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
                           >
-                              <option value="right">Right</option>
-                              <option value="left">Left</option>
-                              <option value="up">Up</option>
-                              <option value="down">Down</option>
+                                <option value="up">Up</option>
+                                <option value="down">Down</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                                <option value="top-left">Top-Left</option>
+                                <option value="top-right">Top-Right</option>
+                                <option value="bottom-left">Bottom-Left</option>
+                                <option value="bottom-right">Bottom-Right</option>
                           </select>
                       </div>
                       <div style={{ marginBottom: '8px' }}>
