@@ -597,7 +597,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           }}>
             
             <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Tool:</label>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {[
                   { label: 'Brush', value: 'brush' },
@@ -655,7 +654,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             </div>
 
             <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Colors:</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                 {colorPalette.slice(1).map((color, index) => (
                   <button
