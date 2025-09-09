@@ -776,22 +776,22 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     { 
                       label: autoSpreading ? 'Stop Spread' : 'Start Spread', 
                       onClick: toggleAutoSpread, 
-                      bg: autoSpreading ? '#dc2626' : '#374151',
+                      active: autoSpreading,
                       enabled: autoSpreadEnabled
                     },
                     { 
                       label: autoDots ? 'Stop Dots' : 'Start Dots', 
                       onClick: toggleAutoDots, 
-                      bg: autoDots ? '#dc2626' : '#374151',
+                      active: autoDots,
                       enabled: autoDotsEnabled
                     },
                     { 
                       label: autoShapes ? 'Stop Shapes' : 'Start Shapes', 
                       onClick: toggleAutoShapes, 
-                      bg: autoShapes ? '#dc2626' : '#374151',
+                      active: autoShapes,
                       enabled: autoShapesEnabled
                     }
-                  ].map(({ label, onClick, bg, enabled }) => (
+                  ].map(({ label, onClick, active, enabled }) => (
                     <button
                       key={label}
                       onClick={() => { onClick(); setIsSavingColor(false); }}
@@ -799,14 +799,16 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       style={{
                         padding: '6px 12px',
                         borderRadius: '6px',
-                        background: enabled ? bg : '#6b7280',
+                        background: enabled ? '#374151' : '#6b7280',
                         color: '#fff',
                         border: 'none',
                         cursor: enabled ? 'pointer' : 'not-allowed',
                         fontWeight: 'normal',
                         fontSize: '0.95rem',
                         whiteSpace: 'nowrap',
-                        opacity: enabled ? 1 : 0.6
+                        opacity: enabled ? 1 : 0.6,
+                        boxShadow: active ? '0 0 8px rgba(78, 205, 196, 0.7)' : 'none',
+                        transition: 'box-shadow 0.2s ease-in-out'
                       }}
                     >
                       {label}
