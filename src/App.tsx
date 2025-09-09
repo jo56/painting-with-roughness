@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-const GRID_COLOR = '#1f2937';
+const GRID_COLOR = '#27272a';
 
 function createEmptyGrid(rows: number, cols: number): number[][] {
   const g: number[][] = [];
@@ -29,7 +29,7 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
             <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>{label}:</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                 {numbers.map(num => (
-                    <label key={num} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: '#374151', padding: '4px 8px', borderRadius: '4px', userSelect: 'none' }}>
+                    <label key={num} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: '#404040', padding: '4px 8px', borderRadius: '4px', userSelect: 'none' }}>
                         <input
                             type="checkbox"
                             checked={rules.includes(num)}
@@ -45,7 +45,7 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
 }
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion';
+type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion' | 'flow' | 'jitter' | 'vortex' | 'strobe' | 'scramble' | 'ripple';
 
 export default function ModularSettingsPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -60,12 +60,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const shapesRunningRef = useRef(false);
   const pressedKeys = useRef(new Set<string>());
   const walkers = useRef<{r: number, c: number, color: number}[]>([]);
+  const strobeStateRef = useRef(true); // true: expand, false: contract
+  const ripplesRef = useRef<{r: number, c: number, color: number, radius: number, maxRadius: number}[]>([]);
 
   const defaults = {
     cellSize: 20,
     rows: 30,
     cols: 40,
-    showGrid: true,
+    showGrid: false,
     backgroundColor: '#0a0a0a',
     brushSize: 1,
     selectedColor: 1,
@@ -77,7 +79,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     spreadPattern: 'random' as SpreadPattern,
     pulseSpeed: 10,
     pulseOvertakes: true,
-    pulseDirection: 'down' as Direction,
+    pulseDirection: 'bottom-right' as Direction,
     directionalBias: 'bottom-right' as Direction,
     conwayRules: { born: [3], survive: [2,3] },
     tendrilsRules: { born: [1], survive: [1,2] },
@@ -89,6 +91,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     crystallizeThreshold: 2,
     erosionRate: 0.5,
     erosionSolidity: 3,
+    flowDirection: 'down' as Direction,
+    flowChance: 0.5,
+    jitterChance: 0.3,
+    vortexCount: 5,
+    strobeExpandThreshold: 2,
+    strobeContractThreshold: 3,
+    scrambleSwaps: 10,
+    rippleChance: 0.05,
   };
 
   const [palette, setPalette] = useState([
@@ -123,7 +133,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
   const [showStepControls, setShowStepControls] = useState(false);
   const [showAutoControls, setShowAutoControls] = useState(true);
-  const [showOptions, setShowOptions] = useState(false);
+  const [showOptions, setShowOptions] = useState(true);
   const [customColor, setCustomColor] = useState('#ffffff');
   const [isSavingColor, setIsSavingColor] = useState(false);
   const [generativeColorIndices, setGenerativeColorIndices] = useState(() => palette.slice(1).map((_, index) => index + 1));
@@ -142,6 +152,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [crystallizeThreshold, setCrystallizeThreshold] = useState(defaults.crystallizeThreshold);
   const [erosionRate, setErosionRate] = useState(defaults.erosionRate);
   const [erosionSolidity, setErosionSolidity] = useState(defaults.erosionSolidity);
+  const [flowDirection, setFlowDirection] = useState<Direction>(defaults.flowDirection);
+  const [flowChance, setFlowChance] = useState(defaults.flowChance);
+  const [jitterChance, setJitterChance] = useState(defaults.jitterChance);
+  const [vortexCount, setVortexCount] = useState(defaults.vortexCount);
+  const [strobeExpandThreshold, setStrobeExpandThreshold] = useState(defaults.strobeExpandThreshold);
+  const [strobeContractThreshold, setStrobeContractThreshold] = useState(defaults.strobeContractThreshold);
+  const [scrambleSwaps, setScrambleSwaps] = useState(defaults.scrambleSwaps);
+  const [rippleChance, setRippleChance] = useState(defaults.rippleChance);
 
   const generativeColorIndicesRef = useRef(generativeColorIndices);
   const spreadProbabilityRef = useRef(spreadProbability);
@@ -165,6 +183,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const crystallizeThresholdRef = useRef(crystallizeThreshold);
   const erosionRateRef = useRef(erosionRate);
   const erosionSolidityRef = useRef(erosionSolidity);
+  const flowDirectionRef = useRef(flowDirection);
+  const flowChanceRef = useRef(flowChance);
+  const jitterChanceRef = useRef(jitterChance);
+  const vortexCountRef = useRef(vortexCount);
+  const strobeExpandThresholdRef = useRef(strobeExpandThreshold);
+  const strobeContractThresholdRef = useRef(strobeContractThreshold);
+  const scrambleSwapsRef = useRef(scrambleSwaps);
+  const rippleChanceRef = useRef(rippleChance);
   
   useEffect(() => { spreadProbabilityRef.current = spreadProbability; }, [spreadProbability]);
   useEffect(() => { autoSpreadSpeedRef.current = autoSpreadSpeed; }, [autoSpreadSpeed]);
@@ -188,6 +214,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   useEffect(() => { crystallizeThresholdRef.current = crystallizeThreshold; }, [crystallizeThreshold]);
   useEffect(() => { erosionRateRef.current = erosionRate; }, [erosionRate]);
   useEffect(() => { erosionSolidityRef.current = erosionSolidity; }, [erosionSolidity]);
+  useEffect(() => { flowDirectionRef.current = flowDirection; }, [flowDirection]);
+  useEffect(() => { flowChanceRef.current = flowChance; }, [flowChance]);
+  useEffect(() => { jitterChanceRef.current = jitterChance; }, [jitterChance]);
+  useEffect(() => { vortexCountRef.current = vortexCount; }, [vortexCount]);
+  useEffect(() => { strobeExpandThresholdRef.current = strobeExpandThreshold; }, [strobeExpandThreshold]);
+  useEffect(() => { strobeContractThresholdRef.current = strobeContractThreshold; }, [strobeContractThreshold]);
+  useEffect(() => { scrambleSwapsRef.current = scrambleSwaps; }, [scrambleSwaps]);
+  useEffect(() => { rippleChanceRef.current = rippleChance; }, [rippleChance]);
 
 
   const isDragging = useRef(false);
@@ -225,10 +259,15 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         else if (keys.has('KeyD')) newDirection = 'right';
         
         if (newDirection) {
-            if (spreadPattern === 'pulse') {
+            const isDiagonal = newDirection.includes('-');
+            const isCardinal = !isDiagonal;
+
+            if (spreadPattern === 'pulse' && isDiagonal) {
                 setPulseDirection(newDirection);
             } else if (spreadPattern === 'directional') {
                 setDirectionalBias(newDirection);
+            } else if (spreadPattern === 'flow' && isCardinal) {
+                setFlowDirection(newDirection);
             }
         }
     };
@@ -239,7 +278,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     const relevantCodes = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
 
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (!showGenerativeSettings || (spreadPattern !== 'pulse' && spreadPattern !== 'directional')) {
+        if (!showGenerativeSettings || (spreadPattern !== 'pulse' && spreadPattern !== 'directional' && spreadPattern !== 'flow')) {
             return;
         }
 
@@ -265,7 +304,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [showGenerativeSettings, spreadPattern, setPulseDirection, setDirectionalBias]);
+  }, [showGenerativeSettings, spreadPattern, setPulseDirection, setDirectionalBias, setFlowDirection]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -420,6 +459,244 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         let ng = cloneGrid(g);
 
         switch (pattern) {
+            case 'ripple': {
+                // Update existing ripples
+                ripplesRef.current.forEach(ripple => {
+                    const r = Math.round(ripple.radius);
+                    for (let i = 0; i < 360; i += 5) {
+                        const angle = i * Math.PI / 180;
+                        const nr = Math.round(ripple.r + r * Math.sin(angle));
+                        const nc = Math.round(ripple.c + r * Math.cos(angle));
+                        if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && ng[nr][nc] === 0) {
+                            ng[nr][nc] = ripple.color;
+                        }
+                    }
+                    ripple.radius += 0.5;
+                });
+                
+                // Filter out old ripples
+                ripplesRef.current = ripplesRef.current.filter(r => r.radius <= r.maxRadius);
+
+                // Create new ripples
+                const chance = rippleChanceRef.current;
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        if (g[r][c] > 0 && Math.random() < chance) {
+                            ripplesRef.current.push({
+                                r, c, color: g[r][c], radius: 1, maxRadius: Math.max(currentRows, currentCols) / 3
+                            });
+                        }
+                    }
+                }
+                break;
+            }
+            case 'scramble': {
+                const coloredCells: {r: number, c: number, color: number}[] = [];
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        if (g[r][c] > 0) {
+                            coloredCells.push({r, c, color: g[r][c]});
+                        }
+                    }
+                }
+                if (coloredCells.length < 2) break;
+
+                const swaps = Math.min(scrambleSwapsRef.current, Math.floor(coloredCells.length / 2));
+                for (let i = 0; i < swaps; i++) {
+                    const idx1 = Math.floor(Math.random() * coloredCells.length);
+                    let idx2 = Math.floor(Math.random() * coloredCells.length);
+                    while (idx1 === idx2) {
+                        idx2 = Math.floor(Math.random() * coloredCells.length);
+                    }
+                    const cell1 = coloredCells[idx1];
+                    const cell2 = coloredCells[idx2];
+                    
+                    if (cell1 && cell2) {
+                        const color1 = ng[cell1.r][cell1.c];
+                        const color2 = ng[cell2.r][cell2.c];
+                        ng[cell1.r][cell1.c] = color2;
+                        ng[cell2.r][cell2.c] = color1;
+                    }
+                }
+                break;
+            }
+            case 'vortex': {
+                const count = vortexCountRef.current;
+                for (let i = 0; i < count; i++) {
+                    const r = 1 + Math.floor(Math.random() * (currentRows - 2));
+                    const c = 1 + Math.floor(Math.random() * (currentCols - 2));
+                    
+                    const neighborsCoords = [
+                        [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
+                        [r, c + 1], [r + 1, c + 1], [r + 1, c],
+                        [r + 1, c - 1], [r, c - 1]
+                    ];
+                    
+                    const originalColors = neighborsCoords.map(([nr, nc]) => g[nr][nc]);
+                    
+                    // Clockwise rotation
+                    neighborsCoords.forEach(([nr, nc], idx) => {
+                        const sourceIndex = (idx + 7) % 8; // (idx - 1 + 8) % 8
+                        ng[nr][nc] = originalColors[sourceIndex];
+                    });
+                }
+                break;
+            }
+            case 'strobe': {
+                strobeStateRef.current = !strobeStateRef.current;
+            
+                if (strobeStateRef.current) { // EXPAND
+                    const expandThreshold = strobeExpandThresholdRef.current;
+                    const locationsToColor = new Map<string, number>();
+                    for (let r = 0; r < currentRows; r++) {
+                        for (let c = 0; c < currentCols; c++) {
+                            if (g[r][c] === 0) {
+                                const neighborColors: number[] = [];
+                                for (let dr = -1; dr <= 1; dr++) {
+                                    for (let dc = -1; dc <= 1; dc++) {
+                                        if (dr === 0 && dc === 0) continue;
+                                        const nr = r + dr, nc = c + dc;
+                                        if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] > 0) {
+                                            neighborColors.push(g[nr][nc]);
+                                        }
+                                    }
+                                }
+            
+                                if (neighborColors.length >= expandThreshold) {
+                                    const colorCounts = neighborColors.reduce((acc, color) => {
+                                        acc[color] = (acc[color] || 0) + 1;
+                                        return acc;
+                                    }, {} as Record<number, number>);
+                                    
+                                    let dominantColor = 0;
+                                    let maxCount = 0;
+                                    for (const color in colorCounts) {
+                                        if (colorCounts[color] > maxCount) {
+                                            maxCount = colorCounts[color];
+                                            dominantColor = parseInt(color);
+                                        }
+                                    }
+                                    if(dominantColor > 0) {
+                                        locationsToColor.set(`${r},${c}`, dominantColor);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    locationsToColor.forEach((color, key) => {
+                        const [r, c] = key.split(',').map(Number);
+                        ng[r][c] = color;
+                    });
+            
+                } else { // CONTRACT
+                    const contractThreshold = strobeContractThresholdRef.current;
+                    for (let r = 0; r < currentRows; r++) {
+                        for (let c = 0; c < currentCols; c++) {
+                            if (g[r][c] > 0) {
+                                let emptyNeighbors = 0;
+                                for (let dr = -1; dr <= 1; dr++) {
+                                    for (let dc = -1; dc <= 1; dc++) {
+                                        if (dr === 0 && dc === 0) continue;
+                                        const nr = r + dr, nc = c + dc;
+                                        if (nr < 0 || nr >= currentRows || nc < 0 || nc >= currentCols || g[nr][nc] === 0) {
+                                            emptyNeighbors++;
+                                        }
+                                    }
+                                }
+                                if (emptyNeighbors >= contractThreshold) {
+                                    ng[r][c] = 0;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            case 'jitter': {
+                const changes = new Map<string, number>();
+                const empties = new Set<string>();
+                const chance = jitterChanceRef.current;
+
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        const color = g[r]?.[c];
+                        if (color > 0 && Math.random() < chance) {
+                            const emptyNeighbors = [];
+                            for (let dr = -1; dr <= 1; dr++) {
+                                for (let dc = -1; dc <= 1; dc++) {
+                                    if (dr === 0 && dc === 0) continue;
+                                    const nr = r + dr, nc = c + dc;
+                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] === 0) {
+                                        emptyNeighbors.push({nr, nc});
+                                    }
+                                }
+                            }
+                            if (emptyNeighbors.length > 0) {
+                                const target = emptyNeighbors[Math.floor(Math.random() * emptyNeighbors.length)];
+                                const key = `${target.nr},${target.nc}`;
+                                if (!changes.has(key) && !empties.has(`${r},${c}`)) {
+                                    changes.set(key, color);
+                                    empties.add(`${r},${c}`);
+                                }
+                            }
+                        }
+                    }
+                }
+                 empties.forEach(key => {
+                    const [r, c] = key.split(',').map(Number);
+                    if (!changes.has(key)) ng[r][c] = 0;
+                });
+                changes.forEach((color, key) => {
+                    const [r, c] = key.split(',').map(Number);
+                    ng[r][c] = color;
+                });
+                break;
+            }
+            case 'flow': {
+                const changes = new Map<string, number>();
+                const empties = new Set<string>();
+                const dir = flowDirectionRef.current;
+                const chance = flowChanceRef.current;
+                
+                let r_start = 0, r_end = currentRows, r_inc = 1;
+                let c_start = 0, c_end = currentCols, c_inc = 1;
+        
+                if (dir.includes('down')) { r_start = currentRows - 1; r_end = -1; r_inc = -1; }
+                if (dir.includes('right')) { c_start = currentCols - 1; c_end = -1; c_inc = -1; }
+        
+                for (let r = r_start; r !== r_end; r += r_inc) {
+                    for (let c = c_start; c !== c_end; c += c_inc) {
+                        const color = g[r]?.[c];
+                        if (color > 0 && Math.random() < chance) {
+                            let dr = 0, dc = 0;
+                            if (dir.includes('up')) dr = -1;
+                            if (dir.includes('down')) dr = 1;
+                            if (dir.includes('left')) dc = -1;
+                            if (dir.includes('right')) dc = 1;
+        
+                            const nr = r + dr;
+                            const nc = c + dc;
+        
+                            if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] === 0) {
+                                if (!changes.has(`${nr},${nc}`)) {
+                                    changes.set(`${nr},${nc}`, color);
+                                    empties.add(`${r},${c}`);
+                                }
+                            }
+                        }
+                    }
+                }
+        
+                empties.forEach(key => {
+                    const [r, c] = key.split(',').map(Number);
+                    if (!changes.has(key)) ng[r][c] = 0;
+                });
+                changes.forEach((color, key) => {
+                    const [r, c] = key.split(',').map(Number);
+                    ng[r][c] = color;
+                });
+                break;
+            }
             case 'vein': {
                 if (walkers.current.length === 0) {
                     for(let r = 0; r < currentRows; r++) {
@@ -849,9 +1126,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     runningRef.current = !runningRef.current;
     setAutoSpreading(runningRef.current);
     if (runningRef.current) {
-      if (spreadPatternRef.current === 'vein') {
-        walkers.current = []; // Reset walkers when starting
-      }
+      if (spreadPatternRef.current === 'vein') walkers.current = [];
+      if (spreadPatternRef.current === 'strobe') strobeStateRef.current = true;
+      if (spreadPatternRef.current === 'ripple') ripplesRef.current = [];
       runAutoSpread();
     } else if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
@@ -1026,6 +1303,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     setCrystallizeThreshold(defaults.crystallizeThreshold);
     setErosionRate(defaults.erosionRate);
     setErosionSolidity(defaults.erosionSolidity);
+    setFlowDirection(defaults.flowDirection);
+    setFlowChance(defaults.flowChance);
+    setJitterChance(defaults.jitterChance);
+    setVortexCount(defaults.vortexCount);
+    setStrobeExpandThreshold(defaults.strobeExpandThreshold);
+    setStrobeContractThreshold(defaults.strobeContractThreshold);
+    setScrambleSwaps(defaults.scrambleSwaps);
+    setRippleChance(defaults.rippleChance);
   };
 
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
@@ -1034,8 +1319,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   return (
     <div style={{
       width: '100%',
-      height: '100vh',
-      background: '#111827',
+      minHeight: '100vh',
+      background: 'black',
       display: 'flex',
       flexDirection: isMobile ? 'column' : 'row',
       alignItems: 'flex-start',
@@ -1063,7 +1348,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           top: isMobile ? undefined : panelPos.y,
           left: isMobile ? undefined : panelPos.x,
           margin: isMobile ? '0 auto' : undefined,
-          background: 'rgba(17,24,39,0.95)',
+          background: 'rgba(39, 39, 42, 0.95)',
           padding: '12px',
           borderRadius: '10px',
           width: isMobile ? 'calc(100% - 20px)': 'auto',
@@ -1076,18 +1361,16 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           onMouseDown={handleHeaderMouseDown}
           style={{
             fontWeight: 500,
-            textAlign: 'center',
             marginBottom: '12px',
             cursor: 'move',
             padding: '4px',
-            background: 'rgba(55,65,81,0.8)',
+            background: 'rgba(63, 63, 70, 0.8)',
             borderRadius: '6px',
             fontSize: '1rem',
             userSelect: 'none',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            position: 'relative',
           }}
         >
           <span>Modular Paint Studio</span>
@@ -1098,17 +1381,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               border: 'none',
               color: '#fff',
               cursor: 'pointer',
-              fontSize: '1rem',
+              fontSize: '1.2rem',
               width: '24px',
               height: '24px',
-              padding: 0,
               display: 'flex',
-              justifyContent: 'center',
               alignItems: 'center',
-              position: 'absolute',
-              right: '4px',
-              top: '50%',
-              transform: 'translateY(-50%)'
+              justifyContent: 'center',
+              padding: '0',
+              marginLeft: '4px',
             }}
           >
             {panelMinimized ? '+' : '-'}
@@ -1139,7 +1419,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
-                      background: tool === value ? '#06b6d4' : '#374151',
+                      background: tool === value ? '#52525b' : '#3a3a3c',
                       color: '#fff',
                       border: 'none',
                       cursor: 'pointer',
@@ -1155,7 +1435,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   style={{
                     padding: '6px 12px',
                     borderRadius: '6px',
-                    background: showAutoControls ? '#059669' : '#374151',
+                    background: showAutoControls ? '#52525b' : '#3a3a3c',
                     color: '#fff',
                     border: 'none',
                     cursor: 'pointer',
@@ -1170,7 +1450,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   style={{
                     padding: '6px 12px',
                     borderRadius: '6px',
-                    background: showOptions ? '#059669' : '#374151',
+                    background: showOptions ? '#52525b' : '#3a3a3c',
                     color: '#fff',
                     border: 'none',
                     cursor: 'pointer',
@@ -1185,7 +1465,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   style={{
                     padding: '6px 12px',
                     borderRadius: '6px',
-                    background: '#374151',
+                    background: '#3a3a3c',
                     color: '#fff',
                     border: 'none',
                     cursor: 'pointer',
@@ -1213,7 +1493,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
                       borderRadius: '6px',
                       cursor: 'pointer',
-                      outline: isSavingColor ? '2px dashed #059669' : 'none',
+                      outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
                       outlineOffset: '2px',
                       transition: 'outline 0.2s'
                       }}
@@ -1264,7 +1544,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                         padding: '6px 0',
                         height: '32px',
                         borderRadius: '6px',
-                        background: isSavingColor ? '#f59e0b' : '#374151',
+                        background: isSavingColor ? '#54a0ff' : '#3a3a3c',
                         color: '#fff',
                         border: 'none',
                         cursor: 'pointer',
@@ -1292,17 +1572,19 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       padding: '6px 12px',
                       borderRadius: '6px',
                       background: autoSpreading 
-                        ? '#dc2626' 
+                        ? '#3a3a3c' 
                         : autoSpreadEnabled 
-                          ? '#16a34a' 
-                          : '#6b7280',
+                          ? '#3a3a3c' 
+                          : '#52525b',
                       color: '#fff',
                       border: 'none',
                       cursor: autoSpreadEnabled ? 'pointer' : 'not-allowed',
-                      fontWeight: 600,
+                      fontWeight: 'normal',
                       fontSize: '0.95rem',
                       whiteSpace: 'nowrap',
-                      opacity: autoSpreadEnabled ? 1 : 0.6
+                      opacity: autoSpreadEnabled ? 1 : 0.6,
+                      boxShadow: autoSpreading ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
+                      transition: 'box-shadow 0.2s ease-in-out'
                     }}
                   >
                     {autoSpreading ? 'Stop Spread' : 'Start Spread'}
@@ -1328,7 +1610,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       style={{
                         padding: '6px 12px',
                         borderRadius: '6px',
-                        background: enabled ? '#374151' : '#6b7280',
+                        background: enabled ? '#3a3a3c' : '#52525b',
                         color: '#fff',
                         border: 'none',
                         cursor: enabled ? 'pointer' : 'not-allowed',
@@ -1336,7 +1618,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                         fontSize: '0.95rem',
                         whiteSpace: 'nowrap',
                         opacity: enabled ? 1 : 0.6,
-                        boxShadow: active ? '0 0 8px rgba(78, 205, 196, 0.7)' : 'none',
+                        boxShadow: active ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
                         transition: 'box-shadow 0.2s ease-in-out'
                       }}
                     >
@@ -1349,7 +1631,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
-                      background: anyEnabled || isAnyRunning ? '#374151' : '#6b7280',
+                      background: anyEnabled || isAnyRunning ? '#3a3a3c' : '#52525b',
                       color: '#fff',
                       border: 'none',
                       cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
@@ -1357,7 +1639,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       fontSize: '0.95rem',
                       whiteSpace: 'nowrap',
                       opacity: anyEnabled || isAnyRunning ? 1 : 0.6,
-                      boxShadow: isAnyRunning ? '0 0 8px rgba(78, 205, 196, 0.7)' : 'none',
+                      boxShadow: isAnyRunning ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
                       transition: 'box-shadow 0.2s ease-in-out'
                     }}
                   >
@@ -1370,11 +1652,11 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             {showOptions && (
               <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#059669' : '#374151' },
-                  { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#059669' : '#374151' },
-                  { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#059669' : '#374151' },
-                  { label: 'Generative', onClick: () => setShowGenerativeSettings(prev => !prev), bg: showGenerativeSettings ? '#059669' : '#374151' },
-                  { label: 'Steps', onClick: () => setShowStepControls(prev => !prev), bg: showStepControls ? '#059669' : '#374151' }
+                  { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#52525b' : '#3a3a3c' },
+                  { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#52525b' : '#3a3a3c' },
+                  { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#52525b' : '#3a3a3c' },
+                  { label: 'Generative', onClick: () => setShowGenerativeSettings(prev => !prev), bg: showGenerativeSettings ? '#52525b' : '#3a3a3c' },
+                  { label: 'Steps', onClick: () => setShowStepControls(prev => !prev), bg: showStepControls ? '#52525b' : '#3a3a3c' }
                 ].map(({ label, onClick, bg }) => (
                   <button
                     key={label}
@@ -1410,7 +1692,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
-                      background: '#374151',
+                      background: '#3a3a3c',
                       color: '#fff',
                       border: 'none',
                       cursor: 'pointer',
@@ -1439,9 +1721,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     </label>
                     {[
                       ['Spread Rate', spreadProbability, 0, 1, 0.01, setSpreadProbability, '%'],
-                      ['Spread Speed', autoSpreadSpeed, 0.25, 20, 0.25, setAutoSpreadSpeed, '/s'],
-                      ['Dots Speed', autoDotsSpeed, 0.1, 10, 0.1, setAutoDotsSpeed, '/s'],
-                      ['Shapes Speed', autoShapesSpeed, 0.1, 5, 0.1, setAutoShapesSpeed, '/s']
+                      ['Spread Speed', autoSpreadSpeed, 0.25, 100, 0.25, setAutoSpreadSpeed, '/s'],
+                      ['Dots Speed', autoDotsSpeed, 0.1, 100, 0.1, setAutoDotsSpeed, '/s'],
+                      ['Shapes Speed', autoShapesSpeed, 0.1, 100, 0.1, setAutoShapesSpeed, '/s']
                     ].map(([label, value, min, max, step, setter, unit], idx) => (
                       <div key={idx} style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
@@ -1470,10 +1752,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       Canvas Settings
                     </label>
                     {[
-                      ['Brush Size', brushSize, 1, 10, 1, setBrushSize, ''],
-                      ['Cell Size', cellSize, 5, 50, 1, setCellSize, ' px'],
-                      ['Rows', rows, 10, 100, 1, handleRowsChange, ''],
-                      ['Cols', cols, 10, 100, 1, handleColsChange, '']
+                      ['Brush Size', brushSize, 1, 20, 1, setBrushSize, ''],
+                      ['Cell Size', cellSize, 1, 30, 1, setCellSize, ' px'],
+                      ['Rows', rows, 10, 2000, 1, handleRowsChange, ''],
+                      ['Cols', cols, 10, 2000, 1, handleColsChange, '']
                     ].map(([label, value, min, max, step, setter, unit], idx) => (
                       <div key={idx} style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
@@ -1512,7 +1794,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       style={{ 
                         padding: '4px 8px', 
                         borderRadius: '6px', 
-                        background: '#374151', 
+                        background: '#3a3a3c', 
                         color: '#fff', 
                         border: 'none',
                         width: '100%'
@@ -1526,6 +1808,12 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       <option value="vein">Vein Growth</option>
                       <option value="crystallize">Crystallize</option>
                       <option value="erosion">Erosion</option>
+                      <option value="flow">Flow</option>
+                      <option value="jitter">Jitter</option>
+                      <option value="vortex">Vortex</option>
+                      <option value="strobe">Strobe</option>
+                      <option value="scramble">Scramble</option>
+                      <option value="ripple">Ripple</option>
                     </select>
                   </div>
                    <button
@@ -1533,7 +1821,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
-                      background: '#374151',
+                      background: '#3a3a3c',
                       color: '#fff',
                       border: 'none',
                       cursor: 'pointer',
@@ -1546,8 +1834,100 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   </button>
                 </div>
                 
+                {spreadPattern === 'ripple' && (
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Ripple Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(rippleChance*100)}%</span>
+                          </div>
+                          <input type="range" min={0.01} max={0.5} step={0.01} value={rippleChance} onChange={(e) => setRippleChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+
+                {spreadPattern === 'scramble' && (
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Swaps per Step:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{scrambleSwaps}</span>
+                          </div>
+                          <input type="range" min={1} max={100} value={scrambleSwaps} onChange={(e) => setScrambleSwaps(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+                
+                {spreadPattern === 'vortex' && (
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Vortex Count:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{vortexCount}</span>
+                          </div>
+                          <input type="range" min={1} max={50} value={vortexCount} onChange={(e) => setVortexCount(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+
+                {spreadPattern === 'strobe' && (
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                      <div style={{ marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Expand Threshold:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{strobeExpandThreshold} Neighbors</span>
+                          </div>
+                          <input type="range" min={1} max={8} value={strobeExpandThreshold} onChange={(e) => setStrobeExpandThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Contract Threshold:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{strobeContractThreshold} Neighbors</span>
+                          </div>
+                          <input type="range" min={1} max={8} value={strobeContractThreshold} onChange={(e) => setStrobeContractThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+                
+                {spreadPattern === 'jitter' && (
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Jitter Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(jitterChance*100)}%</span>
+                          </div>
+                          <input type="range" min={0} max={1} step={0.05} value={jitterChance} onChange={(e) => setJitterChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+                
+                {spreadPattern === 'flow' && (
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                      <div style={{ marginBottom: '10px' }}>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
+                          <select
+                              value={flowDirection}
+                              onChange={(e) => setFlowDirection(e.target.value as any)}
+                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
+                          >
+                              <option value="down">Down</option>
+                              <option value="up">Up</option>
+                              <option value="left">Left</option>
+                              <option value="right">Right</option>
+                          </select>
+                      </div>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Flow Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(flowChance*100)}%</span>
+                          </div>
+                          <input type="range" min={0} max={1} step={0.05} value={flowChance} onChange={(e) => setFlowChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+
                 {spreadPattern === 'vein' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                     <div style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                           <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Seek Strength:</label>
@@ -1566,7 +1946,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'crystallize' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                           <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Growth Threshold:</label>
@@ -1578,7 +1958,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
                 
                 {spreadPattern === 'erosion' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                      <div style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                           <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Erosion Rate:</label>
@@ -1597,13 +1977,13 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'random' && (
-                    <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                         <div style={{ marginBottom: '10px' }}>
                             <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Walk Mode:</label>
                             <select
                                 value={randomWalkMode}
                                 onChange={(e) => setRandomWalkMode(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
                             >
                                 <option value="any">8 Directions (Any)</option>
                                 <option value="cardinal">4 Directions (Cardinal)</option>
@@ -1624,7 +2004,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'conway' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                     <RuleEditor label="Survive Counts" rules={conwayRules.survive} onChange={(newSurvive) => setConwayRules(r => ({ ...r, survive: newSurvive }))} />
 
                     <RuleEditor label="Birth Counts" rules={conwayRules.born} onChange={(newBorn) => setConwayRules(r => ({ ...r, born: newBorn }))} />
@@ -1632,7 +2012,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
                 
                 {spreadPattern === 'tendrils' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                      <RuleEditor label="Survive Counts" rules={tendrilsRules.survive} onChange={(newSurvive) => setTendrilsRules(r => ({ ...r, survive: newSurvive }))} />
 
                      <RuleEditor label="Birth Counts" rules={tendrilsRules.born} onChange={(newBorn) => setTendrilsRules(r => ({ ...r, born: newBorn }))} />
@@ -1640,7 +2020,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
                 
                 {spreadPattern === 'pulse' && (
-                    <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                         <div style={{ marginBottom: '8px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                             <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Pulse Speed:</label>
@@ -1657,12 +2037,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                             <select
                                 value={pulseDirection}
                                 onChange={(e) => setPulseDirection(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
                             >
-                                <option value="up">Up</option>
-                                <option value="down">Down</option>
-                                <option value="left">Left</option>
-                                <option value="right">Right</option>
                                 <option value="top-left">Top-Left</option>
                                 <option value="top-right">Top-Right</option>
                                 <option value="bottom-left">Bottom-Left</option>
@@ -1684,13 +2060,13 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'directional' && (
-                    <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                       <div style={{ marginBottom: '10px' }}>
                           <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Bias Direction:</label>
                           <select
                               value={directionalBias}
                               onChange={(e) => setDirectionalBias(e.target.value as any)}
-                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
                           >
                                 <option value="up">Up</option>
                                 <option value="down">Down</option>
@@ -1732,7 +2108,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                                     cursor: 'pointer',
                                     padding: '2px',
                                     borderRadius: '6px',
-                                    outline: isSavingColor ? '2px dashed #059669' : 'none',
+                                    outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
                                     outlineOffset: '2px',
                                     transition: 'outline 0.2s',
                                 }}
@@ -1774,7 +2150,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     style={{ 
                       padding: '4px 8px', 
                       borderRadius: '6px', 
-                      background: '#374151', 
+                      background: '#3a3a3c', 
                       color: '#fff', 
                       border: 'none',
                       width: '100%'
