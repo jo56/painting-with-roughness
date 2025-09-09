@@ -14,7 +14,7 @@ function cloneGrid(grid: number[][]): number[][] {
   return grid.map(row => [...row]);
 }
 
-export default function InfinitePaintStudio(): JSX.Element {
+export default function MasterControlPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -61,6 +61,9 @@ export default function InfinitePaintStudio(): JSX.Element {
   const [autoSpreading, setAutoSpreading] = useState(false);
   const [autoDots, setAutoDots] = useState(false);
   const [autoShapes, setAutoShapes] = useState(false);
+  const [autoSpreadEnabled, setAutoSpreadEnabled] = useState(true);
+  const [autoDotsEnabled, setAutoDotsEnabled] = useState(true);
+  const [autoShapesEnabled, setAutoShapesEnabled] = useState(true);
   const [blendMode, setBlendMode] = useState(defaults.blendMode);
   const [tool, setTool] = useState('brush');
   const [panelMinimized, setPanelMinimized] = useState(false);
@@ -399,6 +402,50 @@ export default function InfinitePaintStudio(): JSX.Element {
     }
   };
 
+  const startAllEnabled = () => {
+    // Start all enabled auto modes
+    if (autoSpreadEnabled && !autoSpreading) {
+      runningRef.current = true;
+      setAutoSpreading(true);
+      runAutoSpread();
+    }
+    if (autoDotsEnabled && !autoDots) {
+      dotsRunningRef.current = true;
+      setAutoDots(true);
+      runAutoDots();
+    }
+    if (autoShapesEnabled && !autoShapes) {
+      shapesRunningRef.current = true;
+      setAutoShapes(true);
+      runAutoShapes();
+    }
+  };
+
+  const stopAll = () => {
+    // Stop all running auto modes
+    if (autoSpreading) {
+      runningRef.current = false;
+      setAutoSpreading(false);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    }
+    if (autoDots) {
+      dotsRunningRef.current = false;
+      setAutoDots(false);
+      if (autoDotsRef.current) {
+        cancelAnimationFrame(autoDotsRef.current);
+      }
+    }
+    if (autoShapes) {
+      shapesRunningRef.current = false;
+      setAutoShapes(false);
+      if (autoShapesRef.current) {
+        cancelAnimationFrame(autoShapesRef.current);
+      }
+    }
+  };
+
   const handleHeaderMouseDown = (e: React.MouseEvent) => {
     if (isMobile) return;
     isDragging.current = true;
@@ -460,6 +507,9 @@ export default function InfinitePaintStudio(): JSX.Element {
     }));
   };
 
+  const isAnyRunning = autoSpreading || autoDots || autoShapes;
+  const anyEnabled = autoSpreadEnabled || autoDotsEnabled || autoShapesEnabled;
+
   return (
     <div style={{
       width: '100%',
@@ -515,7 +565,7 @@ export default function InfinitePaintStudio(): JSX.Element {
             alignItems: 'center'
           }}
         >
-          <span>Infinite Paint Studio</span>
+          <span>Master Control Paint Studio</span>
           <button
             onClick={() => setPanelMinimized(prev => !prev)}
             style={{
@@ -591,37 +641,95 @@ export default function InfinitePaintStudio(): JSX.Element {
               </div>
             </div>
 
+            {/* Master Control Button */}
+            <div style={{ marginBottom: '12px' }}>
+              <button
+                onClick={isAnyRunning ? stopAll : startAllEnabled}
+                disabled={!anyEnabled && !isAnyRunning}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  background: isAnyRunning ? '#dc2626' : anyEnabled ? '#16a34a' : '#6b7280',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  width: '100%'
+                }}
+              >
+                {isAnyRunning ? 'STOP ALL' : 'START ALL ENABLED'}
+              </button>
+            </div>
+
+            {/* Enable/Disable Checkboxes */}
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Enable Auto Modes:</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+                  <input
+                    type="checkbox"
+                    checked={autoSpreadEnabled}
+                    onChange={(e) => setAutoSpreadEnabled(e.target.checked)}
+                  />
+                  Auto Spread
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+                  <input
+                    type="checkbox"
+                    checked={autoDotsEnabled}
+                    onChange={(e) => setAutoDotsEnabled(e.target.checked)}
+                  />
+                  Auto Dots
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+                  <input
+                    type="checkbox"
+                    checked={autoShapesEnabled}
+                    onChange={(e) => setAutoShapesEnabled(e.target.checked)}
+                  />
+                  Auto Shapes
+                </label>
+              </div>
+            </div>
+
+            {/* Individual Control Buttons */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
                 { 
-                  label: autoSpreading ? 'Stop Spread' : 'Auto Spread', 
+                  label: autoSpreading ? 'Stop Spread' : 'Start Spread', 
                   onClick: toggleAutoSpread, 
-                  bg: autoSpreading ? '#dc2626' : '#16a34a' 
+                  bg: autoSpreading ? '#dc2626' : '#16a34a',
+                  enabled: autoSpreadEnabled
                 },
                 { 
-                  label: autoDots ? 'Stop Dots' : 'Auto Dots', 
+                  label: autoDots ? 'Stop Dots' : 'Start Dots', 
                   onClick: toggleAutoDots, 
-                  bg: autoDots ? '#dc2626' : '#f59e0b' 
+                  bg: autoDots ? '#dc2626' : '#f59e0b',
+                  enabled: autoDotsEnabled
                 },
                 { 
-                  label: autoShapes ? 'Stop Shapes' : 'Auto Shapes', 
+                  label: autoShapes ? 'Stop Shapes' : 'Start Shapes', 
                   onClick: toggleAutoShapes, 
-                  bg: autoShapes ? '#dc2626' : '#8b5cf6' 
+                  bg: autoShapes ? '#dc2626' : '#8b5cf6',
+                  enabled: autoShapesEnabled
                 }
-              ].map(({ label, onClick, bg }) => (
+              ].map(({ label, onClick, bg, enabled }) => (
                 <button
                   key={label}
                   onClick={onClick}
+                  disabled={!enabled}
                   style={{
                     padding: '6px 12px',
                     borderRadius: '6px',
-                    background: bg,
+                    background: enabled ? bg : '#6b7280',
                     color: '#fff',
                     border: 'none',
-                    cursor: 'pointer',
+                    cursor: enabled ? 'pointer' : 'not-allowed',
                     fontWeight: 'normal',
                     fontSize: '0.95rem',
-                    whiteSpace: 'nowrap'
+                    whiteSpace: 'nowrap',
+                    opacity: enabled ? 1 : 0.6
                   }}
                 >
                   {label}
@@ -629,6 +737,7 @@ export default function InfinitePaintStudio(): JSX.Element {
               ))}
             </div>
 
+            {/* Manual Generation */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
                 { label: 'Spread Once', onClick: colorSpread, bg: '#7c3aed' },
