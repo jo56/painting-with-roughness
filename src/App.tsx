@@ -25,7 +25,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const autoShapesRef = useRef<number | null>(null);
   const dotsRunningRef = useRef(false);
   const shapesRunningRef = useRef(false);
-  const tickRef = useRef(0);
 
   const defaults = {
     cellSize: 20,
@@ -277,7 +276,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     const currentCols = colsRef.current;
 
     setGrid(g => {
-        const ng = cloneGrid(g);
+        let ng = cloneGrid(g);
 
         switch (pattern) {
             case 'tendrils': {
@@ -352,8 +351,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 break;
             }
             case 'pulse': {
-                if (tickRef.current % Math.max(1, pulseSpeedRef.current) !== 0) return g;
-                const changes: {r: number, c: number, color: number}[] = [];
+                const nextGrid = createEmptyGrid(currentRows, currentCols);
+                const changes = new Map<string, number>();
+
                 for (let r = 0; r < currentRows; r++) {
                     for (let c = 0; c < currentCols; c++) {
                         const currentColor = g[r]?.[c];
@@ -364,22 +364,23 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                                     const nr = r + dr;
                                     const nc = c + dc;
                                     if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr]?.[nc] === 0) {
-                                        changes.push({r: nr, c: nc, color: currentColor});
+                                        const key = `${nr},${nc}`;
+                                        if (!changes.has(key)) {
+                                            changes.set(key, currentColor);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-                const applied = new Set<string>();
-                changes.forEach(change => {
-                    const key = `${change.r},${change.c}`;
-                    if (!applied.has(key)) {
-                        ng[change.r][change.c] = change.color;
-                        applied.add(key);
-                    }
+                
+                changes.forEach((color, key) => {
+                    const [r, c] = key.split(',').map(Number);
+                    nextGrid[r][c] = color;
                 });
-                break;
+
+                return nextGrid;
             }
             case 'random':
             case 'directional': {
@@ -501,9 +502,15 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     let lastTime = performance.now();
     const loop = (time: number) => {
       if (!runningRef.current) return;
-      const interval = 1000 / Math.max(0.25, autoSpreadSpeedRef.current);
+
+      const pattern = spreadPatternRef.current;
+      const speed = pattern === 'pulse' 
+        ? pulseSpeedRef.current 
+        : autoSpreadSpeedRef.current;
+      
+      const interval = 1000 / Math.max(0.25, speed);
+
       if (time - lastTime >= interval) {
-        tickRef.current++;
         colorSpread();
         lastTime = time;
       }
