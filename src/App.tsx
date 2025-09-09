@@ -1320,7 +1320,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     <div style={{
       width: '100%',
       height: '100vh',
-      background: '#111827',
+      background: 'black',
       display: 'flex',
       flexDirection: isMobile ? 'column' : 'row',
       alignItems: 'flex-start',
@@ -1372,7 +1372,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            position: 'relative',
           }}
         >
           <span>Modular Paint Studio</span>
@@ -1390,10 +1389,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              position: 'absolute',
-              right: '4px',
-              top: '50%',
-              transform: 'translateY(-50%)'
+              marginLeft: '8px',
             }}
           >
             {panelMinimized ? '+' : '-'}
