@@ -1361,7 +1361,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           onMouseDown={handleHeaderMouseDown}
           style={{
             fontWeight: 500,
-            textAlign: 'center',
             marginBottom: '12px',
             cursor: 'move',
             padding: '4px',
@@ -1382,14 +1381,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               border: 'none',
               color: '#fff',
               cursor: 'pointer',
-              fontSize: '1rem',
+              fontSize: '1.2rem',
               width: '24px',
               height: '24px',
-              padding: 0,
               display: 'flex',
-              justifyContent: 'center',
               alignItems: 'center',
-              marginLeft: '8px',
+              justifyContent: 'center',
+              padding: '0',
+              marginLeft: '4px',
             }}
           >
             {panelMinimized ? '+' : '-'}
@@ -2188,4 +2187,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     </div>
   );
 }
+
+
+
+
+
 
