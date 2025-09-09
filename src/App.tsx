@@ -74,8 +74,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     spreadPattern: 'random',
     pulseSpeed: 10,
     pulseOvertakes: true,
-    pulseDirection: 'bottom-right' as const,
-    directionalBias: 'down' as const,
+    pulseDirection: 'down' as const,
+    directionalBias: 'bottom-right' as const,
     conwayRules: { born: [3], survive: [2,3] },
     tendrilsRules: { born: [1], survive: [1,2] },
     directionalBiasStrength: 0.8,
@@ -186,6 +186,50 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     handleResize();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (!showGenerativeSettings || (spreadPattern !== 'pulse' && spreadPattern !== 'directional')) {
+            return;
+        }
+
+        let newDirection: Direction | null = null;
+        switch (e.key) {
+            case 'ArrowUp':
+            case 'w':
+                newDirection = 'up';
+                break;
+            case 'ArrowDown':
+            case 's':
+                newDirection = 'down';
+                break;
+            case 'ArrowLeft':
+            case 'a':
+                newDirection = 'left';
+                break;
+            case 'ArrowRight':
+            case 'd':
+                newDirection = 'right';
+                break;
+            default:
+                return; 
+        }
+
+        e.preventDefault();
+
+        if (spreadPattern === 'pulse') {
+            setPulseDirection(newDirection);
+        } else if (spreadPattern === 'directional') {
+            setDirectionalBias(newDirection);
+        }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+    };
+}, [showGenerativeSettings, spreadPattern, setPulseDirection, setDirectionalBias]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
