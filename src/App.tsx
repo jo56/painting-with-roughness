@@ -684,35 +684,33 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
 
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                    {palette.slice(1).map((color, index) => (
-                    <button
-                        key={index + 1}
-                        onClick={() => handlePaletteClick(index + 1)}
-                        title={isSavingColor ? `Save ${customColor} to this slot` : `Select ${color}`}
-                        style={{
-                        width: '32px',
-                        height: '32px',
-                        background: color,
-                        border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        outline: isSavingColor ? '2px dashed #059669' : 'none',
-                        outlineOffset: '2px',
-                        transition: 'outline 0.2s'
-                        }}
-                    />
-                    ))}
-                </div>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {palette.slice(1).map((color, index) => (
+                  <button
+                      key={index + 1}
+                      onClick={() => handlePaletteClick(index + 1)}
+                      title={isSavingColor ? `Save ${customColor} to this slot` : `Select ${color}`}
+                      style={{
+                      width: '32px',
+                      height: '32px',
+                      background: color,
+                      border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      outline: isSavingColor ? '2px dashed #059669' : 'none',
+                      outlineOffset: '2px',
+                      transition: 'outline 0.2s'
+                      }}
+                  />
+                ))}
 
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
                   {selectedColor === palette.length && (
                     <button
                       onClick={() => setIsSavingColor(prev => !prev)}
                       title={isSavingColor ? "Cancel saving" : "Save this color to a slot"}
                       style={{
-                          padding: '6px 12px',
+                          padding: '6px 0',
                           height: '32px',
                           borderRadius: '6px',
                           background: isSavingColor ? '#f59e0b' : '#374151',
@@ -721,7 +719,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                           cursor: 'pointer',
                           fontSize: '0.95rem',
                           fontWeight: 'normal',
-                          whiteSpace: 'nowrap'
+                          whiteSpace: 'nowrap',
+                          minWidth: '75px',
+                          textAlign: 'center'
                       }}
                     >
                       {isSavingColor ? 'Cancel' : 'Save'}
