@@ -691,7 +691,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                             color: '#fff',
                             border: 'none',
                             cursor: 'pointer',
-                            fontSize: '0.8rem',
+                            fontSize: '0.95rem',
                             fontWeight: 'normal',
                             whiteSpace: 'nowrap'
                         }}
@@ -750,23 +750,45 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             {showAutoControls && (
               <>
                 <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => { isAnyRunning ? stopAll() : startAllEnabled(); setIsSavingColor(false); }}
+                    disabled={!anyEnabled && !isAnyRunning}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      background: isAnyRunning 
+                        ? '#dc2626' 
+                        : anyEnabled 
+                          ? '#16a34a' 
+                          : '#6b7280',
+                      color: '#fff',
+                      border: 'none',
+                      cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      whiteSpace: 'nowrap',
+                      opacity: anyEnabled || isAnyRunning ? 1 : 0.6
+                    }}
+                  >
+                    {isAnyRunning ? 'Stop All' : 'Start All'}
+                  </button>
                   {[
                     { 
                       label: autoSpreading ? 'Stop Spread' : 'Start Spread', 
                       onClick: toggleAutoSpread, 
-                      bg: autoSpreading ? '#dc2626' : '#16a34a',
+                      bg: autoSpreading ? '#dc2626' : '#374151',
                       enabled: autoSpreadEnabled
                     },
                     { 
                       label: autoDots ? 'Stop Dots' : 'Start Dots', 
                       onClick: toggleAutoDots, 
-                      bg: autoDots ? '#dc2626' : '#f59e0b',
+                      bg: autoDots ? '#dc2626' : '#374151',
                       enabled: autoDotsEnabled
                     },
                     { 
                       label: autoShapes ? 'Stop Shapes' : 'Start Shapes', 
                       onClick: toggleAutoShapes, 
-                      bg: autoShapes ? '#dc2626' : '#8b5cf6',
+                      bg: autoShapes ? '#dc2626' : '#374151',
                       enabled: autoShapesEnabled
                     }
                   ].map(({ label, onClick, bg, enabled }) => (
@@ -790,47 +812,24 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       {label}
                     </button>
                   ))}
-                  
-                  <button
-                    onClick={() => { isAnyRunning ? stopAll() : startAllEnabled(); setIsSavingColor(false); }}
-                    disabled={!anyEnabled && !isAnyRunning}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      background: isAnyRunning 
-                        ? '#dc2626' 
-                        : anyEnabled 
-                          ? '#16a34a' 
-                          : '#6b7280',
-                      color: '#fff',
-                      border: 'none',
-                      cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
-                      fontWeight: 600,
-                      fontSize: '0.95rem',
-                      whiteSpace: 'nowrap',
-                      opacity: anyEnabled || isAnyRunning ? 1 : 0.6
-                    }}
-                  >
-                    {isAnyRunning ? 'Stop All' : 'Start All'}
-                  </button>
                 </div>
               </>
             )}
 
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
-                { label: 'Spread Once', onClick: colorSpread, bg: '#7c3aed' },
-                { label: 'Add Dots', onClick: addRandomDots, bg: '#ea580c' },
-                { label: 'Add Shapes', onClick: addRandomShapes, bg: '#f59e0b' },
-                { label: 'Clear', onClick: clear, bg: '#991b1b' }
-              ].map(({ label, onClick, bg }) => (
+                { label: 'Spread Once', onClick: colorSpread },
+                { label: 'Add Dots', onClick: addRandomDots },
+                { label: 'Add Shapes', onClick: addRandomShapes },
+                { label: 'Clear', onClick: clear }
+              ].map(({ label, onClick }) => (
                 <button
                   key={label}
                   onClick={() => { onClick(); setIsSavingColor(false); }}
                   style={{
                     padding: '6px 12px',
                     borderRadius: '6px',
-                    background: bg,
+                    background: '#374151',
                     color: '#fff',
                     border: 'none',
                     cursor: 'pointer',
@@ -994,3 +993,4 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     </div>
   );
 }
+
