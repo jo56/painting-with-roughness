@@ -25,6 +25,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const autoShapesRef = useRef<number | null>(null);
   const dotsRunningRef = useRef(false);
   const shapesRunningRef = useRef(false);
+  const tickRef = useRef(0);
 
   const defaults = {
     cellSize: 20,
@@ -38,7 +39,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     autoSpreadSpeed: 3,
     autoDotsSpeed: 2,
     autoShapesSpeed: 1,
-    blendMode: 'replace'
+    blendMode: 'replace',
+    spreadPattern: 'random',
+    pulseSpeed: 10,
+    directionalBias: 'right',
   };
 
   const [palette, setPalette] = useState([
@@ -77,6 +81,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [customColor, setCustomColor] = useState('#ffffff');
   const [isSavingColor, setIsSavingColor] = useState(false);
   const [generativeColorIndices, setGenerativeColorIndices] = useState(() => palette.slice(1).map((_, index) => index + 1));
+  const [spreadPattern, setSpreadPattern] = useState<'random' | 'conway' | 'pulse' | 'directional' | 'tendrils'>(defaults.spreadPattern);
+  const [pulseSpeed, setPulseSpeed] = useState(defaults.pulseSpeed);
+  const [directionalBias, setDirectionalBias] = useState<'none' | 'up' | 'down' | 'left' | 'right'>(defaults.directionalBias);
 
   const generativeColorIndicesRef = useRef(generativeColorIndices);
   const spreadProbabilityRef = useRef(spreadProbability);
@@ -85,6 +92,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const autoShapesSpeedRef = useRef(autoShapesSpeed);
   const rowsRef = useRef(rows);
   const colsRef = useRef(cols);
+  const spreadPatternRef = useRef(spreadPattern);
+  const pulseSpeedRef = useRef(pulseSpeed);
+  const directionalBiasRef = useRef(directionalBias);
   
   useEffect(() => { spreadProbabilityRef.current = spreadProbability; }, [spreadProbability]);
   useEffect(() => { autoSpreadSpeedRef.current = autoSpreadSpeed; }, [autoSpreadSpeed]);
@@ -93,6 +103,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   useEffect(() => { generativeColorIndicesRef.current = generativeColorIndices; }, [generativeColorIndices]);
   useEffect(() => { rowsRef.current = rows; }, [rows]);
   useEffect(() => { colsRef.current = cols; }, [cols]);
+  useEffect(() => { spreadPatternRef.current = spreadPattern; }, [spreadPattern]);
+  useEffect(() => { pulseSpeedRef.current = pulseSpeed; }, [pulseSpeed]);
+  useEffect(() => { directionalBiasRef.current = directionalBias; }, [directionalBias]);
 
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -259,40 +272,158 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   };
 
   const colorSpread = useCallback(() => {
+    const pattern = spreadPatternRef.current;
+    const currentRows = rowsRef.current;
+    const currentCols = colsRef.current;
+
     setGrid(g => {
-      const ng = cloneGrid(g);
-      const currentRows = rowsRef.current;
-      const currentCols = colsRef.current;
-      
-      for (let r = 0; r < currentRows; r++) {
-        for (let c = 0; c < currentCols; c++) {
-          const currentColor = g[r]?.[c];
-          if (currentColor === undefined) continue;
-          
-          if (currentColor > 0) {
-            if (Math.random() < spreadProbabilityRef.current) {
-              const neighbors: { r: number, c: number }[] = [];
-              for (let dr = -1; dr <= 1; dr++) {
-                for (let dc = -1; dc <= 1; dc++) {
-                  if (dr === 0 && dc === 0) continue;
-                  const nr = r + dr;
-                  const nc = c + dc;
-                  if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols) {
-                    neighbors.push({ r: nr, c: nc });
-                  }
+        const ng = cloneGrid(g);
+
+        switch (pattern) {
+            case 'tendrils': {
+                const BORN = [1];
+                const SURVIVE = [1, 2];
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        let liveNeighbors = 0;
+                        let neighborColor = 0;
+                        for (let dr = -1; dr <= 1; dr++) {
+                            for (let dc = -1; dc <= 1; dc++) {
+                                if (dr === 0 && dc === 0) continue;
+                                const nr = r + dr;
+                                const nc = c + dc;
+                                if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr]?.[nc] > 0) {
+                                    liveNeighbors++;
+                                    neighborColor = g[nr][nc];
+                                }
+                            }
+                        }
+
+                        const isAlive = g[r]?.[c] > 0;
+                        if (isAlive && !SURVIVE.includes(liveNeighbors)) {
+                            ng[r][c] = 0;
+                        } else if (!isAlive && BORN.includes(liveNeighbors)) {
+                            ng[r][c] = neighborColor;
+                        }
+                    }
                 }
-              }
-              
-              if (neighbors.length > 0) {
-                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
-                ng[randomNeighbor.r][randomNeighbor.c] = currentColor;
-              }
+                break;
             }
-          }
+            case 'conway': {
+                const BORN = [3];
+                const SURVIVE = [2, 3];
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        let liveNeighbors = 0;
+                        const neighborColors: number[] = [];
+                        for (let dr = -1; dr <= 1; dr++) {
+                            for (let dc = -1; dc <= 1; dc++) {
+                                if (dr === 0 && dc === 0) continue;
+                                const nr = r + dr;
+                                const nc = c + dc;
+                                if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr]?.[nc] > 0) {
+                                    liveNeighbors++;
+                                    neighborColors.push(g[nr][nc]);
+                                }
+                            }
+                        }
+
+                        const isAlive = g[r]?.[c] > 0;
+                        if (isAlive && !SURVIVE.includes(liveNeighbors)) {
+                            ng[r][c] = 0; // Death
+                        } else if (!isAlive && BORN.includes(liveNeighbors)) {
+                            const colorCounts = neighborColors.reduce((acc, color) => {
+                                acc[color] = (acc[color] || 0) + 1;
+                                return acc;
+                            }, {} as Record<number, number>);
+                            
+                            let dominantColor = 0;
+                            let maxCount = 0;
+                            for (const color in colorCounts) {
+                                if (colorCounts[color] > maxCount) {
+                                    maxCount = colorCounts[color];
+                                    dominantColor = parseInt(color);
+                                }
+                            }
+                            ng[r][c] = dominantColor > 0 ? dominantColor : (generativeColorIndicesRef.current[0] || 1);
+                        }
+                    }
+                }
+                break;
+            }
+            case 'pulse': {
+                if (tickRef.current % Math.max(1, pulseSpeedRef.current) !== 0) return g;
+                const changes: {r: number, c: number, color: number}[] = [];
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        const currentColor = g[r]?.[c];
+                        if (currentColor > 0) {
+                            for (let dr = -1; dr <= 1; dr++) {
+                                for (let dc = -1; dc <= 1; dc++) {
+                                    if (dr === 0 && dc === 0) continue;
+                                    const nr = r + dr;
+                                    const nc = c + dc;
+                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr]?.[nc] === 0) {
+                                        changes.push({r: nr, c: nc, color: currentColor});
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                const applied = new Set<string>();
+                changes.forEach(change => {
+                    const key = `${change.r},${change.c}`;
+                    if (!applied.has(key)) {
+                        ng[change.r][change.c] = change.color;
+                        applied.add(key);
+                    }
+                });
+                break;
+            }
+            case 'random':
+            case 'directional': {
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        const currentColor = g[r]?.[c];
+                        if (currentColor === undefined || currentColor === 0) continue;
+
+                        if (Math.random() < spreadProbabilityRef.current) {
+                            let neighbors: { r: number, c: number }[] = [];
+                            for (let dr = -1; dr <= 1; dr++) {
+                                for (let dc = -1; dc <= 1; dc++) {
+                                    if (dr === 0 && dc === 0) continue;
+                                    const nr = r + dr;
+                                    const nc = c + dc;
+                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols) {
+                                        neighbors.push({ r: nr, c: nc });
+                                    }
+                                }
+                            }
+
+                            if (pattern === 'directional' && directionalBiasRef.current !== 'none' && Math.random() < 0.8) { // 80% chance to follow bias
+                                const bias = directionalBiasRef.current;
+                                const biasedNeighbor = {
+                                    r: r + (bias === 'down' ? 1 : bias === 'up' ? -1 : 0),
+                                    c: c + (bias === 'right' ? 1 : bias === 'left' ? -1 : 0),
+                                };
+                                if (biasedNeighbor.r >= 0 && biasedNeighbor.r < currentRows && biasedNeighbor.c >= 0 && biasedNeighbor.c < currentCols) {
+                                    ng[biasedNeighbor.r][biasedNeighbor.c] = currentColor;
+                                    continue;
+                                }
+                            }
+
+                            if (neighbors.length > 0) {
+                                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                                ng[randomNeighbor.r][randomNeighbor.c] = currentColor;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
         }
-      }
-      
-      return ng;
+        return ng;
     });
   }, []);
 
@@ -372,6 +503,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
       if (!runningRef.current) return;
       const interval = 1000 / Math.max(0.25, autoSpreadSpeedRef.current);
       if (time - lastTime >= interval) {
+        tickRef.current++;
         colorSpread();
         lastTime = time;
       }
@@ -568,6 +700,12 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             return [...prev, colorIndex];
         }
     });
+  };
+
+  const resetGenerativeSettings = () => {
+    setSpreadPattern(defaults.spreadPattern);
+    setPulseSpeed(defaults.pulseSpeed);
+    setDirectionalBias(defaults.directionalBias);
   };
 
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
@@ -1020,8 +1158,78 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             
             {showOptions && showGenerativeSettings && (
               <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb' }}>
-                    Allowed Random Colors
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ flexGrow: 1}}>
+                    <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Spread Pattern:</label>
+                    <select
+                      value={spreadPattern}
+                      onChange={(e) => setSpreadPattern(e.target.value as any)}
+                      style={{ 
+                        padding: '4px 8px', 
+                        borderRadius: '6px', 
+                        background: '#374151', 
+                        color: '#fff', 
+                        border: 'none',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="random">Random Walk</option>
+                      <option value="conway">Game of Life</option>
+                      <option value="tendrils">Tendrils</option>
+                      <option value="pulse">Pulsing</option>
+                      <option value="directional">Directional</option>
+                    </select>
+                  </div>
+                   <button
+                    onClick={resetGenerativeSettings}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      background: '#374151',
+                      color: '#fff',
+                      border: 'none',
+                      cursor: 'pointer',
+                      alignSelf: 'flex-end',
+                      height: '29px'
+                    }}
+                    title="Reset generative settings to default"
+                  >
+                    Reset
+                  </button>
+                </div>
+                
+                {spreadPattern === 'pulse' && (
+                    <div style={{ marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                        <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Pulse Speed:</label>
+                        <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{pulseSpeed}</span>
+                        </div>
+                        <input
+                        type="range" min={1} max={50} value={pulseSpeed}
+                        onChange={(e) => setPulseSpeed(Number(e.target.value))}
+                        style={{ width: '100%', height: '6px' }}
+                        />
+                    </div>
+                )}
+
+                {spreadPattern === 'directional' && (
+                    <div style={{ marginBottom: '10px' }}>
+                        <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Bias:</label>
+                        <select
+                            value={directionalBias}
+                            onChange={(e) => setDirectionalBias(e.target.value as any)}
+                            style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                        >
+                            <option value="right">Right</option>
+                            <option value="left">Left</option>
+                            <option value="up">Up</option>
+                            <option value="down">Down</option>
+                        </select>
+                    </div>
+                )}
+
+                <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb', marginTop: '12px' }}>
+                    Allowed Generative Colors
                 </label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {palette.slice(1).map((color, index) => {
