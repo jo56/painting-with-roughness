@@ -57,6 +57,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const autoShapesRef = useRef<number | null>(null);
   const dotsRunningRef = useRef(false);
   const shapesRunningRef = useRef(false);
+  const pressedKeys = useRef(new Set<string>());
 
   const defaults = {
     cellSize: 20,
@@ -188,48 +189,61 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   }, []);
 
   useEffect(() => {
+    const updateDirection = () => {
+        let newDirection: Direction | null = null;
+        const keys = pressedKeys.current;
+
+        if (keys.has('KeyW') && keys.has('KeyA')) newDirection = 'top-left';
+        else if (keys.has('KeyW') && keys.has('KeyD')) newDirection = 'top-right';
+        else if (keys.has('KeyS') && keys.has('KeyA')) newDirection = 'bottom-left';
+        else if (keys.has('KeyS') && keys.has('KeyD')) newDirection = 'bottom-right';
+        else if (keys.has('KeyW')) newDirection = 'up';
+        else if (keys.has('KeyS')) newDirection = 'down';
+        else if (keys.has('KeyA')) newDirection = 'left';
+        else if (keys.has('KeyD')) newDirection = 'right';
+        
+        if (newDirection) {
+            if (spreadPattern === 'pulse') {
+                setPulseDirection(newDirection);
+            } else if (spreadPattern === 'directional') {
+                setDirectionalBias(newDirection);
+            }
+        }
+    };
+
+    const keyMap: { [key: string]: string } = {
+        'ArrowUp': 'KeyW', 'ArrowDown': 'KeyS', 'ArrowLeft': 'KeyA', 'ArrowRight': 'KeyD'
+    };
+    const relevantCodes = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
+
     const handleKeyDown = (e: KeyboardEvent) => {
         if (!showGenerativeSettings || (spreadPattern !== 'pulse' && spreadPattern !== 'directional')) {
             return;
         }
 
-        let newDirection: Direction | null = null;
-        switch (e.key) {
-            case 'ArrowUp':
-            case 'w':
-                newDirection = 'up';
-                break;
-            case 'ArrowDown':
-            case 's':
-                newDirection = 'down';
-                break;
-            case 'ArrowLeft':
-            case 'a':
-                newDirection = 'left';
-                break;
-            case 'ArrowRight':
-            case 'd':
-                newDirection = 'right';
-                break;
-            default:
-                return; 
-        }
-
+        const code = keyMap[e.code] || e.code;
+        if (!relevantCodes.includes(code) || e.repeat) return;
+        
         e.preventDefault();
-
-        if (spreadPattern === 'pulse') {
-            setPulseDirection(newDirection);
-        } else if (spreadPattern === 'directional') {
-            setDirectionalBias(newDirection);
-        }
+        pressedKeys.current.add(code);
+        updateDirection();
     };
 
+    const handleKeyUp = (e: KeyboardEvent) => {
+        const code = keyMap[e.code] || e.code;
+        if (relevantCodes.includes(code)) {
+            pressedKeys.current.delete(code);
+        }
+    };
+    
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
 
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
     };
-}, [showGenerativeSettings, spreadPattern, setPulseDirection, setDirectionalBias]);
+  }, [showGenerativeSettings, spreadPattern, setPulseDirection, setDirectionalBias]);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
