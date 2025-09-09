@@ -72,6 +72,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     spreadPattern: 'random',
     pulseSpeed: 10,
     pulseOvertakes: true,
+    pulseDirection: 'bottom-right' as const,
     directionalBias: 'right',
     conwayRules: { born: [3], survive: [2,3] },
     tendrilsRules: { born: [1], survive: [1,2] },
@@ -123,6 +124,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [tendrilsRules, setTendrilsRules] = useState(defaults.tendrilsRules);
   const [directionalBiasStrength, setDirectionalBiasStrength] = useState(defaults.directionalBiasStrength);
   const [pulseOvertakes, setPulseOvertakes] = useState(defaults.pulseOvertakes);
+  const [pulseDirection, setPulseDirection] = useState<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'>(defaults.pulseDirection);
   const [randomWalkSpreadCount, setRandomWalkSpreadCount] = useState(defaults.randomWalkSpreadCount);
   const [randomWalkMode, setRandomWalkMode] = useState<'any' | 'cardinal'>(defaults.randomWalkMode);
 
@@ -140,6 +142,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const tendrilsRulesRef = useRef(tendrilsRules);
   const directionalBiasStrengthRef = useRef(directionalBiasStrength);
   const pulseOvertakesRef = useRef(pulseOvertakes);
+  const pulseDirectionRef = useRef(pulseDirection);
   const randomWalkSpreadCountRef = useRef(randomWalkSpreadCount);
   const randomWalkModeRef = useRef(randomWalkMode);
   
@@ -157,6 +160,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   useEffect(() => { tendrilsRulesRef.current = tendrilsRules; }, [tendrilsRules]);
   useEffect(() => { directionalBiasStrengthRef.current = directionalBiasStrength; }, [directionalBiasStrength]);
   useEffect(() => { pulseOvertakesRef.current = pulseOvertakes; }, [pulseOvertakes]);
+  useEffect(() => { pulseDirectionRef.current = pulseDirection; }, [pulseDirection]);
   useEffect(() => { randomWalkSpreadCountRef.current = randomWalkSpreadCount; }, [randomWalkSpreadCount]);
   useEffect(() => { randomWalkModeRef.current = randomWalkMode; }, [randomWalkMode]);
 
@@ -381,9 +385,23 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             }
             case 'pulse': {
                 const changes = new Map<string, number>();
+                const direction = pulseDirectionRef.current;
+                let r_start = 0, r_end = currentRows, r_inc = 1;
+                let c_start = 0, c_end = currentCols, c_inc = 1;
 
-                for (let r = 0; r < currentRows; r++) {
-                    for (let c = 0; c < currentCols; c++) {
+                if (direction === 'top-left') {
+                    r_start = currentRows - 1; r_end = -1; r_inc = -1;
+                    c_start = currentCols - 1; c_end = -1; c_inc = -1;
+                } else if (direction === 'top-right') {
+                    r_start = currentRows - 1; r_end = -1; r_inc = -1;
+                    c_start = 0; c_end = currentCols; c_inc = 1;
+                } else if (direction === 'bottom-left') {
+                    r_start = 0; r_end = currentRows; r_inc = 1;
+                    c_start = currentCols - 1; c_end = -1; c_inc = -1;
+                }
+
+                for (let r = r_start; r !== r_end; r += r_inc) {
+                    for (let c = c_start; c !== c_end; c += c_inc) {
                         const currentColor = g[r]?.[c];
                         if (currentColor > 0) {
                             for (let dr = -1; dr <= 1; dr++) {
@@ -781,6 +799,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     setTendrilsRules(defaults.tendrilsRules);
     setDirectionalBiasStrength(defaults.directionalBiasStrength);
     setPulseOvertakes(defaults.pulseOvertakes);
+    setPulseDirection(defaults.pulseDirection);
     setRandomWalkSpreadCount(defaults.randomWalkSpreadCount);
     setRandomWalkMode(defaults.randomWalkMode);
   };
@@ -1106,7 +1125,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       fontSize: '0.95rem',
                       whiteSpace: 'nowrap',
                       opacity: anyEnabled || isAnyRunning ? 1 : 0.6,
-                      marginLeft: 'auto',
                       boxShadow: isAnyRunning ? '0 0 8px rgba(78, 205, 196, 0.7)' : 'none',
                       transition: 'box-shadow 0.2s ease-in-out'
                     }}
@@ -1346,6 +1364,19 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                             style={{ width: '100%', height: '6px' }}
                             />
                         </div>
+                        <div style={{ marginBottom: '10px' }}>
+                            <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
+                            <select
+                                value={pulseDirection}
+                                onChange={(e) => setPulseDirection(e.target.value as any)}
+                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                            >
+                                <option value="bottom-right">From Bottom-Right</option>
+                                <option value="bottom-left">From Bottom-Left</option>
+                                <option value="top-right">From Top-Right</option>
+                                <option value="top-left">From Top-Left</option>
+                            </select>
+                        </div>
                         <div style={{ fontWeight: 500, marginTop: '10px', fontSize: '0.85rem' }}>
                             <label>
                                 <input 
@@ -1392,7 +1423,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb', marginTop: '12px' }}>
                     Allowed Generative Colors
                 </label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '8px' }}>
                     {palette.slice(1).map((color, index) => {
                         const colorIndex = index + 1;
                         return (
@@ -1486,4 +1517,3 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     </div>
   );
 }
-
