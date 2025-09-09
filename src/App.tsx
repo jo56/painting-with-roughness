@@ -1021,7 +1021,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             {showOptions && showGenerativeSettings && (
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb' }}>
-                    Allowed Generative Colors
+                    Allowed Random Colors
                 </label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {palette.slice(1).map((color, index) => {
