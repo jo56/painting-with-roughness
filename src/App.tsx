@@ -2,70 +2,66 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 const GRID_COLOR = '#1f2937';
 
-function createEmptyGrid(rows: number, cols: number): Uint8Array[] {
-  const g: Uint8Array[] = [];
-  for (let r = 0; r < rows; r++) g[r] = new Uint8Array(cols);
+function createEmptyGrid(rows: number, cols: number): number[][] {
+  const g: number[][] = [];
+  for (let r = 0; r < rows; r++) {
+    g[r] = new Array(cols).fill(0);
+  }
   return g;
 }
 
-function cloneGrid(grid: Uint8Array[]): Uint8Array[] {
-  return grid.map(row => new Uint8Array(row));
+function cloneGrid(grid: number[][]): number[][] {
+  return grid.map(row => [...row]);
 }
 
-export default function App(): JSX.Element {
+export default function DigitalPaintApp(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const runningRef = useRef(false);
   const isMouseDown = useRef(false);
-  const drawMode = useRef(1);
+  const currentTool = useRef('brush');
 
   const defaults = {
-    cellSize: 25,
-    rows: 25,
-    cols: 30,
-    speed: 2,
-    fillProb: 0.25,
+    cellSize: 20,
+    rows: 30,
+    cols: 40,
     showGrid: true,
-    aliveColor: '#06b6d4',
-    deadColor: '#051025',
-    wrapEdges: true,
-    surviveCounts: [2, 3],
-    birthCounts: [3],
-    pattern: '',
-    showAdvanced: false
+    backgroundColor: '#0a0a0a',
+    brushSize: 1,
+    selectedColor: 1,
+    randomIntensity: 0.3,
+    randomRadius: 2,
+    blendMode: 'replace'
   };
+
+  // Color palette - index 0 is transparent/eraser, 1-8 are colors
+  const colorPalette = [
+    '#000000', // 0: transparent/eraser
+    '#ff6b6b', // 1: red
+    '#4ecdc4', // 2: teal
+    '#45b7d1', // 3: blue
+    '#96ceb4', // 4: green
+    '#feca57', // 5: yellow
+    '#ff9ff3', // 6: pink
+    '#54a0ff', // 7: light blue
+    '#5f27cd', // 8: purple
+  ];
 
   const [cellSize, setCellSize] = useState(defaults.cellSize);
   const [rows, setRows] = useState(defaults.rows);
   const [cols, setCols] = useState(defaults.cols);
-  const [grid, setGrid] = useState<Uint8Array[]>(() => createEmptyGrid(defaults.rows, defaults.cols));
-  const [running, setRunning] = useState(false);
-  const [speed, setSpeed] = useState(defaults.speed);
-
-  const [fillProb, setFillProb] = useState(defaults.fillProb);
+  const [grid, setGrid] = useState<number[][]>(() => createEmptyGrid(defaults.rows, defaults.cols));
   const [showGrid, setShowGrid] = useState(defaults.showGrid);
-  const [aliveColor, setAliveColor] = useState(defaults.aliveColor);
-  const [deadColor, setDeadColor] = useState(defaults.deadColor);
-  const [wrapEdges, setWrapEdges] = useState(defaults.wrapEdges);
-  const [surviveCounts, setSurviveCounts] = useState(defaults.surviveCounts);
-  const [birthCounts, setBirthCounts] = useState(defaults.birthCounts);
-  const [pattern, setPattern] = useState(defaults.pattern);
-  const [showAdvanced, setShowAdvanced] = useState(defaults.showAdvanced);
+  const [backgroundColor, setBackgroundColor] = useState(defaults.backgroundColor);
+  const [brushSize, setBrushSize] = useState(defaults.brushSize);
+  const [selectedColor, setSelectedColor] = useState(defaults.selectedColor);
+  const [randomIntensity, setRandomIntensity] = useState(defaults.randomIntensity);
+  const [randomRadius, setRandomRadius] = useState(defaults.randomRadius);
+  const [blendMode, setBlendMode] = useState(defaults.blendMode);
+  const [tool, setTool] = useState('brush');
 
   const [panelMinimized, setPanelMinimized] = useState(false);
-
-  const surviveRef = useRef(surviveCounts);
-  const birthRef = useRef(birthCounts);
-  useEffect(() => { surviveRef.current = surviveCounts; }, [surviveCounts]);
-  useEffect(() => { birthRef.current = birthCounts; }, [birthCounts]);
-  const speedRef = useRef(speed);
-useEffect(() => {
-  speedRef.current = speed;
-}, [speed]);
-
-  
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -73,6 +69,7 @@ useEffect(() => {
   const mousePos = useRef({ x: 0, y: 0 });
 
   const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 800;
@@ -87,33 +84,6 @@ useEffect(() => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const countNeighbors = (g: Uint8Array[], r: number, c: number) => {
-    const R = g.length, C = g[0].length;
-    let sum = 0;
-    for (let dr = -1; dr <= 1; dr++)
-      for (let dc = -1; dc <= 1; dc++) {
-        if (dr === 0 && dc === 0) continue;
-        let nr = r + dr, nc = c + dc;
-        if (wrapEdges) {
-          nr = (nr + R) % R; nc = (nc + C) % C;
-        } else if (nr < 0 || nr >= R || nc < 0 || nc >= C) continue;
-        sum += g[nr][nc];
-      }
-    return sum;
-  };
-
-  const step = useCallback((g: Uint8Array[]) => {
-    const newG = createEmptyGrid(g.length, g[0].length);
-    for (let r = 0; r < g.length; r++)
-      for (let c = 0; c < g[0].length; c++) {
-        const n = countNeighbors(g, r, c);
-        newG[r][c] = g[r][c]
-          ? (surviveRef.current.includes(n) ? 1 : 0)
-          : (birthRef.current.includes(n) ? 1 : 0);
-      }
-    return newG;
-  }, [wrapEdges]);
-
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -121,16 +91,22 @@ useEffect(() => {
     canvas.width = cols * cellSize;
     canvas.height = rows * cellSize;
 
-    ctx.fillStyle = deadColor;
+    // Draw background
+    ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    for (let r = 0; r < rows; r++)
-      for (let c = 0; c < cols; c++)
-        if (grid[r][c]) {
-          ctx.fillStyle = aliveColor;
+    // Draw cells
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const colorIndex = grid[r][c];
+        if (colorIndex > 0) {
+          ctx.fillStyle = colorPalette[colorIndex];
           ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
         }
+      }
+    }
 
+    // Draw grid lines
     if (showGrid) {
       ctx.strokeStyle = GRID_COLOR;
       ctx.lineWidth = 0.5;
@@ -147,29 +123,32 @@ useEffect(() => {
         ctx.stroke();
       }
     }
-  }, [grid, rows, cols, cellSize, aliveColor, deadColor, showGrid]);
+  }, [grid, rows, cols, cellSize, backgroundColor, showGrid, colorPalette]);
 
   useEffect(() => draw(), [draw]);
 
-  const runLoop = () => {
-  let lastTime = performance.now();
-  const loop = (time: number) => {
-    if (!runningRef.current) return;
-    const interval = 1000 / Math.max(0.25, speedRef.current);  // <-- use ref
-    if (time - lastTime >= interval) {
-      setGrid(g => step(g));
-      lastTime = time;
-    }
-    rafRef.current = requestAnimationFrame(loop);
-  };
-  rafRef.current = requestAnimationFrame(loop);
-};
-
-  const toggleRunning = () => {
-    runningRef.current = !runningRef.current;
-    setRunning(runningRef.current);
-    if (runningRef.current) runLoop();
-    else if (rafRef.current) cancelAnimationFrame(rafRef.current);
+  const paintCell = (r: number, c: number, color: number) => {
+    if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+    
+    setGrid(g => {
+      const ng = cloneGrid(g);
+      
+      // Apply brush size
+      for (let dr = -Math.floor(brushSize/2); dr <= Math.floor(brushSize/2); dr++) {
+        for (let dc = -Math.floor(brushSize/2); dc <= Math.floor(brushSize/2); dc++) {
+          const nr = r + dr;
+          const nc = c + dc;
+          if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+            if (blendMode === 'replace' || ng[nr][nc] === 0) {
+              ng[nr][nc] = color;
+            } else if (blendMode === 'overlay' && color > 0) {
+              ng[nr][nc] = color;
+            }
+          }
+        }
+      }
+      return ng;
+    });
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -179,16 +158,15 @@ useEffect(() => {
     const rect = canvas.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / cellSize);
     const y = Math.floor((e.clientY - rect.top) / cellSize);
-    setGrid(g => {
-      const ng = cloneGrid(g);
-      if (y >= 0 && y < rows && x >= 0 && x < cols) {
-        drawMode.current = ng[y][x] ? 0 : 1;
-        ng[y][x] = drawMode.current;
-      }
-      return ng;
-    });
+    
+    const colorToUse = tool === 'eraser' ? 0 : selectedColor;
+    paintCell(y, x, colorToUse);
   };
-  const handleMouseUp = () => { isMouseDown.current = false; };
+
+  const handleMouseUp = () => { 
+    isMouseDown.current = false; 
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isMouseDown.current) return;
     const canvas = canvasRef.current;
@@ -196,26 +174,77 @@ useEffect(() => {
     const rect = canvas.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / cellSize);
     const y = Math.floor((e.clientY - rect.top) / cellSize);
+    
+    const colorToUse = tool === 'eraser' ? 0 : selectedColor;
+    paintCell(y, x, colorToUse);
+  };
+
+  const clear = () => {
+    setGrid(createEmptyGrid(rows, cols));
+  };
+
+  const applyRandomness = () => {
     setGrid(g => {
       const ng = cloneGrid(g);
-      if (y >= 0 && y < rows && x >= 0 && x < cols) ng[y][x] = drawMode.current;
+      
+      // Get all currently used colors
+      const usedColors = new Set<number>();
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (g[r][c] > 0) usedColors.add(g[r][c]);
+        }
+      }
+      
+      if (usedColors.size === 0) return ng;
+      
+      const colorsArray = Array.from(usedColors);
+      
+      // Apply randomness
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (Math.random() < randomIntensity) {
+            // Find nearby colored cells within radius
+            const nearbyColors = new Set<number>();
+            for (let dr = -randomRadius; dr <= randomRadius; dr++) {
+              for (let dc = -randomRadius; dc <= randomRadius; dc++) {
+                const nr = r + dr;
+                const nc = c + dc;
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && g[nr][nc] > 0) {
+                  nearbyColors.add(g[nr][nc]);
+                }
+              }
+            }
+            
+            if (nearbyColors.size > 0) {
+              const nearbyArray = Array.from(nearbyColors);
+              ng[r][c] = nearbyArray[Math.floor(Math.random() * nearbyArray.length)];
+            } else if (Math.random() < 0.3) {
+              // Sometimes use any color from the palette
+              ng[r][c] = colorsArray[Math.floor(Math.random() * colorsArray.length)];
+            }
+          }
+        }
+      }
+      
       return ng;
     });
   };
 
-  const randomize = () => setGrid(() => {
-    const ng = createEmptyGrid(rows, cols);
-    for (let r = 0; r < ng.length; r++)
-      for (let c = 0; c < ng[0].length; c++)
-        ng[r][c] = Math.random() < fillProb ? 1 : 0;
-    return ng;
-  });
-
-  const clear = () => {
-  setGrid(createEmptyGrid(rows, cols));
-};
-
-  const stepOnce = () => setGrid(g => step(g));
+  const applyNoise = () => {
+    setGrid(g => {
+      const ng = cloneGrid(g);
+      
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (Math.random() < 0.1) {
+            ng[r][c] = Math.floor(Math.random() * colorPalette.length);
+          }
+        }
+      }
+      
+      return ng;
+    });
+  };
 
   const handleHeaderMouseDown = (e: React.MouseEvent) => {
     if (isMobile) return;
@@ -226,8 +255,6 @@ useEffect(() => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       mousePos.current = { x: e.clientX, y: e.clientY };
-      //console.log('Mouse position updated:', mousePos.current); 
-      
       if (isDragging.current)
         setPanelPos({ x: e.clientX - dragOffset.current.x, y: e.clientY - dragOffset.current.y });
     };
@@ -236,31 +263,12 @@ useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         e.preventDefault();
-        
-        console.log('Shift pressed! Current state:', {
-          isMobile,
-          mousePos: mousePos.current,
-          currentPanelPos: panelPos
-        });
-        
         setIsMobile(false);
-        
         const mouseX = mousePos.current.x || window.innerWidth / 2;
         const mouseY = mousePos.current.y || window.innerHeight / 2;
-        
-        // Simple positioning - just put it at mouse location with small offset
         const newX = Math.max(10, Math.min(mouseX - 200, window.innerWidth - 440));
         const newY = Math.max(10, Math.min(mouseY - 50, window.innerHeight - 400));
-        
-        console.log('Setting new panel position:', { newX, newY });
-        
-        // Force the panel position update
         setPanelPos({ x: newX, y: newY });
-        
-        // Also force a re-render by updating a dummy state if needed
-        setTimeout(() => {
-          console.log('Panel position after update:', panelPos);
-        }, 100);
       }
     };
     
@@ -273,48 +281,30 @@ useEffect(() => {
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isMobile, panelPos]); // Add dependencies
+  }, [isMobile, panelPos]);
 
   const handleRowsChange = (newRows: number) => {
     setRows(newRows);
     setGrid(g => {
       const newGrid = createEmptyGrid(newRows, cols);
-      for (let r = 0; r < Math.min(g.length, newRows); r++) newGrid[r].set(g[r]);
+      for (let r = 0; r < Math.min(g.length, newRows); r++) {
+        for (let c = 0; c < cols; c++) {
+          newGrid[r][c] = g[r][c];
+        }
+      }
       return newGrid;
     });
   };
+
   const handleColsChange = (newCols: number) => {
     setCols(newCols);
     setGrid(g => g.map(row => {
-      const newRow = new Uint8Array(newCols);
-      newRow.set(row.slice(0, Math.min(row.length, newCols)));
+      const newRow = new Array(newCols).fill(0);
+      for (let c = 0; c < Math.min(row.length, newCols); c++) {
+        newRow[c] = row[c];
+      }
       return newRow;
     }));
-  };
-
-  const patternOptions = ['Glider', 'Blinker', 'Block'];
-  const applyPattern = (pat: string) => {
-    setGrid(g => {
-      const newGrid = cloneGrid(g);
-      const centerR = Math.floor(rows / 2);
-      const centerC = Math.floor(cols / 2);
-
-      const patternCells: [number, number][] =
-        pat === 'Glider' ? [[1,0],[2,1],[0,2],[1,2],[2,2]] :
-        pat === 'Blinker' ? [[0,0],[0,1],[0,2]] :
-        pat === 'Block' ? [[0,0],[0,1],[1,0],[1,1]] :
-        [];
-
-      patternCells.forEach(([r, c]) => {
-        const row = centerR + r;
-        const col = centerC + c;
-        if (row >= 0 && row < rows && col >= 0 && col < cols) {
-          newGrid[row][col] = 1;
-        }
-      });
-
-      return newGrid;
-    });
   };
 
   return (
@@ -332,7 +322,7 @@ useEffect(() => {
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
-          style={{ display: 'block', cursor: 'crosshair', background: deadColor }}
+          style={{ display: 'block', cursor: 'crosshair', background: backgroundColor }}
         />
       </div>
 
@@ -351,10 +341,10 @@ useEffect(() => {
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
         }}
       >
-        {/* Header with minimize button */}
+        {/* Header */}
         <div
-        onMouseDown={handleHeaderMouseDown}
-        style={{
+          onMouseDown={handleHeaderMouseDown}
+          style={{
             fontWeight: 500,
             textAlign: 'center',
             marginBottom: '12px',
@@ -367,26 +357,27 @@ useEffect(() => {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: '0px'   // spacing between text and button
-        }}
+            gap: '0px'
+          }}
         >
-        <span>Conway's Game of Life</span>
-        <button
+          <span>Digital Paint Studio</span>
+          <button
             onClick={() => setPanelMinimized(prev => !prev)}
             style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#fff',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            width: '20px',         // fixed width prevents text shift
-            textAlign: 'center'
+              background: 'transparent',
+              border: 'none',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              width: '20px',
+              textAlign: 'center'
             }}
-        >
+          >
             {panelMinimized ? '+' : '-'}
-        </button>
+          </button>
         </div>
-        {/* Panel contents with collapse animation */}
+
+        {/* Panel contents */}
         <div style={{
           maxHeight: panelMinimized ? '0px' : '2000px',
           overflow: 'hidden',
@@ -397,13 +388,62 @@ useEffect(() => {
             transition: 'opacity 0.3s ease',
             pointerEvents: panelMinimized ? 'none' : 'auto'
           }}>
-            {/* Buttons */}
+            
+            {/* Tool Selection */}
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Tool:</label>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Brush', value: 'brush' },
+                  { label: 'Eraser', value: 'eraser' }
+                ].map(({ label, value }) => (
+                  <button
+                    key={value}
+                    onClick={() => setTool(value)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      background: tool === value ? '#06b6d4' : '#374151',
+                      color: '#fff',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontWeight: 'normal',
+                      fontSize: '0.95rem'
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Color Palette */}
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Colors:</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
+                {colorPalette.slice(1).map((color, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => setSelectedColor(index + 1)}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      background: color,
+                      border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
-              {[ 
-                { label: running ? 'Stop' : 'Start', onClick: toggleRunning, bg: running ? '#06b6d4' : '#374151' },
-                { label: 'Step', onClick: stepOnce, bg: '#374151' },
-                { label: 'Random', onClick: randomize, bg: '#374151' },
-                { label: 'Clear', onClick: clear, bg: '#374151' },
+              {[
+                { label: 'Randomize', onClick: applyRandomness, bg: '#9333ea' },
+                { label: 'Noise', onClick: applyNoise, bg: '#ea580c' },
+                { label: 'Clear', onClick: clear, bg: '#dc2626' },
                 { label: 'Adv.', onClick: () => setShowAdvanced(prev => !prev), bg: '#374151' },
               ].map(({ label, onClick, bg }) => (
                 <button
@@ -426,11 +466,13 @@ useEffect(() => {
               ))}
             </div>
 
-            {/* Sliders */}
-            {[['Speed', speed, 0.25, 100, setSpeed, ' gen/s'],
-              ['Cell size', cellSize, 1, 40, setCellSize, ' px'],
-              ['Rows', rows, 5, 1000, handleRowsChange, ''],
-              ['Cols', cols, 5, 1000, handleColsChange, '']].map(([label, value, min, max, setter, unit], idx) => (
+            {/* Basic Settings */}
+            {[
+              ['Brush Size', brushSize, 1, 10, setBrushSize, ''],
+              ['Cell Size', cellSize, 5, 50, setCellSize, ' px'],
+              ['Rows', rows, 10, 100, handleRowsChange, ''],
+              ['Cols', cols, 10, 100, handleColsChange, '']
+            ].map(([label, value, min, max, setter, unit], idx) => (
               <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                 <label style={{ width: '100px', fontWeight: 600 }}>{label}:</label>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -438,7 +480,6 @@ useEffect(() => {
                     type="range"
                     min={min as number}
                     max={max as number}
-                    step={label === 'Speed' ? 0.25 : 1}
                     value={value as number}
                     onChange={(e) => setter(Number(e.target.value))}
                     style={{ flex: 1, height: '8px', borderRadius: '4px' }}
@@ -454,79 +495,74 @@ useEffect(() => {
             {showAdvanced && (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                  <label style={{ width: '100px', fontWeight: 600 }}>Random Fill:</label>
+                  <label style={{ width: '100px', fontWeight: 600 }}>Random Int:</label>
                   <input
                     type="range"
                     min={0}
                     max={1}
                     step={0.01}
-                    value={fillProb}
-                    onChange={(e) => setFillProb(Number(e.target.value))}
+                    value={randomIntensity}
+                    onChange={(e) => setRandomIntensity(Number(e.target.value))}
                     style={{ flex: 1, marginRight: '8px', height: '8px', borderRadius: '4px' }}
                   />
-                  <div style={{ width: '40px', textAlign: 'right', fontSize: '0.95rem' }}>
-                    {`${Math.round(fillProb * 100)}%`}
+                  <div style={{ width: '50px', textAlign: 'right', fontSize: '0.95rem' }}>
+                    {`${Math.round(randomIntensity * 100)}%`}
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', gap: '8px' }}>
-                  <label style={{ fontWeight: 600 }}>Alive:</label>
-                  <input type="color" value={aliveColor} onChange={e => setAliveColor(e.target.value)} />
-                  <label style={{ fontWeight: 600 }}>Dead:</label>
-                  <input type="color" value={deadColor} onChange={e => setDeadColor(e.target.value)} />
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                  <label style={{ width: '100px', fontWeight: 600 }}>Rand Radius:</label>
+                  <input
+                    type="range"
+                    min={1}
+                    max={10}
+                    value={randomRadius}
+                    onChange={(e) => setRandomRadius(Number(e.target.value))}
+                    style={{ flex: 1, marginRight: '8px', height: '8px', borderRadius: '4px' }}
+                  />
+                  <div style={{ width: '50px', textAlign: 'right', fontSize: '0.95rem' }}>
+                    {randomRadius}
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', gap: '8px', fontWeight: 600 }}>
-                  <label><input type="checkbox" checked={showGrid} onChange={e => setShowGrid(e.target.checked)} /> Show Grid</label>
-                  <label><input type="checkbox" checked={wrapEdges} onChange={e => setWrapEdges(e.target.checked)} /> Wrap Edges</label>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '10px', gap: '4px' }}>
-                  <label style={{ fontWeight: 600 }}>Starting Pattern:</label>
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
                   <select
-                    value={pattern}
-                    onChange={(e) => { setPattern(e.target.value); applyPattern(e.target.value); }}
-                    style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none' }}
+                    value={blendMode}
+                    onChange={(e) => setBlendMode(e.target.value)}
+                    style={{ 
+                      padding: '4px 8px', 
+                      borderRadius: '6px', 
+                      background: '#374151', 
+                      color: '#fff', 
+                      border: 'none',
+                      width: '100%'
+                    }}
                   >
-                    <option value="">None</option>
-                    {patternOptions.map(p => <option key={p} value={p}>{p}</option>)}
+                    <option value="replace">Replace</option>
+                    <option value="overlay">Overlay</option>
                   </select>
                 </div>
 
-                <div style={{ marginTop: '8px' }}>
-                  <div style={{ marginBottom: '4px', fontWeight: 600 }}>Survive counts:</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
-                    {Array.from({ length: 9 }, (_, n) => (
-                      <label key={`s${n}`} style={{ display: 'flex', alignItems: 'center', fontSize: '0.95rem', fontWeight: 600 }}>
-                        <input
-                          type="checkbox"
-                          checked={surviveCounts.includes(n)}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
-                            setSurviveCounts(prev => checked ? [...prev, n] : prev.filter(x => x !== n));
-                          }}
-                        />
-                        <span style={{ marginLeft: '3px' }}>{n}</span>
-                      </label>
-                    ))}
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                  <label style={{ fontWeight: 600 }}>Background:</label>
+                  <input 
+                    type="color" 
+                    value={backgroundColor} 
+                    onChange={e => setBackgroundColor(e.target.value)}
+                    style={{ marginLeft: '8px' }}
+                  />
+                </div>
 
-                  <div style={{ marginTop: '6px', marginBottom: '4px', fontWeight: 600 }}>Birth counts:</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
-                    {Array.from({ length: 9 }, (_, n) => (
-                      <label key={`b${n}`} style={{ display: 'flex', alignItems: 'center', fontSize: '0.95rem', fontWeight: 600 }}>
-                        <input
-                          type="checkbox"
-                          checked={birthCounts.includes(n)}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
-                            setBirthCounts(prev => checked ? [...prev, n] : prev.filter(x => x !== n));
-                          }}
-                        />
-                        <span style={{ marginLeft: '3px' }}>{n}</span>
-                      </label>
-                    ))}
-                  </div>
+                <div style={{ fontWeight: 600 }}>
+                  <label>
+                    <input 
+                      type="checkbox" 
+                      checked={showGrid} 
+                      onChange={e => setShowGrid(e.target.checked)} 
+                    /> 
+                    Show Grid
+                  </label>
                 </div>
               </>
             )}
