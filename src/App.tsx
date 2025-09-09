@@ -133,7 +133,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
   const [showStepControls, setShowStepControls] = useState(false);
   const [showAutoControls, setShowAutoControls] = useState(true);
-  const [showOptions, setShowOptions] = useState(false);
+  const [showOptions, setShowOptions] = useState(true);
   const [customColor, setCustomColor] = useState('#ffffff');
   const [isSavingColor, setIsSavingColor] = useState(false);
   const [generativeColorIndices, setGenerativeColorIndices] = useState(() => palette.slice(1).map((_, index) => index + 1));
@@ -1493,7 +1493,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
                       borderRadius: '6px',
                       cursor: 'pointer',
-                      outline: isSavingColor ? '2px dashed #15803d' : 'none',
+                      outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
                       outlineOffset: '2px',
                       transition: 'outline 0.2s'
                       }}
@@ -1544,7 +1544,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                         padding: '6px 0',
                         height: '32px',
                         borderRadius: '6px',
-                        background: isSavingColor ? '#166534' : '#3a3a3c',
+                        background: isSavingColor ? '#54a0ff' : '#3a3a3c',
                         color: '#fff',
                         border: 'none',
                         cursor: 'pointer',
@@ -1572,7 +1572,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       padding: '6px 12px',
                       borderRadius: '6px',
                       background: autoSpreading 
-                        ? '#dc2626' 
+                        ? '#3a3a3c' 
                         : autoSpreadEnabled 
                           ? '#3a3a3c' 
                           : '#52525b',
@@ -1583,7 +1583,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       fontSize: '0.95rem',
                       whiteSpace: 'nowrap',
                       opacity: autoSpreadEnabled ? 1 : 0.6,
-                      boxShadow: autoSpreading ? '0 0 8px rgba(22, 163, 74, 0.6)' : 'none',
+                      boxShadow: autoSpreading ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
                       transition: 'box-shadow 0.2s ease-in-out'
                     }}
                   >
@@ -1618,7 +1618,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                         fontSize: '0.95rem',
                         whiteSpace: 'nowrap',
                         opacity: enabled ? 1 : 0.6,
-                        boxShadow: active ? '0 0 8px rgba(22, 163, 74, 0.6)' : 'none',
+                        boxShadow: active ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
                         transition: 'box-shadow 0.2s ease-in-out'
                       }}
                     >
@@ -1639,7 +1639,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       fontSize: '0.95rem',
                       whiteSpace: 'nowrap',
                       opacity: anyEnabled || isAnyRunning ? 1 : 0.6,
-                      boxShadow: isAnyRunning ? '0 0 8px rgba(22, 163, 74, 0.6)' : 'none',
+                      boxShadow: isAnyRunning ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
                       transition: 'box-shadow 0.2s ease-in-out'
                     }}
                   >
@@ -2108,7 +2108,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                                     cursor: 'pointer',
                                     padding: '2px',
                                     borderRadius: '6px',
-                                    outline: isSavingColor ? '2px dashed #6ee7b7' : 'none',
+                                    outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
                                     outlineOffset: '2px',
                                     transition: 'outline 0.2s',
                                 }}
