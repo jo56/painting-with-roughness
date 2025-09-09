@@ -364,14 +364,16 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           const nr = r + dr;
           const nc = c + dc;
           if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-            let shouldPaint = false; // BRUSH PATCH
+            let shouldPaint = false;
             switch (brushType) {
               case 'square':
                 shouldPaint = true;
                 break;
-              case 'circle':
-                shouldPaint = dr*dr + dc*dc <= (brushSize/2) ** 2;
+              case 'circle': {
+                const radius = Math.floor(brushSize / 2);
+                shouldPaint = dr * dr + dc * dc <= radius * radius;
                 break;
+              }
               case 'diagonal':
                 shouldPaint = Math.abs(dr) === Math.abs(dc);
                 break;
@@ -380,7 +382,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 break;
             }
             if (!shouldPaint) continue;
-
+            
             if (blendMode === 'replace' || ng[nr][nc] === 0) {
               ng[nr][nc] = color;
             } else if (blendMode === 'overlay' && color > 0) {
