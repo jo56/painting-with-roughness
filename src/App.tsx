@@ -45,7 +45,7 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
 }
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion' | 'flow' | 'jitter' | 'scramble' | 'contour';
+type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion' | 'flow' | 'jitter' | 'vortex' | 'strobe';
 
 export default function ModularSettingsPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -60,6 +60,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const shapesRunningRef = useRef(false);
   const pressedKeys = useRef(new Set<string>());
   const walkers = useRef<{r: number, c: number, color: number}[]>([]);
+  const strobeStateRef = useRef(true); // true: expand, false: contract
 
   const defaults = {
     cellSize: 20,
@@ -92,7 +93,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     flowDirection: 'down' as Direction,
     flowChance: 0.5,
     jitterChance: 0.3,
-    scrambleSwaps: 10,
+    vortexCount: 5,
+    strobeThreshold: 3,
   };
 
   const [palette, setPalette] = useState([
@@ -149,7 +151,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [flowDirection, setFlowDirection] = useState<Direction>(defaults.flowDirection);
   const [flowChance, setFlowChance] = useState(defaults.flowChance);
   const [jitterChance, setJitterChance] = useState(defaults.jitterChance);
-  const [scrambleSwaps, setScrambleSwaps] = useState(defaults.scrambleSwaps);
+  const [vortexCount, setVortexCount] = useState(defaults.vortexCount);
+  const [strobeThreshold, setStrobeThreshold] = useState(defaults.strobeThreshold);
 
   const generativeColorIndicesRef = useRef(generativeColorIndices);
   const spreadProbabilityRef = useRef(spreadProbability);
@@ -176,7 +179,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const flowDirectionRef = useRef(flowDirection);
   const flowChanceRef = useRef(flowChance);
   const jitterChanceRef = useRef(jitterChance);
-  const scrambleSwapsRef = useRef(scrambleSwaps);
+  const vortexCountRef = useRef(vortexCount);
+  const strobeThresholdRef = useRef(strobeThreshold);
   
   useEffect(() => { spreadProbabilityRef.current = spreadProbability; }, [spreadProbability]);
   useEffect(() => { autoSpreadSpeedRef.current = autoSpreadSpeed; }, [autoSpreadSpeed]);
@@ -203,7 +207,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   useEffect(() => { flowDirectionRef.current = flowDirection; }, [flowDirection]);
   useEffect(() => { flowChanceRef.current = flowChance; }, [flowChance]);
   useEffect(() => { jitterChanceRef.current = jitterChance; }, [jitterChance]);
-  useEffect(() => { scrambleSwapsRef.current = scrambleSwaps; }, [scrambleSwaps]);
+  useEffect(() => { vortexCountRef.current = vortexCount; }, [vortexCount]);
+  useEffect(() => { strobeThresholdRef.current = strobeThreshold; }, [strobeThreshold]);
 
 
   const isDragging = useRef(false);
@@ -436,73 +441,94 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         let ng = cloneGrid(g);
 
         switch (pattern) {
-            case 'contour': {
-                const locationsToColor = new Map<string, number>();
-                for (let r = 0; r < currentRows; r++) {
-                    for (let c = 0; c < currentCols; c++) {
-                        if (g[r][c] === 0) {
-                            const neighborColors: number[] = [];
-                            for (let dr = -1; dr <= 1; dr++) {
-                                for (let dc = -1; dc <= 1; dc++) {
-                                    if (dr === 0 && dc === 0) continue;
-                                    const nr = r + dr, nc = c + dc;
-                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] > 0) {
-                                        neighborColors.push(g[nr][nc]);
-                                    }
-                                }
-                            }
-
-                            if (neighborColors.length > 0) {
-                                const colorCounts = neighborColors.reduce((acc, color) => {
-                                    acc[color] = (acc[color] || 0) + 1;
-                                    return acc;
-                                }, {} as Record<number, number>);
-                                
-                                let dominantColor = 0;
-                                let maxCount = 0;
-                                for (const color in colorCounts) {
-                                    if (colorCounts[color] > maxCount) {
-                                        maxCount = colorCounts[color];
-                                        dominantColor = parseInt(color);
-                                    }
-                                }
-                                if(dominantColor > 0) {
-                                    locationsToColor.set(`${r},${c}`, dominantColor);
-                                }
-                            }
-                        }
-                    }
+            case 'vortex': {
+                const count = vortexCountRef.current;
+                for (let i = 0; i < count; i++) {
+                    const r = 1 + Math.floor(Math.random() * (currentRows - 2));
+                    const c = 1 + Math.floor(Math.random() * (currentCols - 2));
+                    
+                    const neighborsCoords = [
+                        [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
+                        [r, c + 1], [r + 1, c + 1], [r + 1, c],
+                        [r + 1, c - 1], [r, c - 1]
+                    ];
+                    
+                    const originalColors = neighborsCoords.map(([nr, nc]) => g[nr][nc]);
+                    
+                    // Clockwise rotation
+                    neighborsCoords.forEach(([nr, nc], idx) => {
+                        const sourceIndex = (idx + 7) % 8; // (idx - 1 + 8) % 8
+                        ng[nr][nc] = originalColors[sourceIndex];
+                    });
                 }
-                locationsToColor.forEach((color, key) => {
-                    const [r, c] = key.split(',').map(Number);
-                    ng[r][c] = color;
-                });
                 break;
             }
-            case 'scramble': {
-                const coloredCells: {r: number, c: number}[] = [];
-                for (let r = 0; r < currentRows; r++) {
-                    for (let c = 0; c < currentCols; c++) {
-                        if (g[r][c] > 0) {
-                            coloredCells.push({r, c});
+            case 'strobe': {
+                strobeStateRef.current = !strobeStateRef.current;
+                const threshold = strobeThresholdRef.current;
+            
+                if (strobeStateRef.current) { // EXPAND
+                    const locationsToColor = new Map<string, number>();
+                    for (let r = 0; r < currentRows; r++) {
+                        for (let c = 0; c < currentCols; c++) {
+                            if (g[r][c] === 0) {
+                                const neighborColors: number[] = [];
+                                for (let dr = -1; dr <= 1; dr++) {
+                                    for (let dc = -1; dc <= 1; dc++) {
+                                        if (dr === 0 && dc === 0) continue;
+                                        const nr = r + dr, nc = c + dc;
+                                        if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] > 0) {
+                                            neighborColors.push(g[nr][nc]);
+                                        }
+                                    }
+                                }
+            
+                                if (neighborColors.length > 0) {
+                                    const colorCounts = neighborColors.reduce((acc, color) => {
+                                        acc[color] = (acc[color] || 0) + 1;
+                                        return acc;
+                                    }, {} as Record<number, number>);
+                                    
+                                    let dominantColor = 0;
+                                    let maxCount = 0;
+                                    for (const color in colorCounts) {
+                                        if (colorCounts[color] > maxCount) {
+                                            maxCount = colorCounts[color];
+                                            dominantColor = parseInt(color);
+                                        }
+                                    }
+                                    if(dominantColor > 0) {
+                                        locationsToColor.set(`${r},${c}`, dominantColor);
+                                    }
+                                }
+                            }
                         }
                     }
-                }
-                if (coloredCells.length < 2) break;
-
-                const swaps = Math.min(scrambleSwapsRef.current, Math.floor(coloredCells.length / 2));
-                for (let i = 0; i < swaps; i++) {
-                    const idx1 = Math.floor(Math.random() * coloredCells.length);
-                    let idx2 = Math.floor(Math.random() * coloredCells.length);
-                    while (idx1 === idx2) {
-                        idx2 = Math.floor(Math.random() * coloredCells.length);
+                    locationsToColor.forEach((color, key) => {
+                        const [r, c] = key.split(',').map(Number);
+                        ng[r][c] = color;
+                    });
+            
+                } else { // CONTRACT
+                    for (let r = 0; r < currentRows; r++) {
+                        for (let c = 0; c < currentCols; c++) {
+                            if (g[r][c] > 0) {
+                                let emptyNeighbors = 0;
+                                for (let dr = -1; dr <= 1; dr++) {
+                                    for (let dc = -1; dc <= 1; dc++) {
+                                        if (dr === 0 && dc === 0) continue;
+                                        const nr = r + dr, nc = c + dc;
+                                        if (nr < 0 || nr >= currentRows || nc < 0 || nc >= currentCols || g[nr][nc] === 0) {
+                                            emptyNeighbors++;
+                                        }
+                                    }
+                                }
+                                if (emptyNeighbors >= threshold) {
+                                    ng[r][c] = 0;
+                                }
+                            }
+                        }
                     }
-                    const cell1 = coloredCells[idx1];
-                    const cell2 = coloredCells[idx2];
-                    const color1 = ng[cell1.r][cell1.c];
-                    const color2 = ng[cell2.r][cell2.c];
-                    ng[cell1.r][cell1.c] = color2;
-                    ng[cell2.r][cell2.c] = color1;
                 }
                 break;
             }
@@ -1023,6 +1049,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
       if (spreadPatternRef.current === 'vein') {
         walkers.current = []; // Reset walkers when starting
       }
+      if (spreadPatternRef.current === 'strobe') {
+        strobeStateRef.current = true; // Reset to expand
+      }
       runAutoSpread();
     } else if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
@@ -1200,7 +1229,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     setFlowDirection(defaults.flowDirection);
     setFlowChance(defaults.flowChance);
     setJitterChance(defaults.jitterChance);
-    setScrambleSwaps(defaults.scrambleSwaps);
+    setVortexCount(defaults.vortexCount);
+    setStrobeThreshold(defaults.strobeThreshold);
   };
 
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
@@ -1703,8 +1733,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       <option value="erosion">Erosion</option>
                       <option value="flow">Flow</option>
                       <option value="jitter">Jitter</option>
-                      <option value="scramble">Scramble</option>
-                      <option value="contour">Contour</option>
+                      <option value="vortex">Vortex</option>
+                      <option value="strobe">Strobe</option>
                     </select>
                   </div>
                    <button
@@ -1725,6 +1755,30 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   </button>
                 </div>
                 
+                {spreadPattern === 'vortex' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Vortex Count:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{vortexCount}</span>
+                          </div>
+                          <input type="range" min={1} max={50} value={vortexCount} onChange={(e) => setVortexCount(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+
+                {spreadPattern === 'strobe' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Edge Threshold:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{strobeThreshold} Neighbors</span>
+                          </div>
+                          <input type="range" min={1} max={8} value={strobeThreshold} onChange={(e) => setStrobeThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+                
                 {spreadPattern === 'jitter' && (
                   <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
                       <div>
@@ -1737,18 +1791,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   </div>
                 )}
                 
-                {spreadPattern === 'scramble' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
-                      <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Swaps per Step:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{scrambleSwaps}</span>
-                          </div>
-                          <input type="range" min={1} max={100} value={scrambleSwaps} onChange={(e) => setScrambleSwaps(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                      </div>
-                  </div>
-                )}
-
                 {spreadPattern === 'flow' && (
                   <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
                       <div style={{ marginBottom: '10px' }}>
