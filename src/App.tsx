@@ -67,9 +67,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const ripplesRef = useRef<{r: number, c: number, color: number, radius: number, maxRadius: number}[]>([]);
 
   const defaults = {
-    cellSize: 15,
-    rows: 65,
-    cols: 80,
+    cellSize: 10,
+    rows: 100,
+    cols: 165,
     showGrid: false,
     backgroundColor: '#0a0a0a',
     brushSize: 2,
@@ -1407,7 +1407,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             alignItems: 'center',
           }}
         >
-          <span>Painting with Roughness</span>
+          <span>painting-with-roughness</span>
           <button
             onClick={() => setPanelMinimized(prev => !prev)}
             style={{
