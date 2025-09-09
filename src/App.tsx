@@ -78,16 +78,21 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [isSavingColor, setIsSavingColor] = useState(false);
   const [generativeColorIndices, setGenerativeColorIndices] = useState(() => palette.slice(1).map((_, index) => index + 1));
 
-
+  const generativeColorIndicesRef = useRef(generativeColorIndices);
   const spreadProbabilityRef = useRef(spreadProbability);
   const autoSpreadSpeedRef = useRef(autoSpreadSpeed);
   const autoDotsSpeedRef = useRef(autoDotsSpeed);
   const autoShapesSpeedRef = useRef(autoShapesSpeed);
+  const rowsRef = useRef(rows);
+  const colsRef = useRef(cols);
   
   useEffect(() => { spreadProbabilityRef.current = spreadProbability; }, [spreadProbability]);
   useEffect(() => { autoSpreadSpeedRef.current = autoSpreadSpeed; }, [autoSpreadSpeed]);
   useEffect(() => { autoDotsSpeedRef.current = autoDotsSpeed; }, [autoDotsSpeed]);
   useEffect(() => { autoShapesSpeedRef.current = autoShapesSpeed; }, [autoShapesSpeed]);
+  useEffect(() => { generativeColorIndicesRef.current = generativeColorIndices; }, [generativeColorIndices]);
+  useEffect(() => { rowsRef.current = rows; }, [rows]);
+  useEffect(() => { colsRef.current = cols; }, [cols]);
 
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -121,7 +126,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const colorIndex = grid[r][c];
+        const colorIndex = grid[r]?.[c];
         if (colorIndex > 0) {
           if (colorIndex === palette.length) {
             ctx.fillStyle = customColor;
@@ -256,10 +261,13 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const colorSpread = useCallback(() => {
     setGrid(g => {
       const ng = cloneGrid(g);
+      const currentRows = rowsRef.current;
+      const currentCols = colsRef.current;
       
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const currentColor = g[r][c];
+      for (let r = 0; r < currentRows; r++) {
+        for (let c = 0; c < currentCols; c++) {
+          const currentColor = g[r]?.[c];
+          if (currentColor === undefined) continue;
           
           if (currentColor > 0) {
             if (Math.random() < spreadProbabilityRef.current) {
@@ -269,7 +277,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   if (dr === 0 && dc === 0) continue;
                   const nr = r + dr;
                   const nc = c + dc;
-                  if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                  if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols) {
                     neighbors.push({ r: nr, c: nc });
                   }
                 }
@@ -286,31 +294,34 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
       
       return ng;
     });
-  }, [rows, cols]);
+  }, []);
 
   const addRandomDots = useCallback(() => {
     setGrid(g => {
         const ng = cloneGrid(g);
-        const availableColors = generativeColorIndices.length > 0 ? generativeColorIndices : palette.slice(1).map((_, i) => i + 1);
+        const availableColors = generativeColorIndicesRef.current.length > 0 ? generativeColorIndicesRef.current : palette.slice(1).map((_, i) => i + 1);
         if (availableColors.length === 0) return ng;
 
         const numDots = Math.floor(Math.random() * 6) + 5;
         for (let i = 0; i < numDots; i++) {
-            const r = Math.floor(Math.random() * rows);
-            const c = Math.floor(Math.random() * cols);
+            const r = Math.floor(Math.random() * rowsRef.current);
+            const c = Math.floor(Math.random() * colsRef.current);
             const color = availableColors[Math.floor(Math.random() * availableColors.length)];
-            ng[r][c] = color;
+            if(ng[r]) ng[r][c] = color;
         }
         
         return ng;
     });
-  }, [rows, cols, palette, generativeColorIndices]);
+  }, [palette]);
 
   const addRandomShapes = useCallback(() => {
     setGrid(g => {
         const ng = cloneGrid(g);
-        const availableColors = generativeColorIndices.length > 0 ? generativeColorIndices : palette.slice(1).map((_, i) => i + 1);
+        const availableColors = generativeColorIndicesRef.current.length > 0 ? generativeColorIndicesRef.current : palette.slice(1).map((_, i) => i + 1);
         if (availableColors.length === 0) return ng;
+
+        const currentRows = rowsRef.current;
+        const currentCols = colsRef.current;
 
         const numShapes = Math.floor(Math.random() * 2) + 1;
         for (let i = 0; i < numShapes; i++) {
@@ -318,19 +329,19 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             const shapeType = Math.random() > 0.5 ? 'rect' : 'line';
             
             if (shapeType === 'rect') {
-                const startR = Math.floor(Math.random() * (rows - 5));
-                const startC = Math.floor(Math.random() * (cols - 5));
+                const startR = Math.floor(Math.random() * (currentRows - 5));
+                const startC = Math.floor(Math.random() * (currentCols - 5));
                 const width = Math.floor(Math.random() * 6) + 3;
                 const height = Math.floor(Math.random() * 6) + 3;
                 
-                for (let r = startR; r < Math.min(startR + height, rows); r++) {
-                    for (let c = startC; c < Math.min(startC + width, cols); c++) {
-                        ng[r][c] = color;
+                for (let r = startR; r < Math.min(startR + height, currentRows); r++) {
+                    for (let c = startC; c < Math.min(startC + width, currentCols); c++) {
+                        if(ng[r]) ng[r][c] = color;
                     }
                 }
             } else {
-                const startR = Math.floor(Math.random() * rows);
-                const startC = Math.floor(Math.random() * cols);
+                const startR = Math.floor(Math.random() * currentRows);
+                const startC = Math.floor(Math.random() * currentCols);
                 const isHorizontal = Math.random() > 0.5;
                 const length = Math.floor(Math.random() * 10) + 5;
                 
@@ -344,8 +355,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                         r += i;
                     }
                     
-                    if (r >= 0 && r < rows && c >= 0 && c < cols) {
-                        ng[r][c] = color;
+                    if (r >= 0 && r < currentRows && c >= 0 && c < currentCols) {
+                        if(ng[r]) ng[r][c] = color;
                     }
                 }
             }
@@ -353,7 +364,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         
         return ng;
     });
-  }, [rows, cols, palette, generativeColorIndices]);
+  }, [palette]);
 
   const runAutoSpread = useCallback(() => {
     let lastTime = performance.now();
@@ -506,29 +517,34 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     };
   }, [isMobile, panelPos]);
 
-  const handleRowsChange = (newRows: number) => {
+  const handleRowsChange = useCallback((newRows: number) => {
     setRows(newRows);
-    setGrid(g => {
+    setGrid(currentGrid => {
       const newGrid = createEmptyGrid(newRows, cols);
-      for (let r = 0; r < Math.min(g.length, newRows); r++) {
-        for (let c = 0; c < cols; c++) {
-          newGrid[r][c] = g[r][c];
+      const oldRows = currentGrid.length;
+      for (let r = 0; r < Math.min(oldRows, newRows); r++) {
+        const oldCols = currentGrid[r]?.length ?? 0;
+        for (let c = 0; c < Math.min(oldCols, cols); c++) {
+          newGrid[r][c] = currentGrid[r][c];
         }
       }
       return newGrid;
     });
-  };
+  }, [cols]);
 
-  const handleColsChange = (newCols: number) => {
+  const handleColsChange = useCallback((newCols: number) => {
     setCols(newCols);
-    setGrid(g => g.map(row => {
-      const newRow = new Array(newCols).fill(0);
-      for (let c = 0; c < Math.min(row.length, newCols); c++) {
-        newRow[c] = row[c];
-      }
-      return newRow;
-    }));
-  };
+    setGrid(currentGrid =>
+      currentGrid.map(row => {
+        const newRow = new Array(newCols).fill(0);
+        const oldLength = row.length;
+        for (let c = 0; c < Math.min(oldLength, newCols); c++) {
+          newRow[c] = row[c];
+        }
+        return newRow;
+      })
+    );
+  }, []);
 
   const handlePaletteClick = (index: number) => {
     if (isSavingColor) {
@@ -1005,7 +1021,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             {showOptions && showGenerativeSettings && (
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb' }}>
-                    Allowed Random Colors
+                    Allowed Generative Colors
                 </label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {palette.slice(1).map((color, index) => {
