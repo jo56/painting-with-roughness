@@ -993,11 +993,38 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     {palette.slice(1).map((color, index) => {
                         const colorIndex = index + 1;
                         return (
-                            <label key={colorIndex} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                            <label 
+                                key={colorIndex} 
+                                style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '4px', 
+                                    cursor: 'pointer',
+                                    padding: '2px',
+                                    borderRadius: '6px',
+                                    outline: isSavingColor ? '2px dashed #059669' : 'none',
+                                    outlineOffset: '2px',
+                                    transition: 'outline 0.2s',
+                                }}
+                                title={isSavingColor ? `Save ${customColor} to this slot` : `Toggle color for generation`}
+                                onClick={(e) => {
+                                    if (isSavingColor) {
+                                        e.preventDefault();
+                                        setPalette(p => {
+                                            const newPalette = [...p];
+                                            newPalette[colorIndex] = customColor;
+                                            return newPalette;
+                                        });
+                                        setIsSavingColor(false);
+                                        setSelectedColor(colorIndex);
+                                    }
+                                }}
+                            >
                                 <input
                                     type="checkbox"
                                     checked={generativeColorIndices.includes(colorIndex)}
                                     onChange={() => handleGenerativeColorToggle(colorIndex)}
+                                    style={{ pointerEvents: isSavingColor ? 'none' : 'auto' }}
                                 />
                                 <div style={{ width: '20px', height: '20px', background: color, borderRadius: '4px' }} />
                             </label>
