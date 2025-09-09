@@ -1752,10 +1752,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       Canvas Settings
                     </label>
                     {[
-                      ['Brush Size', brushSize, 1, 10, 1, setBrushSize, ''],
-                      ['Cell Size', cellSize, 5, 50, 1, setCellSize, ' px'],
-                      ['Rows', rows, 10, 100, 1, handleRowsChange, ''],
-                      ['Cols', cols, 10, 100, 1, handleColsChange, '']
+                      ['Brush Size', brushSize, 1, 20, 1, setBrushSize, ''],
+                      ['Cell Size', cellSize, 1, 50, 1, setCellSize, ' px'],
+                      ['Rows', rows, 10, 1000, 1, handleRowsChange, ''],
+                      ['Cols', cols, 10, 1000, 1, handleColsChange, '']
                     ].map(([label, value, min, max, step, setter, unit], idx) => (
                       <div key={idx} style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
