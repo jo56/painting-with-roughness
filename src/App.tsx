@@ -47,6 +47,9 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
 type Direction = 'up' | 'down' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion' | 'flow' | 'jitter' | 'vortex' | 'strobe' | 'scramble' | 'ripple';
 
+type BrushType = 'square' | 'circle' | 'diagonal' | 'spray'; // BRUSH PATCH
+
+
 export default function ModularSettingsPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
@@ -64,12 +67,12 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const ripplesRef = useRef<{r: number, c: number, color: number, radius: number, maxRadius: number}[]>([]);
 
   const defaults = {
-    cellSize: 20,
-    rows: 30,
-    cols: 40,
+    cellSize: 10,
+    rows: 100,
+    cols: 165,
     showGrid: false,
     backgroundColor: '#0a0a0a',
-    brushSize: 1,
+    brushSize: 2,
     selectedColor: 1,
     spreadProbability: 0.2,
     autoSpreadSpeed: 3,
@@ -80,7 +83,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     pulseSpeed: 10,
     pulseOvertakes: true,
     pulseDirection: 'bottom-right' as Direction,
-    directionalBias: 'bottom-right' as Direction,
+    directionalBias: 'down' as Direction,
     conwayRules: { born: [3], survive: [2,3] },
     tendrilsRules: { born: [1], survive: [1,2] },
     directionalBiasStrength: 0.8,
@@ -126,6 +129,18 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [autoShapesEnabled, setAutoShapesEnabled] = useState(true);
   const [blendMode, setBlendMode] = useState(defaults.blendMode);
   const [tool, setTool] = useState('brush');
+  const [brushType, setBrushType] = useState<BrushType>('square');
+    const [sprayDensity, setSprayDensity] = useState(0.3); // BRUSH PATCH
+  const [diagonalThickness, setDiagonalThickness] = useState(1);
+  const brushTypeRef = useRef<BrushType>('square'); // BRUSH PATCH
+    const sprayDensityRef = useRef(sprayDensity); // BRUSH PATCH
+  const diagonalThicknessRef = useRef(diagonalThickness); // BRUSH PATCH
+
+  useEffect(() => { brushTypeRef.current = brushType; }, [brushType]); // BRUSH PATCH
+    useEffect(() => { sprayDensityRef.current = sprayDensity; }, [sprayDensity]); // BRUSH PATCH
+  useEffect(() => { diagonalThicknessRef.current = diagonalThickness; }, [diagonalThickness]); // BRUSH PATCH
+ // BRUSH PATCH
+ // BRUSH PATCH
   const [panelMinimized, setPanelMinimized] = useState(false);
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
@@ -360,6 +375,25 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           const nr = r + dr;
           const nc = c + dc;
           if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+            let shouldPaint = false; // BRUSH PATCH
+            switch (brushTypeRef.current) { // BRUSH PATCH
+              case 'square':
+                shouldPaint = true;
+                break;
+              case 'circle': {
+  const radius = Math.floor(brushSize / 2);
+  shouldPaint = dr * dr + dc * dc <= radius * radius;
+  break;
+}
+              case 'diagonal':
+                shouldPaint = Math.abs(dr) === Math.abs(dc) && Math.abs(dr) <= diagonalThicknessRef.current;
+                break;
+              case 'spray':
+                shouldPaint = Math.random() < sprayDensityRef.current;
+                break;
+            }
+            if (!shouldPaint) continue;
+
             if (blendMode === 'replace' || ng[nr][nc] === 0) {
               ng[nr][nc] = color;
             } else if (blendMode === 'overlay' && color > 0) {
@@ -1373,7 +1407,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             alignItems: 'center',
           }}
         >
-          <span>Modular Paint Studio</span>
+          <span>painting-with-roughness</span>
           <button
             onClick={() => setPanelMinimized(prev => !prev)}
             style={{
@@ -1752,7 +1786,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       Canvas Settings
                     </label>
                     {[
-                      ['Brush Size', brushSize, 1, 20, 1, setBrushSize, ''],
+                      ['Brush Size', brushSize, 1, 100, 1, setBrushSize, ''],
                       ['Cell Size', cellSize, 1, 30, 1, setCellSize, ' px'],
                       ['Rows', rows, 10, 2000, 1, handleRowsChange, ''],
                       ['Cols', cols, 10, 2000, 1, handleColsChange, '']
@@ -1803,7 +1837,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       <option value="random">Random Walk</option>
                       <option value="conway">Game of Life</option>
                       <option value="tendrils">Tendrils</option>
-                      <option value="pulse">Pulsing</option>
+                      <option value="pulse">Current</option>
                       <option value="directional">Directional</option>
                       <option value="vein">Vein Growth</option>
                       <option value="crystallize">Crystallize</option>
@@ -2093,7 +2127,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb', marginTop: '12px' }}>
-                    Allowed Generative Colors
+                    Allowed Random Colors
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '8px' }}>
                     {palette.slice(1).map((color, index) => {
@@ -2143,7 +2177,36 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             {showOptions && showVisualSettings && (
               <>
                 <div style={{ marginBottom: '10px' }}>
-                  <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
+                  
+        <div style={{ marginBottom: '12px' }}> {/* BRUSH PATCH */}
+          <label style={{ fontSize: '0.9rem', fontWeight: 500, display: 'block', marginBottom: '6px' }}>Brush Type</label>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {(['square', 'circle', 'diagonal', 'spray'] as BrushType[]).map(type => (
+              <button
+                key={type}
+                onClick={() => setBrushType(type)}
+                style={{ padding: '6px 12px', borderRadius: '6px', background: brushType === type ? '#8b5cf6' : '#3a3a3c', color: '#fff', border: 'none', cursor: 'pointer' }}
+              >
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        
+        {brushType === 'spray' && (
+          <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
+            <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Spray Density: {sprayDensity.toFixed(2)}</label>
+            <input type="range" step={0.05} min={0.05} max={1} value={sprayDensity} onChange={e => setSprayDensity(Number(e.target.value))} />
+          </div>
+        )}
+        {brushType === 'diagonal' && (
+          <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
+            <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Diagonal Thickness: {diagonalThickness}</label>
+            <input type="range" min={1} max={100} value={diagonalThickness} onChange={e => setDiagonalThickness(Number(e.target.value))} />
+          </div>
+        )}
+<label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
                   <select
                     value={blendMode}
                     onChange={(e) => setBlendMode(e.target.value)}
