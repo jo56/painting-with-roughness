@@ -45,7 +45,7 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
 }
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion';
+type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion' | 'flow' | 'jitter' | 'scramble' | 'contour';
 
 export default function ModularSettingsPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -89,6 +89,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     crystallizeThreshold: 2,
     erosionRate: 0.5,
     erosionSolidity: 3,
+    flowDirection: 'down' as Direction,
+    flowChance: 0.5,
+    jitterChance: 0.3,
+    scrambleSwaps: 10,
   };
 
   const [palette, setPalette] = useState([
@@ -142,6 +146,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [crystallizeThreshold, setCrystallizeThreshold] = useState(defaults.crystallizeThreshold);
   const [erosionRate, setErosionRate] = useState(defaults.erosionRate);
   const [erosionSolidity, setErosionSolidity] = useState(defaults.erosionSolidity);
+  const [flowDirection, setFlowDirection] = useState<Direction>(defaults.flowDirection);
+  const [flowChance, setFlowChance] = useState(defaults.flowChance);
+  const [jitterChance, setJitterChance] = useState(defaults.jitterChance);
+  const [scrambleSwaps, setScrambleSwaps] = useState(defaults.scrambleSwaps);
 
   const generativeColorIndicesRef = useRef(generativeColorIndices);
   const spreadProbabilityRef = useRef(spreadProbability);
@@ -165,6 +173,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const crystallizeThresholdRef = useRef(crystallizeThreshold);
   const erosionRateRef = useRef(erosionRate);
   const erosionSolidityRef = useRef(erosionSolidity);
+  const flowDirectionRef = useRef(flowDirection);
+  const flowChanceRef = useRef(flowChance);
+  const jitterChanceRef = useRef(jitterChance);
+  const scrambleSwapsRef = useRef(scrambleSwaps);
   
   useEffect(() => { spreadProbabilityRef.current = spreadProbability; }, [spreadProbability]);
   useEffect(() => { autoSpreadSpeedRef.current = autoSpreadSpeed; }, [autoSpreadSpeed]);
@@ -188,6 +200,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   useEffect(() => { crystallizeThresholdRef.current = crystallizeThreshold; }, [crystallizeThreshold]);
   useEffect(() => { erosionRateRef.current = erosionRate; }, [erosionRate]);
   useEffect(() => { erosionSolidityRef.current = erosionSolidity; }, [erosionSolidity]);
+  useEffect(() => { flowDirectionRef.current = flowDirection; }, [flowDirection]);
+  useEffect(() => { flowChanceRef.current = flowChance; }, [flowChance]);
+  useEffect(() => { jitterChanceRef.current = jitterChance; }, [jitterChance]);
+  useEffect(() => { scrambleSwapsRef.current = scrambleSwaps; }, [scrambleSwaps]);
 
 
   const isDragging = useRef(false);
@@ -420,6 +436,161 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         let ng = cloneGrid(g);
 
         switch (pattern) {
+            case 'contour': {
+                const locationsToColor = new Map<string, number>();
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        if (g[r][c] === 0) {
+                            const neighborColors: number[] = [];
+                            for (let dr = -1; dr <= 1; dr++) {
+                                for (let dc = -1; dc <= 1; dc++) {
+                                    if (dr === 0 && dc === 0) continue;
+                                    const nr = r + dr, nc = c + dc;
+                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] > 0) {
+                                        neighborColors.push(g[nr][nc]);
+                                    }
+                                }
+                            }
+
+                            if (neighborColors.length > 0) {
+                                const colorCounts = neighborColors.reduce((acc, color) => {
+                                    acc[color] = (acc[color] || 0) + 1;
+                                    return acc;
+                                }, {} as Record<number, number>);
+                                
+                                let dominantColor = 0;
+                                let maxCount = 0;
+                                for (const color in colorCounts) {
+                                    if (colorCounts[color] > maxCount) {
+                                        maxCount = colorCounts[color];
+                                        dominantColor = parseInt(color);
+                                    }
+                                }
+                                if(dominantColor > 0) {
+                                    locationsToColor.set(`${r},${c}`, dominantColor);
+                                }
+                            }
+                        }
+                    }
+                }
+                locationsToColor.forEach((color, key) => {
+                    const [r, c] = key.split(',').map(Number);
+                    ng[r][c] = color;
+                });
+                break;
+            }
+            case 'scramble': {
+                const coloredCells: {r: number, c: number}[] = [];
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        if (g[r][c] > 0) {
+                            coloredCells.push({r, c});
+                        }
+                    }
+                }
+                if (coloredCells.length < 2) break;
+
+                const swaps = Math.min(scrambleSwapsRef.current, Math.floor(coloredCells.length / 2));
+                for (let i = 0; i < swaps; i++) {
+                    const idx1 = Math.floor(Math.random() * coloredCells.length);
+                    let idx2 = Math.floor(Math.random() * coloredCells.length);
+                    while (idx1 === idx2) {
+                        idx2 = Math.floor(Math.random() * coloredCells.length);
+                    }
+                    const cell1 = coloredCells[idx1];
+                    const cell2 = coloredCells[idx2];
+                    const color1 = ng[cell1.r][cell1.c];
+                    const color2 = ng[cell2.r][cell2.c];
+                    ng[cell1.r][cell1.c] = color2;
+                    ng[cell2.r][cell2.c] = color1;
+                }
+                break;
+            }
+            case 'jitter': {
+                const changes = new Map<string, number>();
+                const empties = new Set<string>();
+                const chance = jitterChanceRef.current;
+
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        const color = g[r]?.[c];
+                        if (color > 0 && Math.random() < chance) {
+                            const emptyNeighbors = [];
+                            for (let dr = -1; dr <= 1; dr++) {
+                                for (let dc = -1; dc <= 1; dc++) {
+                                    if (dr === 0 && dc === 0) continue;
+                                    const nr = r + dr, nc = c + dc;
+                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] === 0) {
+                                        emptyNeighbors.push({nr, nc});
+                                    }
+                                }
+                            }
+                            if (emptyNeighbors.length > 0) {
+                                const target = emptyNeighbors[Math.floor(Math.random() * emptyNeighbors.length)];
+                                const key = `${target.nr},${target.nc}`;
+                                if (!changes.has(key) && !empties.has(`${r},${c}`)) {
+                                    changes.set(key, color);
+                                    empties.add(`${r},${c}`);
+                                }
+                            }
+                        }
+                    }
+                }
+                 empties.forEach(key => {
+                    const [r, c] = key.split(',').map(Number);
+                    if (!changes.has(key)) ng[r][c] = 0;
+                });
+                changes.forEach((color, key) => {
+                    const [r, c] = key.split(',').map(Number);
+                    ng[r][c] = color;
+                });
+                break;
+            }
+            case 'flow': {
+                const changes = new Map<string, number>();
+                const empties = new Set<string>();
+                const dir = flowDirectionRef.current;
+                const chance = flowChanceRef.current;
+                
+                let r_start = 0, r_end = currentRows, r_inc = 1;
+                let c_start = 0, c_end = currentCols, c_inc = 1;
+        
+                if (dir.includes('down')) { r_start = currentRows - 1; r_end = -1; r_inc = -1; }
+                if (dir.includes('right')) { c_start = currentCols - 1; c_end = -1; c_inc = -1; }
+        
+                for (let r = r_start; r !== r_end; r += r_inc) {
+                    for (let c = c_start; c !== c_end; c += c_inc) {
+                        const color = g[r]?.[c];
+                        if (color > 0 && Math.random() < chance) {
+                            let dr = 0, dc = 0;
+                            if (dir.includes('up')) dr = -1;
+                            if (dir.includes('down')) dr = 1;
+                            if (dir.includes('left')) dc = -1;
+                            if (dir.includes('right')) dc = 1;
+        
+                            const nr = r + dr;
+                            const nc = c + dc;
+        
+                            if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] === 0) {
+                                if (!changes.has(`${nr},${nc}`)) {
+                                    changes.set(`${nr},${nc}`, color);
+                                    empties.add(`${r},${c}`);
+                                }
+                            }
+                        }
+                    }
+                }
+        
+                empties.forEach(key => {
+                    const [r, c] = key.split(',').map(Number);
+                    if (!changes.has(key)) ng[r][c] = 0;
+                });
+                changes.forEach((color, key) => {
+                    const [r, c] = key.split(',').map(Number);
+                    ng[r][c] = color;
+                });
+                break;
+            }
             case 'vein': {
                 if (walkers.current.length === 0) {
                     for(let r = 0; r < currentRows; r++) {
@@ -1026,6 +1197,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     setCrystallizeThreshold(defaults.crystallizeThreshold);
     setErosionRate(defaults.erosionRate);
     setErosionSolidity(defaults.erosionSolidity);
+    setFlowDirection(defaults.flowDirection);
+    setFlowChance(defaults.flowChance);
+    setJitterChance(defaults.jitterChance);
+    setScrambleSwaps(defaults.scrambleSwaps);
   };
 
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
@@ -1526,6 +1701,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       <option value="vein">Vein Growth</option>
                       <option value="crystallize">Crystallize</option>
                       <option value="erosion">Erosion</option>
+                      <option value="flow">Flow</option>
+                      <option value="jitter">Jitter</option>
+                      <option value="scramble">Scramble</option>
+                      <option value="contour">Contour</option>
                     </select>
                   </div>
                    <button
@@ -1546,6 +1725,59 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   </button>
                 </div>
                 
+                {spreadPattern === 'jitter' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Jitter Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(jitterChance*100)}%</span>
+                          </div>
+                          <input type="range" min={0} max={1} step={0.05} value={jitterChance} onChange={(e) => setJitterChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+                
+                {spreadPattern === 'scramble' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Swaps per Step:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{scrambleSwaps}</span>
+                          </div>
+                          <input type="range" min={1} max={100} value={scrambleSwaps} onChange={(e) => setScrambleSwaps(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+
+                {spreadPattern === 'flow' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                      <div style={{ marginBottom: '10px' }}>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
+                          <select
+                              value={flowDirection}
+                              onChange={(e) => setFlowDirection(e.target.value as any)}
+                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                          >
+                              <option value="down">Down</option>
+                              <option value="up">Up</option>
+                              <option value="left">Left</option>
+                              <option value="right">Right</option>
+                              <option value="bottom-right">Bottom-Right</option>
+                              <option value="bottom-left">Bottom-Left</option>
+                              <option value="top-right">Top-Right</option>
+                              <option value="top-left">Top-Left</option>
+                          </select>
+                      </div>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Flow Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(flowChance*100)}%</span>
+                          </div>
+                          <input type="range" min={0} max={1} step={0.05} value={flowChance} onChange={(e) => setFlowChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+
                 {spreadPattern === 'vein' && (
                   <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
                     <div style={{ marginBottom: '8px' }}>
@@ -1813,3 +2045,4 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     </div>
   );
 }
+
