@@ -384,10 +384,12 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 shouldPaint = true;
                 break;
               case 'circle': {
-                const radius = Math.floor(circleRadiusRef.current / 2);
-                shouldPaint = dr * dr + dc * dc <= radius * radius;
-                break;
-              }
+  const radiusPx = circleRadius; // slider now directly represents pixels
+  const dx = dc * cellSize;
+  const dy = dr * cellSize;
+  shouldPaint = dx * dx + dy * dy <= radiusPx * radiusPx;
+  break;
+}
               case 'diagonal':
                 shouldPaint = Math.abs(dr) === Math.abs(dc) && Math.abs(dr) <= diagonalThicknessRef.current;
                 break;
@@ -2196,12 +2198,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           </div>
         </div>
 
-        {brushType === 'circle' && (
-          <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
-            <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Circle Radius: {circleRadius}</label>
-            <input type="range" min={1} max={50} value={circleRadius} onChange={e => setCircleRadius(Number(e.target.value))} />
-          </div>
-        )}
+        
         {brushType === 'spray' && (
           <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
             <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Spray Density: {sprayDensity.toFixed(2)}</label>
