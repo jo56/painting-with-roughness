@@ -70,6 +70,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const [showVisualSettings, setShowVisualSettings] = useState(false);
+  const [showAutoControls, setShowAutoControls] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
 
   const spreadProbabilityRef = useRef(spreadProbability);
   const autoSpreadSpeedRef = useRef(autoSpreadSpeed);
@@ -517,7 +519,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
       background: '#111827',
       display: 'flex',
       flexDirection: isMobile ? 'column' : 'row',
-      alignItems: 'flex-start'
+      alignItems: 'flex-start',
+      color: '#fff'
     }}>
       <div ref={canvasContainerRef} style={{ padding: '10px', display: 'inline-block' }}>
         <canvas
@@ -618,6 +621,36 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     {label}
                   </button>
                 ))}
+                <button
+                  onClick={() => setShowAutoControls(prev => !prev)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    background: showAutoControls ? '#059669' : '#374151',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 'normal',
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  Auto
+                </button>
+                <button
+                  onClick={() => setShowOptions(prev => !prev)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    background: showOptions ? '#059669' : '#374151',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 'normal',
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  Options
+                </button>
               </div>
             </div>
 
@@ -641,83 +674,82 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               </div>
             </div>
 
-           
-
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
-              {[
-                { 
-                  label: autoSpreading ? 'Stop Spread' : 'Start Spread', 
-                  onClick: toggleAutoSpread, 
-                  bg: autoSpreading ? '#dc2626' : '#16a34a',
-                  enabled: autoSpreadEnabled
-                },
-                { 
-                  label: autoDots ? 'Stop Dots' : 'Start Dots', 
-                  onClick: toggleAutoDots, 
-                  bg: autoDots ? '#dc2626' : '#f59e0b',
-                  enabled: autoDotsEnabled
-                },
-                { 
-                  label: autoShapes ? 'Stop Shapes' : 'Start Shapes', 
-                  onClick: toggleAutoShapes, 
-                  bg: autoShapes ? '#dc2626' : '#8b5cf6',
-                  enabled: autoShapesEnabled
-                }
-              ].map(({ label, onClick, bg, enabled }) => (
-                <button
-                  key={label}
-                  onClick={onClick}
-                  disabled={!enabled}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    background: enabled ? bg : '#6b7280',
-                    color: '#fff',
-                    border: 'none',
-                    cursor: enabled ? 'pointer' : 'not-allowed',
-                    fontWeight: 'normal',
-                    fontSize: '0.95rem',
-                    whiteSpace: 'nowrap',
-                    opacity: enabled ? 1 : 0.6
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-              
-              <button
-                onClick={isAnyRunning ? stopAll : startAllEnabled}
-                disabled={!anyEnabled && !isAnyRunning}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  background: isAnyRunning 
-                    ? '#dc2626' 
-                    : anyEnabled 
-                      ? '#16a34a' 
-                      : '#6b7280',
-                  color: '#fff',
-                  border: 'none',
-                  cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                  fontSize: '0.95rem',
-                  whiteSpace: 'nowrap',
-                  opacity: anyEnabled || isAnyRunning ? 1 : 0.6
-                }}
-              >
-                {isAnyRunning ? 'Stop All' : 'Start All'}
-              </button>
-            </div>
+            {showAutoControls && (
+              <>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                  {[
+                    { 
+                      label: autoSpreading ? 'Stop Spread' : 'Start Spread', 
+                      onClick: toggleAutoSpread, 
+                      bg: autoSpreading ? '#dc2626' : '#16a34a',
+                      enabled: autoSpreadEnabled
+                    },
+                    { 
+                      label: autoDots ? 'Stop Dots' : 'Start Dots', 
+                      onClick: toggleAutoDots, 
+                      bg: autoDots ? '#dc2626' : '#f59e0b',
+                      enabled: autoDotsEnabled
+                    },
+                    { 
+                      label: autoShapes ? 'Stop Shapes' : 'Start Shapes', 
+                      onClick: toggleAutoShapes, 
+                      bg: autoShapes ? '#dc2626' : '#8b5cf6',
+                      enabled: autoShapesEnabled
+                    }
+                  ].map(({ label, onClick, bg, enabled }) => (
+                    <button
+                      key={label}
+                      onClick={onClick}
+                      disabled={!enabled}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        background: enabled ? bg : '#6b7280',
+                        color: '#fff',
+                        border: 'none',
+                        cursor: enabled ? 'pointer' : 'not-allowed',
+                        fontWeight: 'normal',
+                        fontSize: '0.95rem',
+                        whiteSpace: 'nowrap',
+                        opacity: enabled ? 1 : 0.6
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={isAnyRunning ? stopAll : startAllEnabled}
+                    disabled={!anyEnabled && !isAnyRunning}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      background: isAnyRunning 
+                        ? '#dc2626' 
+                        : anyEnabled 
+                          ? '#16a34a' 
+                          : '#6b7280',
+                      color: '#fff',
+                      border: 'none',
+                      cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      whiteSpace: 'nowrap',
+                      opacity: anyEnabled || isAnyRunning ? 1 : 0.6
+                    }}
+                  >
+                    {isAnyRunning ? 'Stop All' : 'Start All'}
+                  </button>
+                </div>
+              </>
+            )}
 
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
                 { label: 'Spread Once', onClick: colorSpread, bg: '#7c3aed' },
                 { label: 'Add Dots', onClick: addRandomDots, bg: '#ea580c' },
                 { label: 'Add Shapes', onClick: addRandomShapes, bg: '#f59e0b' },
-                { label: 'Clear', onClick: clear, bg: '#991b1b' },
-                { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#059669' : '#374151' },
-                { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#059669' : '#374151' },
-                { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#059669' : '#374151' }
+                { label: 'Clear', onClick: clear, bg: '#991b1b' }
               ].map(({ label, onClick, bg }) => (
                 <button
                   key={label}
@@ -739,8 +771,36 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               ))}
             </div>
 
+            {showOptions && (
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#059669' : '#374151' },
+                  { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#059669' : '#374151' },
+                  { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#059669' : '#374151' }
+                ].map(({ label, onClick, bg }) => (
+                  <button
+                    key={label}
+                    onClick={onClick}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      background: bg,
+                      color: '#fff',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontWeight: 'normal',
+                      fontSize: '0.95rem',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Conditional Settings Display */}
-            {(showSpeedSettings || showCanvasSettings) && (
+            {showOptions && (showSpeedSettings || showCanvasSettings) && (
               <div style={{ 
                 display: 'grid', 
                 gridTemplateColumns: showSpeedSettings && showCanvasSettings ? 'repeat(2, 1fr)' : '1fr',
@@ -772,7 +832,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                           max={max as number}
                           step={step as number}
                           value={value as number}
-                          onChange={(e) => setter(Number(e.target.value))}
+                          onChange={(e) => (setter as any)(Number(e.target.value))}
                           style={{ width: '100%', height: '6px' }}
                         />
                       </div>
@@ -805,7 +865,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                           max={max as number}
                           step={step as number}
                           value={value as number}
-                          onChange={(e) => setter(Number(e.target.value))}
+                          onChange={(e) => (setter as any)(Number(e.target.value))}
                           style={{ width: '100%', height: '6px' }}
                         />
                       </div>
@@ -815,7 +875,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               </div>
             )}
 
-            {showVisualSettings && (
+            {showOptions && showVisualSettings && (
               <>
                 <div style={{ marginBottom: '10px' }}>
                   <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
