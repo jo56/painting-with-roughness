@@ -544,9 +544,9 @@ export default function AutoSpreadPaint(): JSX.Element {
             {/* Basic Settings */}
             {[
               ['Brush Size', brushSize, 1, 10, setBrushSize, ''],
-              ['Cell Size', cellSize, 5, 50, setCellSize, ' px'],
-              ['Rows', rows, 10, 100, handleRowsChange, ''],
-              ['Cols', cols, 10, 100, handleColsChange, '']
+              ['Cell Size', cellSize, 1, 50, setCellSize, ' px'],
+              ['Rows', rows, 10, 1000, handleRowsChange, ''],
+              ['Cols', cols, 10, 1000, handleColsChange, '']
             ].map(([label, value, min, max, setter, unit], idx) => (
               <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                 <label style={{ width: '100px', fontWeight: 600 }}>{label}:</label>
