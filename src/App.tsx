@@ -71,6 +71,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const [showVisualSettings, setShowVisualSettings] = useState(false);
   const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
+  const [showStepControls, setShowStepControls] = useState(false);
   const [showAutoControls, setShowAutoControls] = useState(true);
   const [showOptions, setShowOptions] = useState(false);
   const [customColor, setCustomColor] = useState('#ffffff');
@@ -696,6 +697,21 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 >
                   Options
                 </button>
+                <button
+                  onClick={() => { clear(); setIsSavingColor(false); }}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    background: '#374151',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 'normal',
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  Clear
+                </button>
               </div>
             </div>
 
@@ -855,40 +871,14 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               </>
             )}
 
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
-              {[
-                { label: 'Spread Once', onClick: colorSpread },
-                { label: 'Add Dots', onClick: addRandomDots },
-                { label: 'Add Shapes', onClick: addRandomShapes },
-                { label: 'Clear', onClick: clear }
-              ].map(({ label, onClick }) => (
-                <button
-                  key={label}
-                  onClick={() => { onClick(); setIsSavingColor(false); }}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    background: '#374151',
-                    color: '#fff',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: 'normal',
-                    fontSize: '0.95rem',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
             {showOptions && (
               <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
                 {[
                   { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#059669' : '#374151' },
                   { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#059669' : '#374151' },
                   { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#059669' : '#374151' },
-                  { label: 'Generative', onClick: () => setShowGenerativeSettings(prev => !prev), bg: showGenerativeSettings ? '#059669' : '#374151' }
+                  { label: 'Generative', onClick: () => setShowGenerativeSettings(prev => !prev), bg: showGenerativeSettings ? '#059669' : '#374151' },
+                  { label: 'Steps', onClick: () => setShowStepControls(prev => !prev), bg: showStepControls ? '#059669' : '#374151' }
                 ].map(({ label, onClick, bg }) => (
                   <button
                     key={label}
@@ -897,6 +887,34 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       padding: '6px 12px',
                       borderRadius: '6px',
                       background: bg,
+                      color: '#fff',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontWeight: 'normal',
+                      fontSize: '0.95rem',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {showOptions && showStepControls && (
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Spread Once', onClick: colorSpread },
+                  { label: 'Add Dots', onClick: addRandomDots },
+                  { label: 'Add Shapes', onClick: addRandomShapes }
+                ].map(({ label, onClick }) => (
+                  <button
+                    key={label}
+                    onClick={() => { onClick(); setIsSavingColor(false); }}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      background: '#374151',
                       color: '#fff',
                       border: 'none',
                       cursor: 'pointer',
@@ -1065,7 +1083,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   />
                 </div>
 
-                <div style={{ fontWeight: 600 }}>
+                <div style={{ fontWeight: 600, marginBottom: '10px' }}>
                   <label>
                     <input 
                       type="checkbox" 
