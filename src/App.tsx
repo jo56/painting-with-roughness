@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-const GRID_COLOR = '#1f2937';
+const GRID_COLOR = '#27272a';
 
 function createEmptyGrid(rows: number, cols: number): number[][] {
   const g: number[][] = [];
@@ -29,7 +29,7 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
             <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>{label}:</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                 {numbers.map(num => (
-                    <label key={num} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: '#374151', padding: '4px 8px', borderRadius: '4px', userSelect: 'none' }}>
+                    <label key={num} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: '#404040', padding: '4px 8px', borderRadius: '4px', userSelect: 'none' }}>
                         <input
                             type="checkbox"
                             checked={rules.includes(num)}
@@ -1348,7 +1348,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           top: isMobile ? undefined : panelPos.y,
           left: isMobile ? undefined : panelPos.x,
           margin: isMobile ? '0 auto' : undefined,
-          background: 'rgba(17,24,39,0.95)',
+          background: 'rgba(39, 39, 42, 0.95)',
           padding: '12px',
           borderRadius: '10px',
           width: isMobile ? 'calc(100% - 20px)': 'auto',
@@ -1364,7 +1364,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             marginBottom: '12px',
             cursor: 'move',
             padding: '4px',
-            background: 'rgba(55,65,81,0.8)',
+            background: 'rgba(63, 63, 70, 0.8)',
             borderRadius: '6px',
             fontSize: '1rem',
             userSelect: 'none',
@@ -1419,7 +1419,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
-                      background: tool === value ? '#06b6d4' : '#374151',
+                      background: tool === value ? '#52525b' : '#3a3a3c',
                       color: '#fff',
                       border: 'none',
                       cursor: 'pointer',
@@ -1435,7 +1435,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   style={{
                     padding: '6px 12px',
                     borderRadius: '6px',
-                    background: showAutoControls ? '#059669' : '#374151',
+                    background: showAutoControls ? '#52525b' : '#3a3a3c',
                     color: '#fff',
                     border: 'none',
                     cursor: 'pointer',
@@ -1450,7 +1450,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   style={{
                     padding: '6px 12px',
                     borderRadius: '6px',
-                    background: showOptions ? '#059669' : '#374151',
+                    background: showOptions ? '#52525b' : '#3a3a3c',
                     color: '#fff',
                     border: 'none',
                     cursor: 'pointer',
@@ -1465,7 +1465,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   style={{
                     padding: '6px 12px',
                     borderRadius: '6px',
-                    background: '#374151',
+                    background: '#3a3a3c',
                     color: '#fff',
                     border: 'none',
                     cursor: 'pointer',
@@ -1493,7 +1493,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
                       borderRadius: '6px',
                       cursor: 'pointer',
-                      outline: isSavingColor ? '2px dashed #059669' : 'none',
+                      outline: isSavingColor ? '2px dashed #15803d' : 'none',
                       outlineOffset: '2px',
                       transition: 'outline 0.2s'
                       }}
@@ -1544,7 +1544,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                         padding: '6px 0',
                         height: '32px',
                         borderRadius: '6px',
-                        background: isSavingColor ? '#f59e0b' : '#374151',
+                        background: isSavingColor ? '#166534' : '#3a3a3c',
                         color: '#fff',
                         border: 'none',
                         cursor: 'pointer',
@@ -1574,15 +1574,17 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       background: autoSpreading 
                         ? '#dc2626' 
                         : autoSpreadEnabled 
-                          ? '#16a34a' 
-                          : '#6b7280',
+                          ? '#3a3a3c' 
+                          : '#52525b',
                       color: '#fff',
                       border: 'none',
                       cursor: autoSpreadEnabled ? 'pointer' : 'not-allowed',
-                      fontWeight: 600,
+                      fontWeight: 'normal',
                       fontSize: '0.95rem',
                       whiteSpace: 'nowrap',
-                      opacity: autoSpreadEnabled ? 1 : 0.6
+                      opacity: autoSpreadEnabled ? 1 : 0.6,
+                      boxShadow: autoSpreading ? '0 0 8px rgba(22, 163, 74, 0.6)' : 'none',
+                      transition: 'box-shadow 0.2s ease-in-out'
                     }}
                   >
                     {autoSpreading ? 'Stop Spread' : 'Start Spread'}
@@ -1608,7 +1610,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       style={{
                         padding: '6px 12px',
                         borderRadius: '6px',
-                        background: enabled ? '#374151' : '#6b7280',
+                        background: enabled ? '#3a3a3c' : '#52525b',
                         color: '#fff',
                         border: 'none',
                         cursor: enabled ? 'pointer' : 'not-allowed',
@@ -1616,7 +1618,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                         fontSize: '0.95rem',
                         whiteSpace: 'nowrap',
                         opacity: enabled ? 1 : 0.6,
-                        boxShadow: active ? '0 0 8px rgba(78, 205, 196, 0.7)' : 'none',
+                        boxShadow: active ? '0 0 8px rgba(22, 163, 74, 0.6)' : 'none',
                         transition: 'box-shadow 0.2s ease-in-out'
                       }}
                     >
@@ -1629,7 +1631,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
-                      background: anyEnabled || isAnyRunning ? '#374151' : '#6b7280',
+                      background: anyEnabled || isAnyRunning ? '#3a3a3c' : '#52525b',
                       color: '#fff',
                       border: 'none',
                       cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
@@ -1637,7 +1639,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       fontSize: '0.95rem',
                       whiteSpace: 'nowrap',
                       opacity: anyEnabled || isAnyRunning ? 1 : 0.6,
-                      boxShadow: isAnyRunning ? '0 0 8px rgba(78, 205, 196, 0.7)' : 'none',
+                      boxShadow: isAnyRunning ? '0 0 8px rgba(22, 163, 74, 0.6)' : 'none',
                       transition: 'box-shadow 0.2s ease-in-out'
                     }}
                   >
@@ -1650,11 +1652,11 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             {showOptions && (
               <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#059669' : '#374151' },
-                  { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#059669' : '#374151' },
-                  { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#059669' : '#374151' },
-                  { label: 'Generative', onClick: () => setShowGenerativeSettings(prev => !prev), bg: showGenerativeSettings ? '#059669' : '#374151' },
-                  { label: 'Steps', onClick: () => setShowStepControls(prev => !prev), bg: showStepControls ? '#059669' : '#374151' }
+                  { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#52525b' : '#3a3a3c' },
+                  { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#52525b' : '#3a3a3c' },
+                  { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#52525b' : '#3a3a3c' },
+                  { label: 'Generative', onClick: () => setShowGenerativeSettings(prev => !prev), bg: showGenerativeSettings ? '#52525b' : '#3a3a3c' },
+                  { label: 'Steps', onClick: () => setShowStepControls(prev => !prev), bg: showStepControls ? '#52525b' : '#3a3a3c' }
                 ].map(({ label, onClick, bg }) => (
                   <button
                     key={label}
@@ -1690,7 +1692,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
-                      background: '#374151',
+                      background: '#3a3a3c',
                       color: '#fff',
                       border: 'none',
                       cursor: 'pointer',
@@ -1792,7 +1794,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       style={{ 
                         padding: '4px 8px', 
                         borderRadius: '6px', 
-                        background: '#374151', 
+                        background: '#3a3a3c', 
                         color: '#fff', 
                         border: 'none',
                         width: '100%'
@@ -1819,7 +1821,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
-                      background: '#374151',
+                      background: '#3a3a3c',
                       color: '#fff',
                       border: 'none',
                       cursor: 'pointer',
@@ -1833,7 +1835,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 </div>
                 
                 {spreadPattern === 'ripple' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                               <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Ripple Chance:</label>
@@ -1845,7 +1847,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'scramble' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                               <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Swaps per Step:</label>
@@ -1857,7 +1859,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
                 
                 {spreadPattern === 'vortex' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                               <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Vortex Count:</label>
@@ -1869,7 +1871,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'strobe' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                       <div style={{ marginBottom: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                               <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Expand Threshold:</label>
@@ -1888,7 +1890,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
                 
                 {spreadPattern === 'jitter' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                               <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Jitter Chance:</label>
@@ -1900,13 +1902,13 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
                 
                 {spreadPattern === 'flow' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                       <div style={{ marginBottom: '10px' }}>
                           <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
                           <select
                               value={flowDirection}
                               onChange={(e) => setFlowDirection(e.target.value as any)}
-                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
                           >
                               <option value="down">Down</option>
                               <option value="up">Up</option>
@@ -1925,7 +1927,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'vein' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                     <div style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                           <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Seek Strength:</label>
@@ -1944,7 +1946,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'crystallize' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                           <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Growth Threshold:</label>
@@ -1956,7 +1958,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
                 
                 {spreadPattern === 'erosion' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                      <div style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                           <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Erosion Rate:</label>
@@ -1975,13 +1977,13 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'random' && (
-                    <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                         <div style={{ marginBottom: '10px' }}>
                             <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Walk Mode:</label>
                             <select
                                 value={randomWalkMode}
                                 onChange={(e) => setRandomWalkMode(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
                             >
                                 <option value="any">8 Directions (Any)</option>
                                 <option value="cardinal">4 Directions (Cardinal)</option>
@@ -2002,7 +2004,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'conway' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                     <RuleEditor label="Survive Counts" rules={conwayRules.survive} onChange={(newSurvive) => setConwayRules(r => ({ ...r, survive: newSurvive }))} />
 
                     <RuleEditor label="Birth Counts" rules={conwayRules.born} onChange={(newBorn) => setConwayRules(r => ({ ...r, born: newBorn }))} />
@@ -2010,7 +2012,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
                 
                 {spreadPattern === 'tendrils' && (
-                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                      <RuleEditor label="Survive Counts" rules={tendrilsRules.survive} onChange={(newSurvive) => setTendrilsRules(r => ({ ...r, survive: newSurvive }))} />
 
                      <RuleEditor label="Birth Counts" rules={tendrilsRules.born} onChange={(newBorn) => setTendrilsRules(r => ({ ...r, born: newBorn }))} />
@@ -2018,7 +2020,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
                 
                 {spreadPattern === 'pulse' && (
-                    <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                         <div style={{ marginBottom: '8px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                             <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Pulse Speed:</label>
@@ -2035,7 +2037,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                             <select
                                 value={pulseDirection}
                                 onChange={(e) => setPulseDirection(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
                             >
                                 <option value="top-left">Top-Left</option>
                                 <option value="top-right">Top-Right</option>
@@ -2058,13 +2060,13 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'directional' && (
-                    <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
                       <div style={{ marginBottom: '10px' }}>
                           <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Bias Direction:</label>
                           <select
                               value={directionalBias}
                               onChange={(e) => setDirectionalBias(e.target.value as any)}
-                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
                           >
                                 <option value="up">Up</option>
                                 <option value="down">Down</option>
@@ -2106,7 +2108,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                                     cursor: 'pointer',
                                     padding: '2px',
                                     borderRadius: '6px',
-                                    outline: isSavingColor ? '2px dashed #059669' : 'none',
+                                    outline: isSavingColor ? '2px dashed #6ee7b7' : 'none',
                                     outlineOffset: '2px',
                                     transition: 'outline 0.2s',
                                 }}
@@ -2148,7 +2150,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     style={{ 
                       padding: '4px 8px', 
                       borderRadius: '6px', 
-                      background: '#374151', 
+                      background: '#3a3a3c', 
                       color: '#fff', 
                       border: 'none',
                       width: '100%'
@@ -2187,9 +2189,3 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     </div>
   );
 }
-
-
-
-
-
-
