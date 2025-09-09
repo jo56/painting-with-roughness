@@ -1319,7 +1319,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   return (
     <div style={{
       width: '100%',
-      height: '100vh',
+      minHeight: '100vh',
       background: 'black',
       display: 'flex',
       flexDirection: isMobile ? 'column' : 'row',
@@ -1753,9 +1753,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     </label>
                     {[
                       ['Brush Size', brushSize, 1, 20, 1, setBrushSize, ''],
-                      ['Cell Size', cellSize, 1, 50, 1, setCellSize, ' px'],
-                      ['Rows', rows, 10, 1000, 1, handleRowsChange, ''],
-                      ['Cols', cols, 10, 1000, 1, handleColsChange, '']
+                      ['Cell Size', cellSize, 1, 30, 1, setCellSize, ' px'],
+                      ['Rows', rows, 10, 2000, 1, handleRowsChange, ''],
+                      ['Cols', cols, 10, 2000, 1, handleColsChange, '']
                     ].map(([label, value, min, max, step, setter, unit], idx) => (
                       <div key={idx} style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
