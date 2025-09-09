@@ -1786,7 +1786,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       Canvas Settings
                     </label>
                     {[
-                      ['Brush Size', brushSize, 1, 20, 1, setBrushSize, ''],
+                      ['Brush Size', brushSize, 1, 100, 1, setBrushSize, ''],
                       ['Cell Size', cellSize, 1, 30, 1, setCellSize, ' px'],
                       ['Rows', rows, 10, 2000, 1, handleRowsChange, ''],
                       ['Cols', cols, 10, 2000, 1, handleColsChange, '']
