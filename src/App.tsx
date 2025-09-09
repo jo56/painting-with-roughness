@@ -60,7 +60,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     cellSize: 20,
     rows: 30,
     cols: 40,
-    showGrid: true,
+    showGrid: false,
     backgroundColor: '#0a0a0a',
     brushSize: 1,
     selectedColor: 1,
