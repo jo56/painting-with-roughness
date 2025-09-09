@@ -45,6 +45,7 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
 }
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion';
 
 export default function ModularSettingsPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -58,6 +59,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const dotsRunningRef = useRef(false);
   const shapesRunningRef = useRef(false);
   const pressedKeys = useRef(new Set<string>());
+  const walkers = useRef<{r: number, c: number, color: number}[]>([]);
 
   const defaults = {
     cellSize: 20,
@@ -72,16 +74,21 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     autoDotsSpeed: 2,
     autoShapesSpeed: 1,
     blendMode: 'replace',
-    spreadPattern: 'random',
+    spreadPattern: 'random' as SpreadPattern,
     pulseSpeed: 10,
     pulseOvertakes: true,
-    pulseDirection: 'down' as const,
-    directionalBias: 'bottom-right' as const,
+    pulseDirection: 'down' as Direction,
+    directionalBias: 'bottom-right' as Direction,
     conwayRules: { born: [3], survive: [2,3] },
     tendrilsRules: { born: [1], survive: [1,2] },
     directionalBiasStrength: 0.8,
     randomWalkSpreadCount: 1,
     randomWalkMode: 'any' as const,
+    veinSeekStrength: 0.5,
+    veinBranchChance: 0.1,
+    crystallizeThreshold: 2,
+    erosionRate: 0.5,
+    erosionSolidity: 3,
   };
 
   const [palette, setPalette] = useState([
@@ -120,7 +127,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [customColor, setCustomColor] = useState('#ffffff');
   const [isSavingColor, setIsSavingColor] = useState(false);
   const [generativeColorIndices, setGenerativeColorIndices] = useState(() => palette.slice(1).map((_, index) => index + 1));
-  const [spreadPattern, setSpreadPattern] = useState<'random' | 'conway' | 'pulse' | 'directional' | 'tendrils'>(defaults.spreadPattern);
+  const [spreadPattern, setSpreadPattern] = useState<SpreadPattern>(defaults.spreadPattern);
   const [pulseSpeed, setPulseSpeed] = useState(defaults.pulseSpeed);
   const [directionalBias, setDirectionalBias] = useState<'none' | Direction>(defaults.directionalBias);
   const [conwayRules, setConwayRules] = useState(defaults.conwayRules);
@@ -130,6 +137,11 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [pulseDirection, setPulseDirection] = useState<Direction>(defaults.pulseDirection);
   const [randomWalkSpreadCount, setRandomWalkSpreadCount] = useState(defaults.randomWalkSpreadCount);
   const [randomWalkMode, setRandomWalkMode] = useState<'any' | 'cardinal'>(defaults.randomWalkMode);
+  const [veinSeekStrength, setVeinSeekStrength] = useState(defaults.veinSeekStrength);
+  const [veinBranchChance, setVeinBranchChance] = useState(defaults.veinBranchChance);
+  const [crystallizeThreshold, setCrystallizeThreshold] = useState(defaults.crystallizeThreshold);
+  const [erosionRate, setErosionRate] = useState(defaults.erosionRate);
+  const [erosionSolidity, setErosionSolidity] = useState(defaults.erosionSolidity);
 
   const generativeColorIndicesRef = useRef(generativeColorIndices);
   const spreadProbabilityRef = useRef(spreadProbability);
@@ -148,6 +160,11 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const pulseDirectionRef = useRef(pulseDirection);
   const randomWalkSpreadCountRef = useRef(randomWalkSpreadCount);
   const randomWalkModeRef = useRef(randomWalkMode);
+  const veinSeekStrengthRef = useRef(veinSeekStrength);
+  const veinBranchChanceRef = useRef(veinBranchChance);
+  const crystallizeThresholdRef = useRef(crystallizeThreshold);
+  const erosionRateRef = useRef(erosionRate);
+  const erosionSolidityRef = useRef(erosionSolidity);
   
   useEffect(() => { spreadProbabilityRef.current = spreadProbability; }, [spreadProbability]);
   useEffect(() => { autoSpreadSpeedRef.current = autoSpreadSpeed; }, [autoSpreadSpeed]);
@@ -166,6 +183,11 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   useEffect(() => { pulseDirectionRef.current = pulseDirection; }, [pulseDirection]);
   useEffect(() => { randomWalkSpreadCountRef.current = randomWalkSpreadCount; }, [randomWalkSpreadCount]);
   useEffect(() => { randomWalkModeRef.current = randomWalkMode; }, [randomWalkMode]);
+  useEffect(() => { veinSeekStrengthRef.current = veinSeekStrength; }, [veinSeekStrength]);
+  useEffect(() => { veinBranchChanceRef.current = veinBranchChance; }, [veinBranchChance]);
+  useEffect(() => { crystallizeThresholdRef.current = crystallizeThreshold; }, [crystallizeThreshold]);
+  useEffect(() => { erosionRateRef.current = erosionRate; }, [erosionRate]);
+  useEffect(() => { erosionSolidityRef.current = erosionSolidity; }, [erosionSolidity]);
 
 
   const isDragging = useRef(false);
@@ -398,6 +420,115 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         let ng = cloneGrid(g);
 
         switch (pattern) {
+            case 'vein': {
+                if (walkers.current.length === 0) {
+                    for(let r = 0; r < currentRows; r++) {
+                        for(let c = 0; c < currentCols; c++) {
+                            if(g[r][c] > 0 && Math.random() < 0.1) {
+                                walkers.current.push({r, c, color: g[r][c]});
+                            }
+                        }
+                    }
+                    if (walkers.current.length === 0 && g.flat().some(cell => cell > 0)) {
+                         let r=0, c=0;
+                         while(g[r][c] === 0) { r = Math.floor(Math.random()*currentRows); c = Math.floor(Math.random()*currentCols); }
+                         walkers.current.push({r,c, color: g[r][c]});
+                    }
+                }
+
+                const foodSources: {r: number, c: number}[] = [];
+                 for(let r = 0; r < currentRows; r++) {
+                    for(let c = 0; c < currentCols; c++) {
+                        if (g[r][c] > 0) foodSources.push({r, c});
+                    }
+                }
+
+                walkers.current.forEach(walker => {
+                    let bestDir = { dr: 0, dc: 0 };
+                    let bestDist = Infinity;
+
+                    if (foodSources.length > 0 && Math.random() < veinSeekStrengthRef.current) {
+                        foodSources.forEach(food => {
+                            const dist = Math.hypot(walker.r - food.r, walker.c - food.c);
+                            if (dist < bestDist && dist > 1) {
+                                bestDist = dist;
+                                bestDir = { dr: Math.sign(food.r - walker.r), dc: Math.sign(food.c - walker.c) };
+                            }
+                        });
+                    } else {
+                        bestDir = { dr: Math.floor(Math.random() * 3) - 1, dc: Math.floor(Math.random() * 3) - 1 };
+                    }
+                    
+                    walker.r += bestDir.dr;
+                    walker.c += bestDir.dc;
+                    walker.r = Math.max(0, Math.min(currentRows - 1, walker.r));
+                    walker.c = Math.max(0, Math.min(currentCols - 1, walker.c));
+
+                    const r_int = Math.round(walker.r);
+                    const c_int = Math.round(walker.c);
+                    ng[r_int][c_int] = walker.color;
+                    
+                    if (Math.random() < veinBranchChanceRef.current) {
+                        walkers.current.push({...walker});
+                    }
+                });
+
+                walkers.current = walkers.current.slice(0, 200); // Limit walker count
+                break;
+            }
+            case 'crystallize': {
+                for(let r = 0; r < currentRows; r++) {
+                    for(let c = 0; c < currentCols; c++) {
+                       if (g[r][c] === 0) { // Can only grow into empty space
+                           const neighbors: number[] = [];
+                           for (let dr = -1; dr <= 1; dr++) {
+                               for (let dc = -1; dc <= 1; dc++) {
+                                   if (dr === 0 && dc === 0) continue;
+                                   const nr = r + dr, nc = c + dc;
+                                   if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] > 0) {
+                                       neighbors.push(g[nr][nc]);
+                                   }
+                               }
+                           }
+                           
+                           if (neighbors.length > 0) {
+                               const counts: {[key:number]: number} = {};
+                               neighbors.forEach(n => { counts[n] = (counts[n] || 0) + 1; });
+                               
+                               for(const color in counts) {
+                                   if (counts[color] >= crystallizeThresholdRef.current) {
+                                       ng[r][c] = parseInt(color);
+                                       break;
+                                   }
+                               }
+                           }
+                       }
+                    }
+                }
+                break;
+            }
+            case 'erosion': {
+                for(let r = 0; r < currentRows; r++) {
+                    for(let c = 0; c < currentCols; c++) {
+                        if (g[r][c] > 0 && Math.random() < erosionRateRef.current) {
+                            let emptyNeighbors = 0;
+                            for (let dr = -1; dr <= 1; dr++) {
+                                for (let dc = -1; dc <= 1; dc++) {
+                                    if (dr === 0 && dc === 0) continue;
+                                    const nr = r + dr, nc = c + dc;
+                                    if (nr < 0 || nr >= currentRows || nc < 0 || nc >= currentCols || g[nr][nc] === 0) {
+                                        emptyNeighbors++;
+                                    }
+                                }
+                            }
+                            if (emptyNeighbors >= erosionSolidityRef.current) {
+                                ng[r][c] = 0;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
             case 'tendrils':
             case 'conway': {
                 const rules = pattern === 'conway' ? conwayRulesRef.current : tendrilsRulesRef.current;
@@ -718,6 +849,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     runningRef.current = !runningRef.current;
     setAutoSpreading(runningRef.current);
     if (runningRef.current) {
+      if (spreadPatternRef.current === 'vein') {
+        walkers.current = []; // Reset walkers when starting
+      }
       runAutoSpread();
     } else if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
@@ -887,6 +1021,11 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     setPulseDirection(defaults.pulseDirection);
     setRandomWalkSpreadCount(defaults.randomWalkSpreadCount);
     setRandomWalkMode(defaults.randomWalkMode);
+    setVeinSeekStrength(defaults.veinSeekStrength);
+    setVeinBranchChance(defaults.veinBranchChance);
+    setCrystallizeThreshold(defaults.crystallizeThreshold);
+    setErosionRate(defaults.erosionRate);
+    setErosionSolidity(defaults.erosionSolidity);
   };
 
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
@@ -946,8 +1085,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             fontSize: '1rem',
             userSelect: 'none',
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'relative',
           }}
         >
           <span>Modular Paint Studio</span>
@@ -959,8 +1099,16 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               color: '#fff',
               cursor: 'pointer',
               fontSize: '1rem',
-              width: '20px',
-              textAlign: 'center'
+              width: '24px',
+              height: '24px',
+              padding: 0,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'absolute',
+              right: '4px',
+              top: '50%',
+              transform: 'translateY(-50%)'
             }}
           >
             {panelMinimized ? '+' : '-'}
@@ -1357,7 +1505,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Spread Pattern:</label>
                     <select
                       value={spreadPattern}
-                      onChange={(e) => setSpreadPattern(e.target.value as any)}
+                      onChange={(e) => {
+                          if (e.target.value === 'vein') walkers.current = []; // Reset walkers
+                          setSpreadPattern(e.target.value as any);
+                      }}
                       style={{ 
                         padding: '4px 8px', 
                         borderRadius: '6px', 
@@ -1372,6 +1523,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       <option value="tendrils">Tendrils</option>
                       <option value="pulse">Pulsing</option>
                       <option value="directional">Directional</option>
+                      <option value="vein">Vein Growth</option>
+                      <option value="crystallize">Crystallize</option>
+                      <option value="erosion">Erosion</option>
                     </select>
                   </div>
                    <button
@@ -1392,6 +1546,56 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   </button>
                 </div>
                 
+                {spreadPattern === 'vein' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{ marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Seek Strength:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(veinSeekStrength*100)}%</span>
+                        </div>
+                        <input type="range" min={0} max={1} step={0.05} value={veinSeekStrength} onChange={(e) => setVeinSeekStrength(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                    </div>
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Branching Chance:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(veinBranchChance*100)}%</span>
+                        </div>
+                        <input type="range" min={0} max={0.5} step={0.01} value={veinBranchChance} onChange={(e) => setVeinBranchChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                    </div>
+                  </div>
+                )}
+
+                {spreadPattern === 'crystallize' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Growth Threshold:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{crystallizeThreshold} Neighbors</span>
+                        </div>
+                        <input type="range" min={1} max={8} value={crystallizeThreshold} onChange={(e) => setCrystallizeThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                    </div>
+                  </div>
+                )}
+                
+                {spreadPattern === 'erosion' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                     <div style={{ marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Erosion Rate:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(erosionRate*100)}%</span>
+                        </div>
+                        <input type="range" min={0.01} max={1} step={0.01} value={erosionRate} onChange={(e) => setErosionRate(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                    </div>
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Core Protection:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{erosionSolidity} Neighbors</span>
+                        </div>
+                        <input type="range" min={1} max={8} value={erosionSolidity} onChange={(e) => setErosionSolidity(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                    </div>
+                  </div>
+                )}
+
                 {spreadPattern === 'random' && (
                     <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
                         <div style={{ marginBottom: '10px' }}>
