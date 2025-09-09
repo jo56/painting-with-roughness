@@ -70,7 +70,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const [showVisualSettings, setShowVisualSettings] = useState(false);
-  const [showAutoControls, setShowAutoControls] = useState(false);
+  const [showAutoControls, setShowAutoControls] = useState(true);
   const [showOptions, setShowOptions] = useState(false);
   const [customColor, setCustomColor] = useState('#ffffff');
   const [isSavingColor, setIsSavingColor] = useState(false);
@@ -575,7 +575,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           padding: '12px',
           borderRadius: '10px',
           width: isMobile ? 'calc(100% - 20px)': 'auto',
-          maxWidth: '430px',
+          maxWidth: '480px',
           zIndex: 1000,
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
         }}
@@ -626,7 +626,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
           }}>
             
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {[
                   { label: 'Brush', value: 'brush' },
                   { label: 'Fill', value: 'fill' },
@@ -679,49 +679,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 >
                   Options
                 </button>
-              </div>
-            </div>
-
-
-            <div style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {palette.slice(1).map((color, index) => (
-                  <button
-                    key={index + 1}
-                    onClick={() => handlePaletteClick(index + 1)}
-                    title={isSavingColor ? `Save ${customColor} to this slot` : `Select ${color}`}
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      background: color,
-                      border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      outline: isSavingColor ? '2px dashed #059669' : 'none',
-                      outlineOffset: '2px',
-                      transition: 'outline 0.2s'
-                    }}
-                  />
-                ))}
-
-                <input
-                  type="color"
-                  value={customColor}
-                  onChange={(e) => {
-                    setCustomColor(e.target.value);
-                    setSelectedColor(palette.length);
-                    setIsSavingColor(false);
-                  }}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    padding: 0,
-                    border: selectedColor === palette.length ? '3px solid #fff' : '1px solid #666',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    background: 'transparent'
-                  }}
-                />
                  {selectedColor === palette.length && (
                     <button
                         onClick={() => setIsSavingColor(prev => !prev)}
@@ -742,6 +699,50 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                         {isSavingColor ? 'Cancel' : 'Save Color'}
                     </button>
                 )}
+              </div>
+            </div>
+
+
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    {palette.slice(1).map((color, index) => (
+                    <button
+                        key={index + 1}
+                        onClick={() => handlePaletteClick(index + 1)}
+                        title={isSavingColor ? `Save ${customColor} to this slot` : `Select ${color}`}
+                        style={{
+                        width: '32px',
+                        height: '32px',
+                        background: color,
+                        border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        outline: isSavingColor ? '2px dashed #059669' : 'none',
+                        outlineOffset: '2px',
+                        transition: 'outline 0.2s'
+                        }}
+                    />
+                    ))}
+                </div>
+                <input
+                  type="color"
+                  value={customColor}
+                  onChange={(e) => {
+                    setCustomColor(e.target.value);
+                    setSelectedColor(palette.length);
+                    setIsSavingColor(false);
+                  }}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    padding: 0,
+                    border: selectedColor === palette.length ? '3px solid #fff' : '1px solid #666',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    background: 'transparent'
+                  }}
+                />
               </div>
               {isSavingColor && <div style={{fontSize: '0.8rem', color: '#9ca3af', marginTop: '6px'}}>Select a color slot to replace it.</div>}
             </div>
