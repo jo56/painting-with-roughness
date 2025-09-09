@@ -60,7 +60,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     cellSize: 20,
     rows: 30,
     cols: 40,
-    showGrid: false,
+    showGrid: true,
     backgroundColor: '#0a0a0a',
     brushSize: 1,
     selectedColor: 1,
@@ -988,27 +988,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 ))}
 
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <button
-                    onClick={() => setIsSavingColor(prev => !prev)}
-                    title={isSavingColor ? "Cancel saving" : "Save this color to a slot"}
-                    style={{
-                        visibility: selectedColor === palette.length ? 'visible' : 'hidden',
-                        padding: '6px 0',
-                        height: '32px',
-                        borderRadius: '6px',
-                        background: isSavingColor ? '#f59e0b' : '#374151',
-                        color: '#fff',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '0.95rem',
-                        fontWeight: 'normal',
-                        whiteSpace: 'nowrap',
-                        minWidth: '75px',
-                        textAlign: 'center'
-                    }}
-                  >
-                    {isSavingColor ? 'Cancel' : 'Save'}
-                  </button>
                   <div
                     style={{
                       position: 'relative',
@@ -1044,6 +1023,27 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       }}
                     />
                   </div>
+                  <button
+                    onClick={() => setIsSavingColor(prev => !prev)}
+                    title={isSavingColor ? "Cancel saving" : "Save this color to a slot"}
+                    style={{
+                        visibility: selectedColor === palette.length ? 'visible' : 'hidden',
+                        padding: '6px 0',
+                        height: '32px',
+                        borderRadius: '6px',
+                        background: isSavingColor ? '#f59e0b' : '#374151',
+                        color: '#fff',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '0.95rem',
+                        fontWeight: 'normal',
+                        whiteSpace: 'nowrap',
+                        minWidth: '75px',
+                        textAlign: 'center'
+                    }}
+                  >
+                    {isSavingColor ? 'Cancel' : 'Save'}
+                  </button>
                 </div>
               </div>
               {isSavingColor && <div style={{fontSize: '0.8rem', color: '#9ca3af', marginTop: '6px'}}>Select a color slot to replace it.</div>}
