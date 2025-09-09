@@ -679,26 +679,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 >
                   Options
                 </button>
-                 {selectedColor === palette.length && (
-                    <button
-                        onClick={() => setIsSavingColor(prev => !prev)}
-                        title={isSavingColor ? "Cancel saving" : "Save this color to a slot"}
-                        style={{
-                            padding: '0 10px',
-                            height: '32px',
-                            borderRadius: '6px',
-                            background: isSavingColor ? '#f59e0b' : '#374151',
-                            color: '#fff',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: '0.95rem',
-                            fontWeight: 'normal',
-                            whiteSpace: 'nowrap'
-                        }}
-                    >
-                        {isSavingColor ? 'Cancel' : 'Save Color'}
-                    </button>
-                )}
               </div>
             </div>
 
@@ -725,24 +705,64 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     />
                     ))}
                 </div>
-                <input
-                  type="color"
-                  value={customColor}
-                  onChange={(e) => {
-                    setCustomColor(e.target.value);
-                    setSelectedColor(palette.length);
-                    setIsSavingColor(false);
-                  }}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    padding: 0,
-                    border: selectedColor === palette.length ? '3px solid #fff' : '1px solid #666',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    background: 'transparent'
-                  }}
-                />
+
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  {selectedColor === palette.length && (
+                    <button
+                      onClick={() => setIsSavingColor(prev => !prev)}
+                      title={isSavingColor ? "Cancel saving" : "Save this color to a slot"}
+                      style={{
+                          padding: '6px 12px',
+                          height: '32px',
+                          borderRadius: '6px',
+                          background: isSavingColor ? '#f59e0b' : '#374151',
+                          color: '#fff',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '0.95rem',
+                          fontWeight: 'normal',
+                          whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {isSavingColor ? 'Cancel' : 'Save'}
+                    </button>
+                  )}
+                  <div
+                    style={{
+                      position: 'relative',
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '6px',
+                      border: selectedColor === palette.length ? '3px solid #fff' : '1px solid #666',
+                      background: customColor,
+                      cursor: 'pointer',
+                      overflow: 'hidden'
+                    }}
+                    onClick={() => {
+                        const colorInput = panelRef.current?.querySelector('input[type="color"]') as HTMLInputElement;
+                        if (colorInput) {
+                            colorInput.click();
+                        }
+                        setSelectedColor(palette.length);
+                        setIsSavingColor(false);
+                    }}
+                  >
+                    <input
+                      type="color"
+                      value={customColor}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                      style={{
+                        position: 'absolute',
+                        top: '-10px',
+                        left: '-10px',
+                        width: '52px',
+                        height: '52px',
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
               {isSavingColor && <div style={{fontSize: '0.8rem', color: '#9ca3af', marginTop: '6px'}}>Select a color slot to replace it.</div>}
             </div>
