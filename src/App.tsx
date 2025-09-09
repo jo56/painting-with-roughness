@@ -14,6 +14,36 @@ function cloneGrid(grid: number[][]): number[][] {
   return grid.map(row => [...row]);
 }
 
+function RuleEditor({ label, rules, onChange }: { label: string, rules: number[], onChange: (rules: number[]) => void }) {
+    const numbers = [1, 2, 3, 4, 5, 6, 7, 8];
+
+    const handleToggle = (num: number) => {
+        const newRules = rules.includes(num)
+            ? rules.filter(r => r !== num)
+            : [...rules, num];
+        onChange(newRules.sort((a, b) => a - b));
+    };
+
+    return (
+        <div style={{ marginBottom: '8px' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>{label}:</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                {numbers.map(num => (
+                    <label key={num} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: '#374151', padding: '4px 8px', borderRadius: '4px', userSelect: 'none' }}>
+                        <input
+                            type="checkbox"
+                            checked={rules.includes(num)}
+                            onChange={() => handleToggle(num)}
+                            style={{ marginRight: '6px', cursor: 'pointer' }}
+                        />
+                        {num}
+                    </label>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export default function ModularSettingsPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
@@ -42,6 +72,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     spreadPattern: 'random',
     pulseSpeed: 10,
     directionalBias: 'right',
+    conwayRules: { born: [3], survive: [2,3] },
+    tendrilsRules: { born: [1], survive: [1,2] },
+    directionalBiasStrength: 0.8,
   };
 
   const [palette, setPalette] = useState([
@@ -83,6 +116,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [spreadPattern, setSpreadPattern] = useState<'random' | 'conway' | 'pulse' | 'directional' | 'tendrils'>(defaults.spreadPattern);
   const [pulseSpeed, setPulseSpeed] = useState(defaults.pulseSpeed);
   const [directionalBias, setDirectionalBias] = useState<'none' | 'up' | 'down' | 'left' | 'right'>(defaults.directionalBias);
+  const [conwayRules, setConwayRules] = useState(defaults.conwayRules);
+  const [tendrilsRules, setTendrilsRules] = useState(defaults.tendrilsRules);
+  const [directionalBiasStrength, setDirectionalBiasStrength] = useState(defaults.directionalBiasStrength);
+
 
   const generativeColorIndicesRef = useRef(generativeColorIndices);
   const spreadProbabilityRef = useRef(spreadProbability);
@@ -94,6 +131,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const spreadPatternRef = useRef(spreadPattern);
   const pulseSpeedRef = useRef(pulseSpeed);
   const directionalBiasRef = useRef(directionalBias);
+  const conwayRulesRef = useRef(conwayRules);
+  const tendrilsRulesRef = useRef(tendrilsRules);
+  const directionalBiasStrengthRef = useRef(directionalBiasStrength);
   
   useEffect(() => { spreadProbabilityRef.current = spreadProbability; }, [spreadProbability]);
   useEffect(() => { autoSpreadSpeedRef.current = autoSpreadSpeed; }, [autoSpreadSpeed]);
@@ -105,6 +145,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   useEffect(() => { spreadPatternRef.current = spreadPattern; }, [spreadPattern]);
   useEffect(() => { pulseSpeedRef.current = pulseSpeed; }, [pulseSpeed]);
   useEffect(() => { directionalBiasRef.current = directionalBias; }, [directionalBias]);
+  useEffect(() => { conwayRulesRef.current = conwayRules; }, [conwayRules]);
+  useEffect(() => { tendrilsRulesRef.current = tendrilsRules; }, [tendrilsRules]);
+  useEffect(() => { directionalBiasStrengthRef.current = directionalBiasStrength; }, [directionalBiasStrength]);
+
 
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -279,38 +323,12 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         let ng = cloneGrid(g);
 
         switch (pattern) {
-            case 'tendrils': {
-                const BORN = [1];
-                const SURVIVE = [1, 2];
-                for (let r = 0; r < currentRows; r++) {
-                    for (let c = 0; c < currentCols; c++) {
-                        let liveNeighbors = 0;
-                        let neighborColor = 0;
-                        for (let dr = -1; dr <= 1; dr++) {
-                            for (let dc = -1; dc <= 1; dc++) {
-                                if (dr === 0 && dc === 0) continue;
-                                const nr = r + dr;
-                                const nc = c + dc;
-                                if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr]?.[nc] > 0) {
-                                    liveNeighbors++;
-                                    neighborColor = g[nr][nc];
-                                }
-                            }
-                        }
-
-                        const isAlive = g[r]?.[c] > 0;
-                        if (isAlive && !SURVIVE.includes(liveNeighbors)) {
-                            ng[r][c] = 0;
-                        } else if (!isAlive && BORN.includes(liveNeighbors)) {
-                            ng[r][c] = neighborColor;
-                        }
-                    }
-                }
-                break;
-            }
+            case 'tendrils':
             case 'conway': {
-                const BORN = [3];
-                const SURVIVE = [2, 3];
+                const rules = pattern === 'conway' ? conwayRulesRef.current : tendrilsRulesRef.current;
+                const BORN = rules.born;
+                const SURVIVE = rules.survive;
+                
                 for (let r = 0; r < currentRows; r++) {
                     for (let c = 0; c < currentCols; c++) {
                         let liveNeighbors = 0;
@@ -329,9 +347,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
 
                         const isAlive = g[r]?.[c] > 0;
                         if (isAlive && !SURVIVE.includes(liveNeighbors)) {
-                            ng[r][c] = 0; // Death
+                            ng[r][c] = 0;
                         } else if (!isAlive && BORN.includes(liveNeighbors)) {
-                            const colorCounts = neighborColors.reduce((acc, color) => {
+                           const colorCounts = neighborColors.reduce((acc, color) => {
                                 acc[color] = (acc[color] || 0) + 1;
                                 return acc;
                             }, {} as Record<number, number>);
@@ -351,7 +369,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 break;
             }
             case 'pulse': {
-                const nextGrid = createEmptyGrid(currentRows, currentCols);
                 const changes = new Map<string, number>();
 
                 for (let r = 0; r < currentRows; r++) {
@@ -377,10 +394,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 
                 changes.forEach((color, key) => {
                     const [r, c] = key.split(',').map(Number);
-                    nextGrid[r][c] = color;
+                    ng[r][c] = color;
                 });
 
-                return nextGrid;
+                return ng;
             }
             case 'random':
             case 'directional': {
@@ -402,7 +419,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                                 }
                             }
 
-                            if (pattern === 'directional' && directionalBiasRef.current !== 'none' && Math.random() < 0.8) { // 80% chance to follow bias
+                            if (pattern === 'directional' && directionalBiasRef.current !== 'none' && Math.random() < directionalBiasStrengthRef.current) {
                                 const bias = directionalBiasRef.current;
                                 const biasedNeighbor = {
                                     r: r + (bias === 'down' ? 1 : bias === 'up' ? -1 : 0),
@@ -713,6 +730,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     setSpreadPattern(defaults.spreadPattern);
     setPulseSpeed(defaults.pulseSpeed);
     setDirectionalBias(defaults.directionalBias);
+    setConwayRules(defaults.conwayRules);
+    setTendrilsRules(defaults.tendrilsRules);
+    setDirectionalBiasStrength(defaults.directionalBiasStrength);
   };
 
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
@@ -1204,6 +1224,20 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     Reset
                   </button>
                 </div>
+
+                {spreadPattern === 'conway' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                    <RuleEditor label="Born" rules={conwayRules.born} onChange={(newBorn) => setConwayRules(r => ({ ...r, born: newBorn }))} />
+                    <RuleEditor label="Survive" rules={conwayRules.survive} onChange={(newSurvive) => setConwayRules(r => ({ ...r, survive: newSurvive }))} />
+                  </div>
+                )}
+                
+                {spreadPattern === 'tendrils' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                     <RuleEditor label="Born" rules={tendrilsRules.born} onChange={(newBorn) => setTendrilsRules(r => ({ ...r, born: newBorn }))} />
+                    <RuleEditor label="Survive" rules={tendrilsRules.survive} onChange={(newSurvive) => setTendrilsRules(r => ({ ...r, survive: newSurvive }))} />
+                  </div>
+                )}
                 
                 {spreadPattern === 'pulse' && (
                     <div style={{ marginBottom: '8px' }}>
@@ -1220,19 +1254,32 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {spreadPattern === 'directional' && (
-                    <div style={{ marginBottom: '10px' }}>
-                        <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Bias:</label>
-                        <select
-                            value={directionalBias}
-                            onChange={(e) => setDirectionalBias(e.target.value as any)}
-                            style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
-                        >
-                            <option value="right">Right</option>
-                            <option value="left">Left</option>
-                            <option value="up">Up</option>
-                            <option value="down">Down</option>
-                        </select>
-                    </div>
+                    <>
+                      <div style={{ marginBottom: '10px' }}>
+                          <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Bias:</label>
+                          <select
+                              value={directionalBias}
+                              onChange={(e) => setDirectionalBias(e.target.value as any)}
+                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#374151', color: '#fff', border: 'none', width: '100%' }}
+                          >
+                              <option value="right">Right</option>
+                              <option value="left">Left</option>
+                              <option value="up">Up</option>
+                              <option value="down">Down</option>
+                          </select>
+                      </div>
+                      <div style={{ marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Bias Strength:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(directionalBiasStrength * 100)}%</span>
+                          </div>
+                          <input
+                          type="range" min={0} max={1} step={0.05} value={directionalBiasStrength}
+                          onChange={(e) => setDirectionalBiasStrength(Number(e.target.value))}
+                          style={{ width: '100%', height: '6px' }}
+                          />
+                      </div>
+                    </>
                 )}
 
                 <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb', marginTop: '12px' }}>
