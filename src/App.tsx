@@ -14,7 +14,7 @@ function cloneGrid(grid: number[][]): number[][] {
   return grid.map(row => [...row]);
 }
 
-export default function MasterControlPaintStudio(): JSX.Element {
+export default function ModularSettingsPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -67,7 +67,9 @@ export default function MasterControlPaintStudio(): JSX.Element {
   const [blendMode, setBlendMode] = useState(defaults.blendMode);
   const [tool, setTool] = useState('brush');
   const [panelMinimized, setPanelMinimized] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showSpeedSettings, setShowSpeedSettings] = useState(false);
+  const [showCanvasSettings, setShowCanvasSettings] = useState(false);
+  const [showVisualSettings, setShowVisualSettings] = useState(false);
 
   const spreadProbabilityRef = useRef(spreadProbability);
   const autoSpreadSpeedRef = useRef(autoSpreadSpeed);
@@ -403,7 +405,6 @@ export default function MasterControlPaintStudio(): JSX.Element {
   };
 
   const startAllEnabled = () => {
-    // Start all enabled auto modes
     if (autoSpreadEnabled && !autoSpreading) {
       runningRef.current = true;
       setAutoSpreading(true);
@@ -422,7 +423,6 @@ export default function MasterControlPaintStudio(): JSX.Element {
   };
 
   const stopAll = () => {
-    // Stop all running auto modes
     if (autoSpreading) {
       runningRef.current = false;
       setAutoSpreading(false);
@@ -565,7 +565,7 @@ export default function MasterControlPaintStudio(): JSX.Element {
             alignItems: 'center'
           }}
         >
-          <span>Master Control Paint Studio</span>
+          <span>Modular Paint Studio</span>
           <button
             onClick={() => setPanelMinimized(prev => !prev)}
             style={{
@@ -641,7 +641,36 @@ export default function MasterControlPaintStudio(): JSX.Element {
               </div>
             </div>
 
-            {/* Individual Control Buttons */}
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Enable Auto Modes:</label>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                  <input
+                    type="checkbox"
+                    checked={autoSpreadEnabled}
+                    onChange={(e) => setAutoSpreadEnabled(e.target.checked)}
+                  />
+                  Spread
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                  <input
+                    type="checkbox"
+                    checked={autoDotsEnabled}
+                    onChange={(e) => setAutoDotsEnabled(e.target.checked)}
+                  />
+                  Dots
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                  <input
+                    type="checkbox"
+                    checked={autoShapesEnabled}
+                    onChange={(e) => setAutoShapesEnabled(e.target.checked)}
+                  />
+                  Shapes
+                </label>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
                 { 
@@ -684,7 +713,6 @@ export default function MasterControlPaintStudio(): JSX.Element {
                 </button>
               ))}
               
-              {/* Master Control Button */}
               <button
                 onClick={isAnyRunning ? stopAll : startAllEnabled}
                 disabled={!anyEnabled && !isAnyRunning}
@@ -709,45 +737,15 @@ export default function MasterControlPaintStudio(): JSX.Element {
               </button>
             </div>
 
-            {/* Enable/Disable Checkboxes */}
-            <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Enable Auto Modes:</label>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                  <input
-                    type="checkbox"
-                    checked={autoSpreadEnabled}
-                    onChange={(e) => setAutoSpreadEnabled(e.target.checked)}
-                  />
-                  Spread
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                  <input
-                    type="checkbox"
-                    checked={autoDotsEnabled}
-                    onChange={(e) => setAutoDotsEnabled(e.target.checked)}
-                  />
-                  Dots
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                  <input
-                    type="checkbox"
-                    checked={autoShapesEnabled}
-                    onChange={(e) => setAutoShapesEnabled(e.target.checked)}
-                  />
-                  Shapes
-                </label>
-              </div>
-            </div>
-
-            {/* Manual Generation */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
                 { label: 'Spread Once', onClick: colorSpread, bg: '#7c3aed' },
                 { label: 'Add Dots', onClick: addRandomDots, bg: '#ea580c' },
                 { label: 'Add Shapes', onClick: addRandomShapes, bg: '#f59e0b' },
                 { label: 'Clear', onClick: clear, bg: '#991b1b' },
-                { label: 'Adv.', onClick: () => setShowAdvanced(prev => !prev), bg: '#374151' }
+                { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#059669' : '#374151' },
+                { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#059669' : '#374151' },
+                { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#059669' : '#374151' }
               ].map(({ label, onClick, bg }) => (
                 <button
                   key={label}
@@ -769,36 +767,83 @@ export default function MasterControlPaintStudio(): JSX.Element {
               ))}
             </div>
 
-            {[
-              ['Spread Rate', spreadProbability, 0, 1, 0.01, setSpreadProbability, '%'],
-              ['Spread Speed', autoSpreadSpeed, 0.25, 20, 0.25, setAutoSpreadSpeed, '/s'],
-              ['Dots Speed', autoDotsSpeed, 0.1, 10, 0.1, setAutoDotsSpeed, '/s'],
-              ['Shapes Speed', autoShapesSpeed, 0.1, 5, 0.1, setAutoShapesSpeed, '/s'],
-              ['Brush Size', brushSize, 1, 10, 1, setBrushSize, ''],
-              ['Cell Size', cellSize, 5, 50, 1, setCellSize, ' px'],
-              ['Rows', rows, 10, 100, 1, handleRowsChange, ''],
-              ['Cols', cols, 10, 100, 1, handleColsChange, '']
-            ].map(([label, value, min, max, step, setter, unit], idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                <label style={{ width: '100px', fontWeight: 600 }}>{label}:</label>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <input
-                    type="range"
-                    min={min as number}
-                    max={max as number}
-                    step={step as number}
-                    value={value as number}
-                    onChange={(e) => setter(Number(e.target.value))}
-                    style={{ flex: 1, height: '8px', borderRadius: '4px' }}
-                  />
-                  <span style={{ minWidth: '60px', textAlign: 'right', fontSize: '0.95rem' }}>
-                    {label === 'Spread Rate' ? `${Math.round((value as number) * 100)}${unit}` : `${value}${unit}`}
-                  </span>
-                </div>
-              </div>
-            ))}
+            {/* Conditional Settings Display */}
+            {(showSpeedSettings || showCanvasSettings) && (
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: showSpeedSettings && showCanvasSettings ? 'repeat(2, 1fr)' : '1fr',
+                gap: '12px', 
+                marginBottom: '12px' 
+              }}>
+                {/* Speed Settings Column */}
+                {showSpeedSettings && (
+                  <div>
+                    <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb' }}>
+                      Speed Controls
+                    </label>
+                    {[
+                      ['Spread Rate', spreadProbability, 0, 1, 0.01, setSpreadProbability, '%'],
+                      ['Spread Speed', autoSpreadSpeed, 0.25, 20, 0.25, setAutoSpreadSpeed, '/s'],
+                      ['Dots Speed', autoDotsSpeed, 0.1, 10, 0.1, setAutoDotsSpeed, '/s'],
+                      ['Shapes Speed', autoShapesSpeed, 0.1, 5, 0.1, setAutoShapesSpeed, '/s']
+                    ].map(([label, value, min, max, step, setter, unit], idx) => (
+                      <div key={idx} style={{ marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>{label}:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+                            {label === 'Spread Rate' ? `${Math.round((value as number) * 100)}${unit}` : `${value}${unit}`}
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={min as number}
+                          max={max as number}
+                          step={step as number}
+                          value={value as number}
+                          onChange={(e) => setter(Number(e.target.value))}
+                          style={{ width: '100%', height: '6px' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-            {showAdvanced && (
+                {/* Canvas Settings Column */}
+                {showCanvasSettings && (
+                  <div>
+                    <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb' }}>
+                      Canvas Settings
+                    </label>
+                    {[
+                      ['Brush Size', brushSize, 1, 10, 1, setBrushSize, ''],
+                      ['Cell Size', cellSize, 5, 50, 1, setCellSize, ' px'],
+                      ['Rows', rows, 10, 100, 1, handleRowsChange, ''],
+                      ['Cols', cols, 10, 100, 1, handleColsChange, '']
+                    ].map(([label, value, min, max, step, setter, unit], idx) => (
+                      <div key={idx} style={{ marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>{label}:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+                            {`${value}${unit}`}
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={min as number}
+                          max={max as number}
+                          step={step as number}
+                          value={value as number}
+                          onChange={(e) => setter(Number(e.target.value))}
+                          style={{ width: '100%', height: '6px' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {showVisualSettings && (
               <>
                 <div style={{ marginBottom: '10px' }}>
                   <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
