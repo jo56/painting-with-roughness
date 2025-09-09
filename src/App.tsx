@@ -67,12 +67,12 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const ripplesRef = useRef<{r: number, c: number, color: number, radius: number, maxRadius: number}[]>([]);
 
   const defaults = {
-    cellSize: 20,
-    rows: 30,
-    cols: 40,
+    cellSize: 15,
+    rows: 65,
+    cols: 80,
     showGrid: false,
     backgroundColor: '#0a0a0a',
-    brushSize: 1,
+    brushSize: 2,
     selectedColor: 1,
     spreadProbability: 0.2,
     autoSpreadSpeed: 3,
@@ -2203,7 +2203,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         {brushType === 'diagonal' && (
           <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
             <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Diagonal Thickness: {diagonalThickness}</label>
-            <input type="range" min={1} max={10} value={diagonalThickness} onChange={e => setDiagonalThickness(Number(e.target.value))} />
+            <input type="range" min={1} max={100} value={diagonalThickness} onChange={e => setDiagonalThickness(Number(e.target.value))} />
           </div>
         )}
 <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
