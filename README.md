@@ -1,4 +1,4 @@
-# Conway's Game of Life — React + TypeScript
+# Roughness Paint — React + TypeScript
 
 ### Quick Start
 

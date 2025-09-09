@@ -714,6 +714,50 @@ export default function MasterControlPaintStudio(): JSX.Element {
               </button>
             </div>
 
+            {/* Individual Control Buttons */}
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              {[
+                { 
+                  label: autoSpreading ? 'Stop Spread' : 'Start Spread', 
+                  onClick: toggleAutoSpread, 
+                  bg: autoSpreading ? '#dc2626' : '#16a34a',
+                  enabled: autoSpreadEnabled
+                },
+                { 
+                  label: autoDots ? 'Stop Dots' : 'Start Dots', 
+                  onClick: toggleAutoDots, 
+                  bg: autoDots ? '#dc2626' : '#f59e0b',
+                  enabled: autoDotsEnabled
+                },
+                { 
+                  label: autoShapes ? 'Stop Shapes' : 'Start Shapes', 
+                  onClick: toggleAutoShapes, 
+                  bg: autoShapes ? '#dc2626' : '#8b5cf6',
+                  enabled: autoShapesEnabled
+                }
+              ].map(({ label, onClick, bg, enabled }) => (
+                <button
+                  key={label}
+                  onClick={onClick}
+                  disabled={!enabled}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    background: enabled ? bg : '#6b7280',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: enabled ? 'pointer' : 'not-allowed',
+                    fontWeight: 'normal',
+                    fontSize: '0.95rem',
+                    whiteSpace: 'nowrap',
+                    opacity: enabled ? 1 : 0.6
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
             {/* Manual Generation */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
               {[
