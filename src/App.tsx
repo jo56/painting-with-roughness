@@ -1785,36 +1785,87 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 {showCanvasSettings && (
-                  <div>
-                    <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb' }}>
-                      Canvas Settings
-                    </label>
-                    {[
-                      ['Brush Size', brushSize, 1, 100, 1, setBrushSize, ''],
-                      ['Cell Size', cellSize, 1, 30, 1, setCellSize, ' px'],
-                      ['Rows', rows, 10, 2000, 1, handleRowsChange, ''],
-                      ['Cols', cols, 10, 2000, 1, handleColsChange, '']
-                    ].map(([label, value, min, max, step, setter, unit], idx) => (
-                      <div key={idx} style={{ marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>{label}:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
-                            {`${value}${unit}`}
-                          </span>
-                        </div>
-                        <input
-                          type="range"
-                          min={min as number}
-                          max={max as number}
-                          step={step as number}
-                          value={value as number}
-                          onChange={(e) => (setter as any)(Number(e.target.value))}
-                          style={{ width: '100%', height: '6px' }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
+  <div>
+    <label
+      style={{
+        fontWeight: 600,
+        marginBottom: '8px',
+        display: 'block',
+        fontSize: '0.9rem',
+        color: '#e5e7eb'
+      }}
+    >
+      Canvas Settings
+    </label>
+    {[
+      ['Brush Size', brushSize, 1, 100, 1, setBrushSize, ''],
+      ['Cell Size', cellSize, 1, 30, 1, setCellSize, ' px'],
+      ['Rows', rows, 10, 2000, 1, handleRowsChange, ''],
+      ['Cols', cols, 10, 2000, 1, handleColsChange, '']
+    ].map(([label, value, min, max, step, setter, unit], idx) => (
+      <div key={idx} style={{ marginBottom: '8px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '2px'
+          }}
+        >
+          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>
+            {label}:
+          </label>
+          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+            {`${value}${unit}`}
+          </span>
+        </div>
+
+        {/* For Rows and Cols: render slider + number box */}
+        {label === 'Rows' || label === 'Cols' ? (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              type="range"
+              min={min as number}
+              max={max as number}
+              step={step as number}
+              value={value as number}
+              onChange={(e) => (setter as any)(Number(e.target.value))}
+              style={{ flex: 1, height: '6px' }}
+            />
+            <input
+              type="number"
+              min={min as number}
+              max={max as number}
+              step={step as number}
+              value={value as number}
+              onChange={(e) => {
+                let newValue = Number(e.target.value);
+                if (isNaN(newValue)) return;
+                // Clamp automatically
+                if (newValue < (min as number)) newValue = min as number;
+                if (newValue > (max as number)) newValue = max as number;
+                (setter as any)(newValue);
+              }}
+              style={{ width: '70px' }}
+            />
+          </div>
+        ) : (
+          // Default case: just a slider
+          <input
+            type="range"
+            min={min as number}
+            max={max as number}
+            step={step as number}
+            value={value as number}
+            onChange={(e) => (setter as any)(Number(e.target.value))}
+            style={{ width: '100%', height: '6px' }}
+          />
+        )}
+      </div>
+    ))}
+  </div>
+)}
+
               </div>
             )}
             
