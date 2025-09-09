@@ -45,7 +45,7 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
 }
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion' | 'flow' | 'jitter' | 'vortex' | 'strobe';
+type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion' | 'flow' | 'jitter' | 'vortex' | 'strobe' | 'scramble' | 'ripple';
 
 export default function ModularSettingsPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -61,6 +61,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const pressedKeys = useRef(new Set<string>());
   const walkers = useRef<{r: number, c: number, color: number}[]>([]);
   const strobeStateRef = useRef(true); // true: expand, false: contract
+  const ripplesRef = useRef<{r: number, c: number, color: number, radius: number, maxRadius: number}[]>([]);
 
   const defaults = {
     cellSize: 20,
@@ -94,7 +95,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     flowChance: 0.5,
     jitterChance: 0.3,
     vortexCount: 5,
-    strobeThreshold: 3,
+    strobeExpandThreshold: 2,
+    strobeContractThreshold: 3,
+    scrambleSwaps: 10,
+    rippleChance: 0.05,
   };
 
   const [palette, setPalette] = useState([
@@ -152,7 +156,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [flowChance, setFlowChance] = useState(defaults.flowChance);
   const [jitterChance, setJitterChance] = useState(defaults.jitterChance);
   const [vortexCount, setVortexCount] = useState(defaults.vortexCount);
-  const [strobeThreshold, setStrobeThreshold] = useState(defaults.strobeThreshold);
+  const [strobeExpandThreshold, setStrobeExpandThreshold] = useState(defaults.strobeExpandThreshold);
+  const [strobeContractThreshold, setStrobeContractThreshold] = useState(defaults.strobeContractThreshold);
+  const [scrambleSwaps, setScrambleSwaps] = useState(defaults.scrambleSwaps);
+  const [rippleChance, setRippleChance] = useState(defaults.rippleChance);
 
   const generativeColorIndicesRef = useRef(generativeColorIndices);
   const spreadProbabilityRef = useRef(spreadProbability);
@@ -180,7 +187,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const flowChanceRef = useRef(flowChance);
   const jitterChanceRef = useRef(jitterChance);
   const vortexCountRef = useRef(vortexCount);
-  const strobeThresholdRef = useRef(strobeThreshold);
+  const strobeExpandThresholdRef = useRef(strobeExpandThreshold);
+  const strobeContractThresholdRef = useRef(strobeContractThreshold);
+  const scrambleSwapsRef = useRef(scrambleSwaps);
+  const rippleChanceRef = useRef(rippleChance);
   
   useEffect(() => { spreadProbabilityRef.current = spreadProbability; }, [spreadProbability]);
   useEffect(() => { autoSpreadSpeedRef.current = autoSpreadSpeed; }, [autoSpreadSpeed]);
@@ -208,7 +218,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   useEffect(() => { flowChanceRef.current = flowChance; }, [flowChance]);
   useEffect(() => { jitterChanceRef.current = jitterChance; }, [jitterChance]);
   useEffect(() => { vortexCountRef.current = vortexCount; }, [vortexCount]);
-  useEffect(() => { strobeThresholdRef.current = strobeThreshold; }, [strobeThreshold]);
+  useEffect(() => { strobeExpandThresholdRef.current = strobeExpandThreshold; }, [strobeExpandThreshold]);
+  useEffect(() => { strobeContractThresholdRef.current = strobeContractThreshold; }, [strobeContractThreshold]);
+  useEffect(() => { scrambleSwapsRef.current = scrambleSwaps; }, [scrambleSwaps]);
+  useEffect(() => { rippleChanceRef.current = rippleChance; }, [rippleChance]);
 
 
   const isDragging = useRef(false);
@@ -441,6 +454,67 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
         let ng = cloneGrid(g);
 
         switch (pattern) {
+            case 'ripple': {
+                // Update existing ripples
+                ripplesRef.current.forEach(ripple => {
+                    const r = Math.round(ripple.radius);
+                    for (let i = 0; i < 360; i += 5) {
+                        const angle = i * Math.PI / 180;
+                        const nr = Math.round(ripple.r + r * Math.sin(angle));
+                        const nc = Math.round(ripple.c + r * Math.cos(angle));
+                        if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && ng[nr][nc] === 0) {
+                            ng[nr][nc] = ripple.color;
+                        }
+                    }
+                    ripple.radius += 0.5;
+                });
+                
+                // Filter out old ripples
+                ripplesRef.current = ripplesRef.current.filter(r => r.radius <= r.maxRadius);
+
+                // Create new ripples
+                const chance = rippleChanceRef.current;
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        if (g[r][c] > 0 && Math.random() < chance) {
+                            ripplesRef.current.push({
+                                r, c, color: g[r][c], radius: 1, maxRadius: Math.max(currentRows, currentCols) / 3
+                            });
+                        }
+                    }
+                }
+                break;
+            }
+            case 'scramble': {
+                const coloredCells: {r: number, c: number, color: number}[] = [];
+                for (let r = 0; r < currentRows; r++) {
+                    for (let c = 0; c < currentCols; c++) {
+                        if (g[r][c] > 0) {
+                            coloredCells.push({r, c, color: g[r][c]});
+                        }
+                    }
+                }
+                if (coloredCells.length < 2) break;
+
+                const swaps = Math.min(scrambleSwapsRef.current, Math.floor(coloredCells.length / 2));
+                for (let i = 0; i < swaps; i++) {
+                    const idx1 = Math.floor(Math.random() * coloredCells.length);
+                    let idx2 = Math.floor(Math.random() * coloredCells.length);
+                    while (idx1 === idx2) {
+                        idx2 = Math.floor(Math.random() * coloredCells.length);
+                    }
+                    const cell1 = coloredCells[idx1];
+                    const cell2 = coloredCells[idx2];
+                    
+                    if (cell1 && cell2) {
+                        const color1 = ng[cell1.r][cell1.c];
+                        const color2 = ng[cell2.r][cell2.c];
+                        ng[cell1.r][cell1.c] = color2;
+                        ng[cell2.r][cell2.c] = color1;
+                    }
+                }
+                break;
+            }
             case 'vortex': {
                 const count = vortexCountRef.current;
                 for (let i = 0; i < count; i++) {
@@ -465,9 +539,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             }
             case 'strobe': {
                 strobeStateRef.current = !strobeStateRef.current;
-                const threshold = strobeThresholdRef.current;
             
                 if (strobeStateRef.current) { // EXPAND
+                    const expandThreshold = strobeExpandThresholdRef.current;
                     const locationsToColor = new Map<string, number>();
                     for (let r = 0; r < currentRows; r++) {
                         for (let c = 0; c < currentCols; c++) {
@@ -483,7 +557,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                                     }
                                 }
             
-                                if (neighborColors.length > 0) {
+                                if (neighborColors.length >= expandThreshold) {
                                     const colorCounts = neighborColors.reduce((acc, color) => {
                                         acc[color] = (acc[color] || 0) + 1;
                                         return acc;
@@ -510,6 +584,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                     });
             
                 } else { // CONTRACT
+                    const contractThreshold = strobeContractThresholdRef.current;
                     for (let r = 0; r < currentRows; r++) {
                         for (let c = 0; c < currentCols; c++) {
                             if (g[r][c] > 0) {
@@ -523,7 +598,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                                         }
                                     }
                                 }
-                                if (emptyNeighbors >= threshold) {
+                                if (emptyNeighbors >= contractThreshold) {
                                     ng[r][c] = 0;
                                 }
                             }
@@ -1046,12 +1121,9 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     runningRef.current = !runningRef.current;
     setAutoSpreading(runningRef.current);
     if (runningRef.current) {
-      if (spreadPatternRef.current === 'vein') {
-        walkers.current = []; // Reset walkers when starting
-      }
-      if (spreadPatternRef.current === 'strobe') {
-        strobeStateRef.current = true; // Reset to expand
-      }
+      if (spreadPatternRef.current === 'vein') walkers.current = [];
+      if (spreadPatternRef.current === 'strobe') strobeStateRef.current = true;
+      if (spreadPatternRef.current === 'ripple') ripplesRef.current = [];
       runAutoSpread();
     } else if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
@@ -1230,7 +1302,10 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     setFlowChance(defaults.flowChance);
     setJitterChance(defaults.jitterChance);
     setVortexCount(defaults.vortexCount);
-    setStrobeThreshold(defaults.strobeThreshold);
+    setStrobeExpandThreshold(defaults.strobeExpandThreshold);
+    setStrobeContractThreshold(defaults.strobeContractThreshold);
+    setScrambleSwaps(defaults.scrambleSwaps);
+    setRippleChance(defaults.rippleChance);
   };
 
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
@@ -1735,6 +1810,8 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       <option value="jitter">Jitter</option>
                       <option value="vortex">Vortex</option>
                       <option value="strobe">Strobe</option>
+                      <option value="scramble">Scramble</option>
+                      <option value="ripple">Ripple</option>
                     </select>
                   </div>
                    <button
@@ -1755,6 +1832,30 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                   </button>
                 </div>
                 
+                {spreadPattern === 'ripple' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Ripple Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(rippleChance*100)}%</span>
+                          </div>
+                          <input type="range" min={0.01} max={0.5} step={0.01} value={rippleChance} onChange={(e) => setRippleChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+
+                {spreadPattern === 'scramble' && (
+                  <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                      <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Swaps per Step:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{scrambleSwaps}</span>
+                          </div>
+                          <input type="range" min={1} max={100} value={scrambleSwaps} onChange={(e) => setScrambleSwaps(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
+                  </div>
+                )}
+                
                 {spreadPattern === 'vortex' && (
                   <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
                       <div>
@@ -1769,12 +1870,19 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
 
                 {spreadPattern === 'strobe' && (
                   <div style={{background: '#1f2937', padding: '8px', borderRadius: '6px'}}>
+                      <div style={{ marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Expand Threshold:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{strobeExpandThreshold} Neighbors</span>
+                          </div>
+                          <input type="range" min={1} max={8} value={strobeExpandThreshold} onChange={(e) => setStrobeExpandThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                      </div>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Edge Threshold:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{strobeThreshold} Neighbors</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Contract Threshold:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{strobeContractThreshold} Neighbors</span>
                           </div>
-                          <input type="range" min={1} max={8} value={strobeThreshold} onChange={(e) => setStrobeThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
+                          <input type="range" min={1} max={8} value={strobeContractThreshold} onChange={(e) => setStrobeContractThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
                   </div>
                 )}
