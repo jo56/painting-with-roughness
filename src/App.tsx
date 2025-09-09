@@ -14,7 +14,7 @@ function cloneGrid(grid: number[][]): number[][] {
   return grid.map(row => [...row]);
 }
 
-export default function AutoSpreadPaint(): JSX.Element {
+export default function PaintFillSpreadApp(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -165,16 +165,62 @@ export default function AutoSpreadPaint(): JSX.Element {
     });
   };
 
+  const floodFill = (startR: number, startC: number, newColor: number) => {
+    setGrid(g => {
+      const ng = cloneGrid(g);
+      const originalColor = g[startR][startC];
+      
+      // Don't fill if the color is already the target color
+      if (originalColor === newColor) return ng;
+      
+      // Flood fill algorithm using a queue
+      const queue: [number, number][] = [[startR, startC]];
+      const visited = new Set<string>();
+      
+      while (queue.length > 0) {
+        const [r, c] = queue.shift()!;
+        const key = `${r},${c}`;
+        
+        // Skip if out of bounds or already visited
+        if (r < 0 || r >= rows || c < 0 || c >= cols || visited.has(key)) {
+          continue;
+        }
+        
+        // Skip if this cell doesn't match the original color
+        if (ng[r][c] !== originalColor) {
+          continue;
+        }
+        
+        // Fill this cell
+        ng[r][c] = newColor;
+        visited.add(key);
+        
+        // Add neighbors to queue (4-directional for cleaner fill)
+        queue.push([r - 1, c]); // up
+        queue.push([r + 1, c]); // down
+        queue.push([r, c - 1]); // left
+        queue.push([r, c + 1]); // right
+      }
+      
+      return ng;
+    });
+  };
+
   const handleMouseDown = (e: React.MouseEvent) => {
-    isMouseDown.current = true;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / cellSize);
     const y = Math.floor((e.clientY - rect.top) / cellSize);
     
-    const colorToUse = tool === 'eraser' ? 0 : selectedColor;
-    paintCell(y, x, colorToUse);
+    if (tool === 'fill') {
+      const colorToUse = selectedColor;
+      floodFill(y, x, colorToUse);
+    } else {
+      isMouseDown.current = true;
+      const colorToUse = tool === 'eraser' ? 0 : selectedColor;
+      paintCell(y, x, colorToUse);
+    }
   };
 
   const handleMouseUp = () => { 
@@ -182,7 +228,7 @@ export default function AutoSpreadPaint(): JSX.Element {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isMouseDown.current) return;
+    if (!isMouseDown.current || tool === 'fill') return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -279,6 +325,56 @@ export default function AutoSpreadPaint(): JSX.Element {
     });
   };
 
+  const addRandomShapes = () => {
+    setGrid(g => {
+      const ng = cloneGrid(g);
+      
+      // Add 3-5 random shapes (rectangles and lines)
+      const numShapes = Math.floor(Math.random() * 3) + 3;
+      for (let i = 0; i < numShapes; i++) {
+        const color = Math.floor(Math.random() * (colorPalette.length - 1)) + 1;
+        const shapeType = Math.random() > 0.5 ? 'rect' : 'line';
+        
+        if (shapeType === 'rect') {
+          // Draw rectangle
+          const startR = Math.floor(Math.random() * (rows - 5));
+          const startC = Math.floor(Math.random() * (cols - 5));
+          const width = Math.floor(Math.random() * 8) + 3;
+          const height = Math.floor(Math.random() * 8) + 3;
+          
+          for (let r = startR; r < Math.min(startR + height, rows); r++) {
+            for (let c = startC; c < Math.min(startC + width, cols); c++) {
+              ng[r][c] = color;
+            }
+          }
+        } else {
+          // Draw line
+          const startR = Math.floor(Math.random() * rows);
+          const startC = Math.floor(Math.random() * cols);
+          const isHorizontal = Math.random() > 0.5;
+          const length = Math.floor(Math.random() * 15) + 5;
+          
+          for (let i = 0; i < length; i++) {
+            let r = startR;
+            let c = startC;
+            
+            if (isHorizontal) {
+              c += i;
+            } else {
+              r += i;
+            }
+            
+            if (r >= 0 && r < rows && c >= 0 && c < cols) {
+              ng[r][c] = color;
+            }
+          }
+        }
+      }
+      
+      return ng;
+    });
+  };
+
   const handleHeaderMouseDown = (e: React.MouseEvent) => {
     if (isMobile) return;
     isDragging.current = true;
@@ -355,7 +451,11 @@ export default function AutoSpreadPaint(): JSX.Element {
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
-          style={{ display: 'block', cursor: 'crosshair', background: backgroundColor }}
+          style={{ 
+            display: 'block', 
+            cursor: tool === 'fill' ? 'pointer' : 'crosshair', 
+            background: backgroundColor 
+          }}
         />
       </div>
 
@@ -393,7 +493,7 @@ export default function AutoSpreadPaint(): JSX.Element {
             gap: '0px'
           }}
         >
-          <span>Auto-Spreading Paint</span>
+          <span>Paint Studio Pro</span>
           <button
             onClick={() => setPanelMinimized(prev => !prev)}
             style={{
@@ -428,6 +528,7 @@ export default function AutoSpreadPaint(): JSX.Element {
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {[
                   { label: 'Brush', value: 'brush' },
+                  { label: 'Fill', value: 'fill' },
                   { label: 'Eraser', value: 'eraser' }
                 ].map(({ label, value }) => (
                   <button
@@ -481,6 +582,7 @@ export default function AutoSpreadPaint(): JSX.Element {
                 },
                 { label: 'Spread Once', onClick: colorSpread, bg: '#7c3aed' },
                 { label: 'Random Dots', onClick: addRandomDots, bg: '#ea580c' },
+                { label: 'Random Shapes', onClick: addRandomShapes, bg: '#f59e0b' },
                 { label: 'Clear', onClick: clear, bg: '#991b1b' },
                 { label: 'Adv.', onClick: () => setShowAdvanced(prev => !prev), bg: '#374151' },
               ].map(({ label, onClick, bg }) => (
@@ -544,9 +646,9 @@ export default function AutoSpreadPaint(): JSX.Element {
             {/* Basic Settings */}
             {[
               ['Brush Size', brushSize, 1, 10, setBrushSize, ''],
-              ['Cell Size', cellSize, 1, 50, setCellSize, ' px'],
-              ['Rows', rows, 10, 1000, handleRowsChange, ''],
-              ['Cols', cols, 10, 1000, handleColsChange, '']
+              ['Cell Size', cellSize, 5, 50, setCellSize, ' px'],
+              ['Rows', rows, 10, 100, handleRowsChange, ''],
+              ['Cols', cols, 10, 100, handleColsChange, '']
             ].map(([label, value, min, max, setter, unit], idx) => (
               <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                 <label style={{ width: '100px', fontWeight: 600 }}>{label}:</label>
