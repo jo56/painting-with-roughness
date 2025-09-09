@@ -241,7 +241,12 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
 
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
-  const [panelPos, setPanelPos] = useState({ x: 20, y: 20 });
+  const [panelPos, setPanelPos] = useState(() => {
+  if (typeof window !== 'undefined') {
+    return { x: window.innerWidth - 360, y: 20 };
+  }
+  return { x: 20, y: 20 };
+});
   const mousePos = useRef({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
 
@@ -251,7 +256,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
       setIsMobile(mobile);
       if (!mobile && canvasContainerRef.current) {
         const rect = canvasContainerRef.current.getBoundingClientRect();
-        setPanelPos({ x: rect.right + 10, y: rect.top });
+        setPanelPos({ x: window.innerWidth - 360, y: 20 });
       }
     };
     window.addEventListener('resize', handleResize);
