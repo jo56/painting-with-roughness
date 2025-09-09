@@ -80,7 +80,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     pulseSpeed: 10,
     pulseOvertakes: true,
     pulseDirection: 'bottom-right' as Direction,
-    directionalBias: 'bottom-right' as Direction,
+    directionalBias: 'down' as Direction,
     conwayRules: { born: [3], survive: [2,3] },
     tendrilsRules: { born: [1], survive: [1,2] },
     directionalBiasStrength: 0.8,
@@ -1373,7 +1373,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
             alignItems: 'center',
           }}
         >
-          <span>Modular Paint Studio</span>
+          <span>Painting with Roughness</span>
           <button
             onClick={() => setPanelMinimized(prev => !prev)}
             style={{
@@ -1803,7 +1803,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       <option value="random">Random Walk</option>
                       <option value="conway">Game of Life</option>
                       <option value="tendrils">Tendrils</option>
-                      <option value="pulse">Pulsing</option>
+                      <option value="pulse">Current</option>
                       <option value="directional">Directional</option>
                       <option value="vein">Vein Growth</option>
                       <option value="crystallize">Crystallize</option>
@@ -2093,7 +2093,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                 )}
 
                 <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb', marginTop: '12px' }}>
-                    Allowed Generative Colors
+                    Allowed Random Colors
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '8px' }}>
                     {palette.slice(1).map((color, index) => {
