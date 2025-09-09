@@ -126,7 +126,6 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [randomWalkSpreadCount, setRandomWalkSpreadCount] = useState(defaults.randomWalkSpreadCount);
   const [randomWalkMode, setRandomWalkMode] = useState<'any' | 'cardinal'>(defaults.randomWalkMode);
 
-
   const generativeColorIndicesRef = useRef(generativeColorIndices);
   const spreadProbabilityRef = useRef(spreadProbability);
   const autoSpreadSpeedRef = useRef(autoSpreadSpeed);
@@ -1036,34 +1035,28 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
               <>
                 <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
                   <button
-                    onClick={() => { isAnyRunning ? stopAll() : startAllEnabled(); setIsSavingColor(false); }}
-                    disabled={!anyEnabled && !isAnyRunning}
+                    onClick={() => { toggleAutoSpread(); setIsSavingColor(false); }}
+                    disabled={!autoSpreadEnabled}
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
-                      background: isAnyRunning 
+                      background: autoSpreading 
                         ? '#dc2626' 
-                        : anyEnabled 
+                        : autoSpreadEnabled 
                           ? '#16a34a' 
                           : '#6b7280',
                       color: '#fff',
                       border: 'none',
-                      cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
+                      cursor: autoSpreadEnabled ? 'pointer' : 'not-allowed',
                       fontWeight: 600,
                       fontSize: '0.95rem',
                       whiteSpace: 'nowrap',
-                      opacity: anyEnabled || isAnyRunning ? 1 : 0.6
+                      opacity: autoSpreadEnabled ? 1 : 0.6
                     }}
                   >
-                    {isAnyRunning ? 'Stop All' : 'Start All'}
+                    {autoSpreading ? 'Stop Spread' : 'Start Spread'}
                   </button>
                   {[
-                    { 
-                      label: autoSpreading ? 'Stop Spread' : 'Start Spread', 
-                      onClick: toggleAutoSpread, 
-                      active: autoSpreading,
-                      enabled: autoSpreadEnabled
-                    },
                     { 
                       label: autoDots ? 'Stop Dots' : 'Start Dots', 
                       onClick: toggleAutoDots, 
@@ -1099,6 +1092,27 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
                       {label}
                     </button>
                   ))}
+                  <button
+                    onClick={() => { isAnyRunning ? stopAll() : startAllEnabled(); setIsSavingColor(false); }}
+                    disabled={!anyEnabled && !isAnyRunning}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      background: anyEnabled || isAnyRunning ? '#374151' : '#6b7280',
+                      color: '#fff',
+                      border: 'none',
+                      cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
+                      fontWeight: 'normal',
+                      fontSize: '0.95rem',
+                      whiteSpace: 'nowrap',
+                      opacity: anyEnabled || isAnyRunning ? 1 : 0.6,
+                      marginLeft: 'auto',
+                      boxShadow: isAnyRunning ? '0 0 8px rgba(78, 205, 196, 0.7)' : 'none',
+                      transition: 'box-shadow 0.2s ease-in-out'
+                    }}
+                  >
+                    {isAnyRunning ? 'Stop All' : 'Start All'}
+                  </button>
                 </div>
               </>
             )}
@@ -1472,3 +1486,4 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     </div>
   );
 }
+
