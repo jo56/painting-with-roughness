@@ -3088,17 +3088,16 @@ if (e.key === 'Shift') {
             
 <div style={{ fontWeight: 600, marginBottom: '10px' }}>
   <label>
-    <input
-      type="checkbox"
-      checked={recordEnabled}
-      onChange={(e) => setRecordEnabled(e.target.checked)}
-    />
-    {' '}
+    <input 
+      type="checkbox" 
+      checked={recordEnabled} 
+      onChange={(e) => setRecordEnabled(e.target.checked)} 
+    />{' '}
     Recording
   </label>
 </div>
 {recordEnabled && (
-  <div style={{ marginTop: '8px', marginBottom: '10px' }}>
+  <div style={{ marginBottom: '10px' }}>
     <label style={{ display: 'block', fontSize: '0.8rem', color: '#d1d5db', marginBottom: '6px' }}>
       Filename
     </label>
