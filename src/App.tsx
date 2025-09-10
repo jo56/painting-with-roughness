@@ -241,11 +241,13 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
 
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
-  const [panelPos, setPanelPos] = useState(() => {
+  const LAUNCH_PANEL_POS = { x: 24, y: 20 };
+
+const [panelPos, setPanelPos] = useState(() => {
   if (typeof window !== 'undefined') {
-    return { x: 24, y: 20 };
+    return LAUNCH_PANEL_POS;
   }
-  return { x: 20, y: 20 };
+  return { x: 20, y: 20 }; // fallback for SSR
 });
   const mousePos = useRef({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
@@ -256,7 +258,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
       setIsMobile(mobile);
       if (!mobile && canvasContainerRef.current) {
         const rect = canvasContainerRef.current.getBoundingClientRect();
-        setPanelPos(prev => ({ x: 24, y: prev.y }));
+        setPanelPos(prev => ({ x: LAUNCH_PANEL_POS.x, y: prev.y }));
       }
     };
     window.addEventListener('resize', handleResize);
@@ -1251,14 +1253,34 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
     const handleMouseUp = () => { isDragging.current = false; };
     
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Shift') {
-        e.preventDefault();
-        setIsMobile(false);
-        const mouseX = mousePos.current.x || window.innerWidth / 2;
-        const mouseY = mousePos.current.y || window.innerHeight / 2;
-        const desiredY = Math.max(20, Math.min(mouseY - 50, window.innerHeight - 400));
-        setPanelPos({ x: 24, y: desiredY });
-      }
+if (e.key === 'Shift') {
+  e.preventDefault();
+  setIsMobile(false);
+
+  // Use mouse position if available, else center
+  const mouseX = mousePos.current.x || window.innerWidth / 2;
+  const mouseY = mousePos.current.y || window.innerHeight / 2;
+
+  // Get actual panel size
+  const panelEl = panelRef.current;
+  const PANEL_WIDTH = panelEl?.offsetWidth || 320;
+  const PANEL_HEIGHT = panelEl?.offsetHeight || 400;
+  const MARGIN = 20;
+
+  // Calculate new position under the mouse, clamped to viewport
+  const newX = Math.max(
+    MARGIN,
+    Math.min(mouseX - PANEL_WIDTH / 2, window.innerWidth - PANEL_WIDTH - MARGIN)
+  );
+  const newY = Math.max(
+    MARGIN,
+    Math.min(mouseY + 20, window.innerHeight - PANEL_HEIGHT - MARGIN)
+  );
+
+  setPanelPos({ x: newX, y: newY });
+}
+
+
     };
     
     window.addEventListener('mousemove', handleMouseMove);
