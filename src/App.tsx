@@ -1253,7 +1253,7 @@ const [panelPos, setPanelPos] = useState(() => {
     const handleMouseUp = () => { isDragging.current = false; };
     
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Shift') {
+if (e.key === 'Shift') {
   e.preventDefault();
   setIsMobile(false);
 
@@ -1261,17 +1261,26 @@ const [panelPos, setPanelPos] = useState(() => {
   const mouseX = mousePos.current.x || window.innerWidth / 2;
   const mouseY = mousePos.current.y || window.innerHeight / 2;
 
-  // Panel dimensions & margins
-  const PANEL_WIDTH = 320; // adjust if your panel is wider
-  const PANEL_HEIGHT = 400; // rough estimate of height
+  // Get actual panel size
+  const panelEl = panelRef.current;
+  const PANEL_WIDTH = panelEl?.offsetWidth || 320;
+  const PANEL_HEIGHT = panelEl?.offsetHeight || 400;
   const MARGIN = 20;
 
   // Calculate new position under the mouse, clamped to viewport
-  const newX = Math.max(MARGIN, Math.min(mouseX - PANEL_WIDTH / 2, window.innerWidth - PANEL_WIDTH - MARGIN));
-  const newY = Math.max(MARGIN, Math.min(mouseY + 20, window.innerHeight - PANEL_HEIGHT - MARGIN));
+  const newX = Math.max(
+    MARGIN,
+    Math.min(mouseX - PANEL_WIDTH / 2, window.innerWidth - PANEL_WIDTH - MARGIN)
+  );
+  const newY = Math.max(
+    MARGIN,
+    Math.min(mouseY + 20, window.innerHeight - PANEL_HEIGHT - MARGIN)
+  );
 
   setPanelPos({ x: newX, y: newY });
 }
+
+
     };
     
     window.addEventListener('mousemove', handleMouseMove);
