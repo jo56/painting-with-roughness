@@ -1176,6 +1176,18 @@ const [panelPos, setPanelPos] = useState(() => {
     }
   };
 
+  useEffect(() => {
+    const handleSpacebar = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        toggleAutoSpread();
+      }
+    };
+    window.addEventListener("keydown", handleSpacebar);
+    return () => window.removeEventListener("keydown", handleSpacebar);
+  }, []);
+
+
   const toggleAutoDots = () => {
     dotsRunningRef.current = !dotsRunningRef.current;
     setAutoDots(dotsRunningRef.current);
