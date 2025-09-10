@@ -24,7 +24,42 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
         onChange(newRules.sort((a, b) => a - b));
     };
 
-    return (
+    
+  // === Recording functions ===
+  const startRecording = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const stream = canvas.captureStream(30); // 30fps
+    const recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9" });
+    mediaRecorderRef.current = recorder;
+    recordedChunksRef.current = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+    };
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${recordingFilename || "grid-recording"}-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setIsRecording(false);
+      setRecordingToast("Recording saved");
+    };
+    recorder.start();
+    setIsRecording(true);
+    setRecordingToast("Recording started (press R to stop)");
+  };
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      setRecordingToast("Stopping recording…");
+    }
+  };
+  // === End Recording functions ===
+
+  return (
         <div style={{ marginBottom: '8px' }}>
             <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>{label}:</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
@@ -145,7 +180,15 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const [showVisualSettings, setShowVisualSettings] = useState(false);
-  const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
+  
+  // === Recording: state & refs ===
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingFilename, setRecordingFilename] = useState("grid-recording");
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const [recordingToast, setRecordingToast] = useState<string | null>(null);
+  // === End Recording state & refs ===
+const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
   const [showStepControls, setShowStepControls] = useState(false);
   const [showAutoControls, setShowAutoControls] = useState(true);
   const [showOptions, setShowOptions] = useState(true);
@@ -263,7 +306,42 @@ const [panelPos, setPanelPos] = useState(() => {
     };
     window.addEventListener('resize', handleResize);
     handleResize();
-    return () => window.removeEventListener('resize', handleResize);
+    
+  // === Recording functions ===
+  const startRecording = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const stream = canvas.captureStream(30); // 30fps
+    const recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9" });
+    mediaRecorderRef.current = recorder;
+    recordedChunksRef.current = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+    };
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${recordingFilename || "grid-recording"}-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setIsRecording(false);
+      setRecordingToast("Recording saved");
+    };
+    recorder.start();
+    setIsRecording(true);
+    setRecordingToast("Recording started (press R to stop)");
+  };
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      setRecordingToast("Stopping recording…");
+    }
+  };
+  // === End Recording functions ===
+
+  return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -322,7 +400,42 @@ const [panelPos, setPanelPos] = useState(() => {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
-    return () => {
+    
+  // === Recording functions ===
+  const startRecording = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const stream = canvas.captureStream(30); // 30fps
+    const recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9" });
+    mediaRecorderRef.current = recorder;
+    recordedChunksRef.current = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+    };
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${recordingFilename || "grid-recording"}-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setIsRecording(false);
+      setRecordingToast("Recording saved");
+    };
+    recorder.start();
+    setIsRecording(true);
+    setRecordingToast("Recording started (press R to stop)");
+  };
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      setRecordingToast("Stopping recording…");
+    }
+  };
+  // === End Recording functions ===
+
+  return () => {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
     };
@@ -371,6 +484,30 @@ const [panelPos, setPanelPos] = useState(() => {
   }, [grid, rows, cols, cellSize, backgroundColor, showGrid, palette, customColor]);
 
   useEffect(() => draw(), [draw]);
+  // === Recording keyboard shortcut & toast ===
+  useEffect(() => {
+    const handleRecordingShortcut = (e: KeyboardEvent) => {
+      if (e.key && e.key.toLowerCase() === "r") {
+        e.preventDefault();
+        if (isRecording) {
+          stopRecording();
+        } else {
+          startRecording();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleRecordingShortcut);
+    return () => window.removeEventListener("keydown", handleRecordingShortcut);
+  }, [isRecording, recordingFilename]);
+
+  useEffect(() => {
+    if (recordingToast) {
+      const t = setTimeout(() => setRecordingToast(null), 1400);
+      return () => clearTimeout(t);
+    }
+  }, [recordingToast]);
+  // === End Recording keyboard shortcut & toast ===
+
 
   const paintCell = (r: number, c: number, color: number) => {
     if (r < 0 || r >= rows || c < 0 || c >= cols) return;
@@ -1184,7 +1321,42 @@ const [panelPos, setPanelPos] = useState(() => {
       }
     };
     window.addEventListener("keydown", handleSpacebar);
-    return () => window.removeEventListener("keydown", handleSpacebar);
+    
+  // === Recording functions ===
+  const startRecording = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const stream = canvas.captureStream(30); // 30fps
+    const recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9" });
+    mediaRecorderRef.current = recorder;
+    recordedChunksRef.current = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+    };
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${recordingFilename || "grid-recording"}-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setIsRecording(false);
+      setRecordingToast("Recording saved");
+    };
+    recorder.start();
+    setIsRecording(true);
+    setRecordingToast("Recording started (press R to stop)");
+  };
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      setRecordingToast("Stopping recording…");
+    }
+  };
+  // === End Recording functions ===
+
+  return () => window.removeEventListener("keydown", handleSpacebar);
   }, []);
 
 
@@ -1299,7 +1471,42 @@ if (e.key === 'Shift') {
     window.addEventListener('mouseup', handleMouseUp);
     window.addEventListener('keydown', handleKeyDown);
     
-    return () => {
+    
+  // === Recording functions ===
+  const startRecording = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const stream = canvas.captureStream(30); // 30fps
+    const recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9" });
+    mediaRecorderRef.current = recorder;
+    recordedChunksRef.current = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+    };
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${recordingFilename || "grid-recording"}-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setIsRecording(false);
+      setRecordingToast("Recording saved");
+    };
+    recorder.start();
+    setIsRecording(true);
+    setRecordingToast("Recording started (press R to stop)");
+  };
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      setRecordingToast("Stopping recording…");
+    }
+  };
+  // === End Recording functions ===
+
+  return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('keydown', handleKeyDown);
@@ -1388,6 +1595,41 @@ if (e.key === 'Shift') {
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
   const anyEnabled = autoSpreadEnabled || autoDotsEnabled || autoShapesEnabled;
 
+  
+  // === Recording functions ===
+  const startRecording = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const stream = canvas.captureStream(30); // 30fps
+    const recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9" });
+    mediaRecorderRef.current = recorder;
+    recordedChunksRef.current = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+    };
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${recordingFilename || "grid-recording"}-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setIsRecording(false);
+      setRecordingToast("Recording saved");
+    };
+    recorder.start();
+    setIsRecording(true);
+    setRecordingToast("Recording started (press R to stop)");
+  };
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      setRecordingToast("Stopping recording…");
+    }
+  };
+  // === End Recording functions ===
+
   return (
     <div style={{
       width: '100%',
@@ -1412,6 +1654,14 @@ if (e.key === 'Shift') {
           }}
         />
       </div>
+
+
+      {recordingToast && (
+        <div style={{ position: 'fixed', top: 12, right: 12, background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '8px 12px', borderRadius: '6px', fontSize: '0.9rem', zIndex: 2000 }}>
+          {recordingToast}
+        </div>
+      )}
+
 
       <div
         ref={panelRef}
@@ -2234,7 +2484,42 @@ if (e.key === 'Shift') {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '8px' }}>
                     {palette.slice(1).map((color, index) => {
                         const colorIndex = index + 1;
-                        return (
+                        
+  // === Recording functions ===
+  const startRecording = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const stream = canvas.captureStream(30); // 30fps
+    const recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9" });
+    mediaRecorderRef.current = recorder;
+    recordedChunksRef.current = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+    };
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${recordingFilename || "grid-recording"}-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setIsRecording(false);
+      setRecordingToast("Recording saved");
+    };
+    recorder.start();
+    setIsRecording(true);
+    setRecordingToast("Recording started (press R to stop)");
+  };
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      setRecordingToast("Stopping recording…");
+    }
+  };
+  // === End Recording functions ===
+
+  return (
                             <label 
                                 key={colorIndex} 
                                 style={{ 
