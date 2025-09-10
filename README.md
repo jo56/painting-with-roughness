@@ -11,6 +11,6 @@ The canvas is responsive; use the controls to start/stop, step, randomize, and c
 
 ### Controls
 
-You can get rid of the settings window by dragging it offscreen.  
+You can get rid of the settings window by dragging it downwards offscreen.  
 
 Pressing **Shift** will cause it to reappear where your mouse is.
