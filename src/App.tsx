@@ -3085,38 +3085,45 @@ if (e.key === 'Shift') {
                 </div>
 
             {/* Recording (Visual Settings) - clean */}
-            <div style={{ marginBottom: '10px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input
-                  type="checkbox"
-                  checked={recordEnabled}
-                  onChange={(e) => setRecordEnabled(e.target.checked)}
-                  style={{ cursor: 'pointer' }}
-                />
-                Recording
-              </label>
-              <div style={{ marginTop: '8px' }}>
-                <input
-                  type="text"
-                  value={recordingFilename}
-                  onChange={(e) => setRecordingFilename(e.target.value)}
-                  placeholder="Filename (no extension)"
-                  style={{
-                    width: '100%',
-                    padding: '6px 8px',
-                    marginBottom: '10px',
-                    borderRadius: '6px',
-                    border: '1px solid #555',
-                    background: '#2a2a2a',
-                    color: '#fff',
-                    fontSize: '0.9rem'
-                  }}
-                />
-                <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>
-                  Press <strong>R</strong> to toggle recording
-                </div>
-              </div>
-            </div>
+            
+<div style={{ fontWeight: 600, marginBottom: '10px' }}>
+  <label>
+    <input
+      type="checkbox"
+      checked={recordEnabled}
+      onChange={(e) => setRecordEnabled(e.target.checked)}
+    />
+    {' '}
+    Recording
+  </label>
+</div>
+{recordEnabled && (
+  <div style={{ marginTop: '8px', marginBottom: '10px' }}>
+    <label style={{ display: 'block', fontSize: '0.8rem', color: '#d1d5db', marginBottom: '6px' }}>
+      Filename
+    </label>
+    <input
+      type="text"
+      value={recordingFilename}
+      onChange={(e) => setRecordingFilename(e.target.value)}
+      placeholder="Enter filename (no extension)"
+      style={{
+        width: '100%',
+        padding: '6px 8px',
+        marginBottom: '8px',
+        borderRadius: '6px',
+        border: '1px solid #555',
+        background: '#2a2a2a',
+        color: '#fff',
+        fontSize: '0.9rem'
+      }}
+    />
+    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>
+      Press <strong>R</strong> to start/stop recording
+    </div>
+  </div>
+)}
+
 
               </>
             )}
