@@ -247,7 +247,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   
   
   // === Recording: state & refs (clean) ===
-  const [recordEnabled, setRecordEnabled] = useState(false);
+  const [recordEnabled, setRecordEnabled] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingFilename, setRecordingFilename] = useState("grid-recording");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -3112,23 +3112,6 @@ if (e.key === 'Shift') {
                     fontSize: '0.9rem'
                   }}
                 />
-                <button
-                  onClick={() => (isRecording ? stopRecording() : startRecording())}
-                  disabled={!recordEnabled}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    background: !recordEnabled ? '#2f2f31' : (isRecording ? '#ef4444' : '#3a3a3c'),
-                    color: '#fff',
-                    border: 'none',
-                    cursor: !recordEnabled ? 'not-allowed' : 'pointer',
-                    fontWeight: 'normal',
-                    fontSize: '0.95rem'
-                  }}
-                  title={recordEnabled ? "Capture the canvas to WebM video" : "Enable recording to use"}
-                >
-                  {isRecording ? 'Stop Recording' : 'Start Recording'}
-                </button>
                 <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>
                   Press <strong>R</strong> to toggle recording
                 </div>
