@@ -226,6 +226,15 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const [autoSpreadEnabled, setAutoSpreadEnabled] = useState(true);
   const [autoDotsEnabled, setAutoDotsEnabled] = useState(true);
   const [autoShapesEnabled, setAutoShapesEnabled] = useState(true);
+
+// Mirror enabled toggles in refs so key handler reads fresh values
+const autoSpreadEnabledRef = useRef(autoSpreadEnabled);
+const autoDotsEnabledRef = useRef(autoDotsEnabled);
+const autoShapesEnabledRef = useRef(autoShapesEnabled);
+useEffect(() => { autoSpreadEnabledRef.current = autoSpreadEnabled; }, [autoSpreadEnabled]);
+useEffect(() => { autoDotsEnabledRef.current = autoDotsEnabled; }, [autoDotsEnabled]);
+useEffect(() => { autoShapesEnabledRef.current = autoShapesEnabled; }, [autoShapesEnabled]);
+
   const [blendMode, setBlendMode] = useState(defaults.blendMode);
   const [tool, setTool] = useState('brush');
   const [brushType, setBrushType] = useState<BrushType>('square');
@@ -1511,11 +1520,73 @@ const [panelPos, setPanelPos] = useState(() => {
 
   useEffect(() => {
     const handleSpacebar = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
-        e.preventDefault();
-        toggleAutoSpread();
-      }
-    };
+// Space: toggle spread
+if (e.code === "Space") {
+  e.preventDefault();
+  toggleAutoSpread();
+  return;
+}
+
+// J: toggle dots
+if (e.code === "KeyJ") {
+  e.preventDefault();
+  toggleAutoDots();
+  return;
+}
+
+// K: toggle shapes
+if (e.code === "KeyK") {
+  e.preventDefault();
+  toggleAutoShapes();
+  return;
+}
+
+// L: Start All / Stop All (match button behavior)
+if (e.code === "KeyL") {
+  e.preventDefault();
+  const anyRunning = runningRef.current || dotsRunningRef.current || shapesRunningRef.current;
+  if (anyRunning) {
+    // Stop all (inline version of stopAll to avoid stale closures)
+    if (runningRef.current) {
+      runningRef.current = false;
+      setAutoSpreading(false);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    }
+    if (dotsRunningRef.current) {
+      dotsRunningRef.current = false;
+      setAutoDots(false);
+      if (autoDotsRef.current) cancelAnimationFrame(autoDotsRef.current);
+    }
+    if (shapesRunningRef.current) {
+      shapesRunningRef.current = false;
+      setAutoShapes(false);
+      if (autoShapesRef.current) cancelAnimationFrame(autoShapesRef.current);
+    }
+  } else {
+    // Start all *enabled* (inline version of startAllEnabled using refs)
+    if (autoSpreadEnabledRef.current && !runningRef.current) {
+      runningRef.current = true;
+      setAutoSpreading(true);
+      // Reset any pattern-specific state like the button does
+      if (spreadPatternRef.current === 'vein') walkers.current = [];
+      if (spreadPatternRef.current === 'strobe') strobeStateRef.current = true;
+      if (spreadPatternRef.current === 'ripple') ripplesRef.current = [];
+      runAutoSpread();
+    }
+    if (autoDotsEnabledRef.current && !dotsRunningRef.current) {
+      dotsRunningRef.current = true;
+      setAutoDots(true);
+      runAutoDots();
+    }
+    if (autoShapesEnabledRef.current && !shapesRunningRef.current) {
+      shapesRunningRef.current = true;
+      setAutoShapes(true);
+      runAutoShapes();
+    }
+  }
+  return;
+}
+};
     window.addEventListener("keydown", handleSpacebar);
     
   
