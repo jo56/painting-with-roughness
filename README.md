@@ -14,3 +14,7 @@ The canvas is responsive; use the controls to start/stop, step, randomize, and c
 You can get rid of the settings window by dragging it downwards offscreen.  
 
 Pressing **Shift** will cause it to reappear where your mouse is.
+
+**Space**,**J**,**K**,**L** toggle **Spread**, **Dots**,**Shapes**,**All** respectivley.
+
+Pres **R** to toggle recording when enabled
