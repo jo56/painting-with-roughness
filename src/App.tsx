@@ -3073,33 +3073,47 @@ if (e.key === 'Shift') {
                   />
                 </div>
 
-                <div style={{ fontWeight: 600, marginBottom: '10px' }}>
-                  <label>
-                    <input 
-                      type="checkbox" 
-                      checked={showGrid} 
-                      onChange={e => setShowGrid(e.target.checked)} 
-                    /> 
-                    Show Grid
-                  </label>
-                </div>
+                
+
+<div style={{ fontWeight: 600, marginBottom: '10px' }}>
+  <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <input 
+      type="checkbox" 
+      checked={showGrid} 
+      onChange={e => setShowGrid(e.target.checked)} 
+      style={{ cursor: 'pointer' }}
+    />
+    <span style={{ minWidth: '90px' }}>Show Grid</span>
+  </label>
+</div>
+
+
 
             {/* Recording (Visual Settings) - clean */}
             
 <div style={{ fontWeight: 600, marginBottom: '10px' }}>
-  <label>
-    <input 
-      type="checkbox" 
-      checked={recordEnabled} 
-      onChange={(e) => setRecordEnabled(e.target.checked)} 
-    />{' '}
-    Recording
+  <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <input
+      type="checkbox"
+      checked={recordEnabled}
+      onChange={(e) => setRecordEnabled(e.target.checked)}
+      style={{ cursor: 'pointer' }}
+    />
+    <span style={{ minWidth: '90px' }}>Recording</span>
   </label>
 </div>
+
 {recordEnabled && (
   <div style={{ marginBottom: '10px' }}>
-    <label style={{ display: 'block', fontSize: '0.8rem', color: '#d1d5db', marginBottom: '6px' }}>
-      Filename
+    <label
+      style={{
+        display: 'block',
+        fontSize: '0.8rem',
+        color: '#d1d5db',
+        marginBottom: '6px',
+      }}
+    >
+      Filename:
     </label>
     <input
       type="text"
@@ -3114,7 +3128,7 @@ if (e.key === 'Shift') {
         border: '1px solid #555',
         background: '#2a2a2a',
         color: '#fff',
-        fontSize: '0.9rem'
+        fontSize: '0.9rem',
       }}
     />
     <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>
