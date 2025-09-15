@@ -250,6 +250,8 @@ useEffect(() => { autoShapesEnabledRef.current = autoShapesEnabled; }, [autoShap
  // BRUSH PATCH
  // BRUSH PATCH
   const [panelMinimized, setPanelMinimized] = useState(false);
+  const [panelVisible, setPanelVisible] = useState(true);
+  const panelDimensions = useRef({ width: 320, height: 400 });
   const [currentTheme] = useState(0); // Locked to void theme
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
@@ -2054,29 +2056,40 @@ if (e.code === "KeyL") {
     const handleKeyDown = (e: KeyboardEvent) => {
 if (e.key === 'Shift') {
   e.preventDefault();
-  setIsMobile(false);
+  console.log('Shift pressed, panelVisible:', panelVisible);
 
-  // Use mouse position if available, else center
-  const mouseX = mousePos.current.x || window.innerWidth / 2;
-  const mouseY = mousePos.current.y || window.innerHeight / 2;
+  if (!panelVisible) {
+    // If panel is invisible, show it at mouse position
+    console.log('Making panel visible');
+    setIsMobile(false);
+    setPanelVisible(true);
+    setPanelMinimized(false);
 
-  // Get actual panel size
-  const panelEl = panelRef.current;
-  const PANEL_WIDTH = panelEl?.offsetWidth || 320;
-  const PANEL_HEIGHT = panelEl?.offsetHeight || 400;
-  const MARGIN = 20;
+    // Use mouse position if available, else center
+    const mouseX = mousePos.current.x || window.innerWidth / 2;
+    const mouseY = mousePos.current.y || window.innerHeight / 2;
 
-  // Calculate new position under the mouse, clamped to viewport
-  const newX = Math.max(
-    MARGIN,
-    Math.min(mouseX - PANEL_WIDTH / 2, window.innerWidth - PANEL_WIDTH - MARGIN)
-  );
-  const newY = Math.max(
-    MARGIN,
-    Math.min(mouseY + 20, window.innerHeight - PANEL_HEIGHT - MARGIN)
-  );
+    // Use stored panel dimensions
+    const PANEL_WIDTH = panelDimensions.current.width;
+    const PANEL_HEIGHT = panelDimensions.current.height;
+    const MARGIN = 20;
 
-  setPanelPos({ x: newX, y: newY });
+    // Calculate new position under the mouse, clamped to viewport
+    const newX = Math.max(
+      MARGIN,
+      Math.min(mouseX - PANEL_WIDTH / 2, window.innerWidth - PANEL_WIDTH - MARGIN)
+    );
+    const newY = Math.max(
+      MARGIN,
+      Math.min(mouseY + 20, window.innerHeight - PANEL_HEIGHT - MARGIN)
+    );
+
+    setPanelPos({ x: newX, y: newY });
+  } else {
+    // If panel is visible, make it invisible
+    console.log('Making panel invisible');
+    setPanelVisible(false);
+  }
 }
 
 
@@ -2190,7 +2203,17 @@ if (e.key === 'Shift') {
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isMobile, panelPos]);
+  }, [isMobile, panelPos, panelVisible]);
+
+  // Update stored panel dimensions when visible
+  useEffect(() => {
+    if (panelVisible && panelRef.current) {
+      const rect = panelRef.current.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        panelDimensions.current = { width: rect.width, height: rect.height };
+      }
+    }
+  }, [panelVisible, panelMinimized]);
 
   const handleRowsChange = useCallback((newRows: number) => {
     setRows(newRows);
@@ -2417,6 +2440,7 @@ if (e.key === 'Shift') {
           width: isMobile ? 'calc(100% - 20px)': 'auto',
           maxWidth: '480px',
           zIndex: 10,
+          display: panelVisible ? 'block' : 'none',
           ...currentThemeConfig.panel
         }}
       >
