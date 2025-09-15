@@ -2635,13 +2635,13 @@ if (e.key === 'Shift') {
 
             {showAutoControls && (
               <>
-                <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', flexWrap: 'wrap' }}>
                   <button
                     onClick={() => { toggleAutoSpread(); setIsSavingColor(false); }}
                     disabled={!autoSpreadEnabled}
                     style={{
-                      padding: '6px 12px',
-                      fontSize: '0.95rem',
+                      padding: '4px 8px',
+                      fontSize: '0.9rem',
                       whiteSpace: 'nowrap',
                       transition: 'all 0.2s ease',
                       ...currentThemeConfig.autoButton(autoSpreading, autoSpreadEnabled)
@@ -2668,8 +2668,8 @@ if (e.key === 'Shift') {
                       onClick={() => { onClick(); setIsSavingColor(false); }}
                       disabled={!enabled}
                       style={{
-                        padding: '6px 12px',
-                        fontSize: '0.95rem',
+                        padding: '4px 8px',
+                        fontSize: '0.9rem',
                         whiteSpace: 'nowrap',
                         transition: 'all 0.2s ease',
                         ...currentThemeConfig.autoButton(active, enabled)
@@ -2682,8 +2682,8 @@ if (e.key === 'Shift') {
                     onClick={() => { isAnyRunning ? stopAll() : startAllEnabled(); setIsSavingColor(false); }}
                     disabled={!anyEnabled && !isAnyRunning}
                     style={{
-                      padding: '6px 12px',
-                      fontSize: '0.95rem',
+                      padding: '4px 8px',
+                      fontSize: '0.9rem',
                       whiteSpace: 'nowrap',
                       transition: 'all 0.2s ease',
                       ...currentThemeConfig.autoButton(isAnyRunning, anyEnabled || isAnyRunning)
