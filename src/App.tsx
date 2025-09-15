@@ -2493,6 +2493,17 @@ if (e.key === 't' || e.key === 'T') {
           overflow: 'hidden',
           transition: 'max-height 0.3s ease'
         }}>
+          <style>
+            {`
+              .scrollable-settings::-webkit-scrollbar {
+                display: none;
+              }
+              .scrollable-settings {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+            `}
+          </style>
           <div style={{
             opacity: panelMinimized ? 0 : 1,
             transition: 'opacity 0.3s ease',
@@ -2790,15 +2801,30 @@ if (e.key === 't' || e.key === 'T') {
             )}
 
             {showOptions && (showSpeedSettings || showCanvasSettings) && (
-              <div style={{ 
-                display: 'grid', 
+              <div className="scrollable-settings" style={{
+                display: 'grid',
                 gridTemplateColumns: showSpeedSettings && showCanvasSettings ? 'repeat(2, 1fr)' : '1fr',
-                gap: '12px', 
-                marginBottom: '12px' 
+                gap: '12px',
+                marginBottom: '12px',
+                maxHeight: '300px',
+                overflowY: 'auto'
               }}>
                 {showSpeedSettings && (
-                  <div>
-                    <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb' }}>
+                  <div style={{
+                    background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.5)',
+                    border: 'none',
+                    borderRadius: '0',
+                    padding: '8px'
+                  }}>
+                    <label style={{
+                      fontWeight: '400',
+                      marginBottom: '8px',
+                      display: 'block',
+                      fontSize: '0.9rem',
+                      color: '#ffffff',
+                      fontFamily: 'monospace',
+                      letterSpacing: '0.3px'
+                    }}>
                       Speed Controls
                     </label>
                     {[
@@ -2809,8 +2835,18 @@ if (e.key === 't' || e.key === 'T') {
                     ].map(([label, value, min, max, step, setter, unit], idx) => (
                       <div key={idx} style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>{label}:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+                          <label style={{
+                            fontSize: '0.85rem',
+                            fontWeight: '400',
+                            fontFamily: 'monospace',
+                            color: '#ffffff',
+                            letterSpacing: '0.3px'
+                          }}>{label}:</label>
+                          <span style={{
+                            fontSize: '0.8rem',
+                            color: '#666666',
+                            fontFamily: 'monospace'
+                          }}>
                             {label === 'Spread Rate' ? `${Math.round((value as number) * 100)}${unit}` : `${value}${unit}`}
                           </span>
                         </div>
@@ -2829,16 +2865,21 @@ if (e.key === 't' || e.key === 'T') {
                 )}
 
 {showCanvasSettings && (
-  <div>
-    <label
-      style={{
-        fontWeight: 600,
-        marginBottom: '8px',
-        display: 'block',
-        fontSize: '0.9rem',
-        color: '#e5e7eb'
-      }}
-    >
+  <div style={{
+    background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.5)',
+    border: 'none',
+    borderRadius: '0',
+    padding: '8px'
+  }}>
+    <label style={{
+      fontWeight: '400',
+      marginBottom: '8px',
+      display: 'block',
+      fontSize: '0.9rem',
+      color: '#ffffff',
+      fontFamily: 'monospace',
+      letterSpacing: '0.3px'
+    }}>
       Canvas Settings
     </label>
     {[
@@ -2928,7 +2969,15 @@ if (e.key === 't' || e.key === 'T') {
             )}
             
             {showOptions && showGenerativeSettings && (
-              <div style={{ marginBottom: '12px', padding: '4px' }}>
+              <div className="scrollable-settings" style={{
+                marginBottom: '12px',
+                padding: '8px',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.5)',
+                border: 'none',
+                borderRadius: '0'
+              }}>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '10px' }}>
                   <div style={{ flexGrow: 1}}>
                     <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Spread Pattern:</label>
@@ -3387,7 +3436,16 @@ if (e.key === 't' || e.key === 'T') {
             )}
 
             {showOptions && showVisualSettings && (
-              <>
+              <div className="scrollable-settings" style={{
+                maxHeight: '400px',
+                overflowY: 'auto',
+                background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.3)',
+                border: 'none',
+                borderRadius: '0',
+                padding: '8px',
+                marginBottom: '12px'
+              }}>
+                <>
                 <div style={{ marginBottom: '10px' }}>
                   
         <div style={{ marginBottom: '12px' }}> {/* BRUSH PATCH */}
@@ -3521,7 +3579,8 @@ if (e.key === 't' || e.key === 'T') {
 )}
 
 
-              </>
+                </>
+              </div>
             )}
           </div>
         </div>
