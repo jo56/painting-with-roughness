@@ -2502,6 +2502,14 @@ if (e.key === 't' || e.key === 'T') {
                 -ms-overflow-style: none;
                 scrollbar-width: none;
               }
+              select option {
+                background: #1a1a1a !important;
+                color: #ffffff !important;
+              }
+              select:focus option:checked {
+                background: #333333 !important;
+                color: #ffffff !important;
+              }
             `}
           </style>
           <div style={{
@@ -2773,17 +2781,11 @@ if (e.key === 't' || e.key === 'T') {
             )}
             
             {showOptions && showStepControls && (
-              <div className="scrollable-settings" style={{
+              <div style={{
                 display: 'flex',
                 gap: '6px',
-                marginBottom: '12px',
-                flexWrap: 'wrap',
-                maxHeight: '200px',
-                overflowY: 'auto',
-                background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.3)',
-                border: 'none',
-                borderRadius: '0',
-                padding: '8px'
+                marginBottom: '6px',
+                flexWrap: 'wrap'
               }}>
                 {[
                   { label: 'Spread Once', onClick: colorSpread },
@@ -3000,12 +3002,12 @@ if (e.key === 't' || e.key === 'T') {
                           if (e.target.value === 'vein') walkers.current = []; // Reset walkers
                           setSpreadPattern(e.target.value as any);
                       }}
-                      style={{ 
-                        padding: '4px 8px', 
-                        borderRadius: '0', 
-                        background: 'transparent', 
-                        color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px', 
-                        border: 'none',
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '0',
+                        background: '#1a1a1a',
+                        color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
+                        border: '1px solid #333333',
                         width: '100%'
                       }}
                     >
@@ -3117,7 +3119,7 @@ if (e.key === 't' || e.key === 'T') {
                           <select
                               value={flowDirection}
                               onChange={(e) => setFlowDirection(e.target.value as any)}
-                              style={{ padding: '4px 8px', borderRadius: '0', background: 'transparent', color: '#ffffff', border: 'none', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
+                              style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                           >
                               <option value="down">Down</option>
                               <option value="up">Up</option>
@@ -3192,7 +3194,7 @@ if (e.key === 't' || e.key === 'T') {
                             <select
                                 value={randomWalkMode}
                                 onChange={(e) => setRandomWalkMode(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '0', background: 'transparent', color: '#ffffff', border: 'none', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
+                                style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                             >
                                 <option value="any">8 Directions (Any)</option>
                                 <option value="cardinal">4 Directions (Cardinal)</option>
@@ -3246,7 +3248,7 @@ if (e.key === 't' || e.key === 'T') {
                             <select
                                 value={pulseDirection}
                                 onChange={(e) => setPulseDirection(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '0', background: 'transparent', color: '#ffffff', border: 'none', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
+                                style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                             >
                                 <option value="top-left">Top-Left</option>
                                 <option value="top-right">Top-Right</option>
@@ -3275,7 +3277,7 @@ if (e.key === 't' || e.key === 'T') {
                           <select
                               value={directionalBias}
                               onChange={(e) => setDirectionalBias(e.target.value as any)}
-                              style={{ padding: '4px 8px', borderRadius: '0', background: 'transparent', color: '#ffffff', border: 'none', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
+                              style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                           >
                                 <option value="up">Up</option>
                                 <option value="down">Down</option>
