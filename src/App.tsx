@@ -14,6 +14,17 @@ function cloneGrid(grid: number[][]): number[][] {
   return grid.map(row => [...row]);
 }
 
+// Helper function to convert RGB color data to a hex string
+function componentToHex(c: number): string {
+  const hex = c.toString(16);
+  return hex.length === 1 ? "0" + hex : hex;
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+
 function RuleEditor({ label, rules, onChange }: { label: string, rules: number[], onChange: (rules: number[]) => void }) {
     const numbers = [1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -164,6 +175,7 @@ export default function ModularSettingsPaintStudio(): JSX.Element {
   const walkers = useRef<{r: number, c: number, color: number}[]>([]);
   const strobeStateRef = useRef(true); // true: expand, false: contract
   const ripplesRef = useRef<{r: number, c: number, color: number, radius: number, maxRadius: number}[]>([]);
+  const clearButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const defaults = {
     cellSize: 10,
@@ -257,6 +269,7 @@ useEffect(() => { autoShapesEnabledRef.current = autoShapesEnabled; }, [autoShap
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const [showVisualSettings, setShowVisualSettings] = useState(false);
+  const [clearButtonColor, setClearButtonColor] = useState('#ff6b6b');
   
   
   // === Recording: state & refs (clean) ===
@@ -977,6 +990,51 @@ const [panelPos, setPanelPos] = useState(() => {
   }, [grid, rows, cols, cellSize, backgroundColor, showGrid, palette, customColor]);
 
   useEffect(() => draw(), [draw]);
+
+  const updateClearButtonColor = useCallback(() => {
+    if (!clearButtonRef.current || !canvasRef.current || !panelVisible) {
+        return;
+    }
+
+    const btnRect = clearButtonRef.current.getBoundingClientRect();
+    const canvasRect = canvasRef.current.getBoundingClientRect();
+    const checkX = btnRect.left + btnRect.width / 2;
+    const checkY = btnRect.top + btnRect.height / 2;
+
+    const defaultClearColor = currentThemeConfig.clear.color;
+
+    if (checkX < canvasRect.left || checkX > canvasRect.right || checkY < canvasRect.top || checkY > canvasRect.bottom) {
+        setClearButtonColor(defaultClearColor);
+        return;
+    }
+
+    const xOnCanvas = checkX - canvasRect.left;
+    const yOnCanvas = checkY - canvasRect.top;
+
+    const ctx = canvasRef.current.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+
+    try {
+        const pixelData = ctx.getImageData(xOnCanvas, yOnCanvas, 1, 1).data;
+        const pixelHex = rgbToHex(pixelData[0], pixelData[1], pixelData[2]);
+
+        if (pixelHex.toLowerCase() === defaultClearColor.toLowerCase()) {
+            setClearButtonColor('#ffffff');
+        } else {
+            setClearButtonColor(defaultClearColor);
+        }
+    } catch (e) {
+        console.error("Could not get image data from canvas:", e);
+        setClearButtonColor(defaultClearColor);
+    }
+  }, [panelVisible, currentThemeConfig]);
+
+  useEffect(() => {
+    // Defer the color check to run after the render cycle completes
+    const timeoutId = setTimeout(updateClearButtonColor, 100);
+    return () => clearTimeout(timeoutId);
+  }, [grid, panelPos, panelVisible, updateClearButtonColor]);
+  
   // === Recording shortcut + toast (clean) ===
   useEffect(() => {
     const handleRecordingShortcut = (e: KeyboardEvent) => {
@@ -1807,175 +1865,105 @@ const [panelPos, setPanelPos] = useState(() => {
 
   useEffect(() => {
     const handleGlobalShortcuts = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      // Ignore keybinds if user is typing in an input
-      if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.isContentEditable) {
-          return;
-      }
-
-      // Tool switching
-      if (e.code === "KeyE") { e.preventDefault(); setTool('eraser'); return; }
-      if (e.code === "KeyF") { e.preventDefault(); setTool('fill'); return; }
-      if (e.code === "KeyB") { e.preventDefault(); setTool('brush'); return; }
-      
-      // Brush type switching (also sets tool to brush)
-      if (e.code === "Digit1") { e.preventDefault(); setBrushType('square'); setTool('brush'); return; }
-      if (e.code === "Digit2") { e.preventDefault(); setBrushType('circle'); setTool('brush'); return; }
-      if (e.code === "Digit3") { e.preventDefault(); setBrushType('diagonal'); setTool('brush'); return; }
-      if (e.code === "Digit4") { e.preventDefault(); setBrushType('spray'); setTool('brush'); return; }
-      
-      // Auto-mode toggles
-      if (e.code === "Space") { e.preventDefault(); toggleAutoSpread(); return; }
-      if (e.code === "KeyJ") { e.preventDefault(); toggleAutoDots(); return; }
-      if (e.code === "KeyK") { e.preventDefault(); toggleAutoShapes(); return; }
-
-      // Start/Stop All
-      if (e.code === "KeyL") {
-        e.preventDefault();
-        const anyRunning = runningRef.current || dotsRunningRef.current || shapesRunningRef.current;
-        if (anyRunning) {
-          // Stop all
-          if (runningRef.current) {
-            runningRef.current = false;
-            setAutoSpreading(false);
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
-          }
-          if (dotsRunningRef.current) {
-            dotsRunningRef.current = false;
-            setAutoDots(false);
-            if (autoDotsRef.current) cancelAnimationFrame(autoDotsRef.current);
-          }
-          if (shapesRunningRef.current) {
-            shapesRunningRef.current = false;
-            setAutoShapes(false);
-            if (autoShapesRef.current) cancelAnimationFrame(autoShapesRef.current);
-          }
-        } else {
-          // Start all *enabled*
-          if (autoSpreadEnabledRef.current && !runningRef.current) {
-            runningRef.current = true;
-            setAutoSpreading(true);
-            if (spreadPatternRef.current === 'vein') walkers.current = [];
-            if (spreadPatternRef.current === 'strobe') strobeStateRef.current = true;
-            if (spreadPatternRef.current === 'ripple') ripplesRef.current = [];
-            runAutoSpread();
-          }
-          if (autoDotsEnabledRef.current && !dotsRunningRef.current) {
-            dotsRunningRef.current = true;
-            setAutoDots(true);
-            runAutoDots();
-          }
-          if (autoShapesEnabledRef.current && !shapesRunningRef.current) {
-            shapesRunningRef.current = true;
-            setAutoShapes(true);
-            runAutoShapes();
-          }
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.isContentEditable) {
+            return;
         }
-        return;
-      }
+
+        // Brush Size
+        if (e.code === 'BracketLeft') {
+            e.preventDefault();
+            setBrushSize(currentSize => Math.max(1, currentSize - 1));
+            return;
+        }
+        if (e.code === 'BracketRight') {
+            e.preventDefault();
+            setBrushSize(currentSize => Math.min(100, currentSize + 1));
+            return;
+        }
+
+        // Brush-Specific Controls
+        if (e.code === 'KeyO') {
+            e.preventDefault();
+            if (brushTypeRef.current === 'diagonal') {
+                setDiagonalThickness(d => Math.max(1, d - 1));
+            } else if (brushTypeRef.current === 'spray') {
+                setSprayDensity(d => Math.max(0.01, parseFloat((d - 0.01).toFixed(2))));
+            }
+            return;
+        }
+        if (e.code === 'KeyP') {
+            e.preventDefault();
+            if (brushTypeRef.current === 'diagonal') {
+                setDiagonalThickness(d => Math.min(100, d + 1));
+            } else if (brushTypeRef.current === 'spray') {
+                setSprayDensity(d => Math.min(1, parseFloat((d + 0.01).toFixed(2))));
+            }
+            return;
+        }
+
+        // Tool switching
+        if (e.code === "KeyE") { e.preventDefault(); setTool('eraser'); return; }
+        if (e.code === "KeyF") { e.preventDefault(); setTool('fill'); return; }
+        if (e.code === "KeyB") { e.preventDefault(); setTool('brush'); return; }
+        
+        // Brush type switching (also sets tool to brush)
+        if (e.code === "Digit1") { e.preventDefault(); setBrushType('square'); setTool('brush'); return; }
+        if (e.code === "Digit2") { e.preventDefault(); setBrushType('circle'); setTool('brush'); return; }
+        if (e.code === "Digit3") { e.preventDefault(); setBrushType('diagonal'); setTool('brush'); return; }
+        if (e.code === "Digit4") { e.preventDefault(); setBrushType('spray'); setTool('brush'); return; }
+        
+        // Auto-mode toggles
+        if (e.code === "Space") { e.preventDefault(); toggleAutoSpread(); return; }
+        if (e.code === "KeyJ") { e.preventDefault(); toggleAutoDots(); return; }
+        if (e.code === "KeyK") { e.preventDefault(); toggleAutoShapes(); return; }
+
+        // Start/Stop All
+        if (e.code === "KeyL") {
+            e.preventDefault();
+            const anyRunning = runningRef.current || dotsRunningRef.current || shapesRunningRef.current;
+            if (anyRunning) {
+                if (runningRef.current) {
+                    runningRef.current = false;
+                    setAutoSpreading(false);
+                    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+                }
+                if (dotsRunningRef.current) {
+                    dotsRunningRef.current = false;
+                    setAutoDots(false);
+                    if (autoDotsRef.current) cancelAnimationFrame(autoDotsRef.current);
+                }
+                if (shapesRunningRef.current) {
+                    shapesRunningRef.current = false;
+                    setAutoShapes(false);
+                    if (autoShapesRef.current) cancelAnimationFrame(autoShapesRef.current);
+                }
+            } else {
+                if (autoSpreadEnabledRef.current && !runningRef.current) {
+                    runningRef.current = true;
+                    setAutoSpreading(true);
+                    if (spreadPatternRef.current === 'vein') walkers.current = [];
+                    if (spreadPatternRef.current === 'strobe') strobeStateRef.current = true;
+                    if (spreadPatternRef.current === 'ripple') ripplesRef.current = [];
+                    runAutoSpread();
+                }
+                if (autoDotsEnabledRef.current && !dotsRunningRef.current) {
+                    dotsRunningRef.current = true;
+                    setAutoDots(true);
+                    runAutoDots();
+                }
+                if (autoShapesEnabledRef.current && !shapesRunningRef.current) {
+                    shapesRunningRef.current = true;
+                    setAutoShapes(true);
+                    runAutoShapes();
+                }
+            }
+            return;
+        }
     };
 
     window.addEventListener("keydown", handleGlobalShortcuts);
-    
-  
-  // === Recording functions (clean) ===
-  const startRecording = () => {
-    if (!recordEnabled) {
-      setRecordingToast("Enable recording in Visual Settings first");
-      return;
-    }
-    const canvas = canvasRef.current as HTMLCanvasElement | null;
-    if (!canvas) {
-      setRecordingToast("Canvas not ready");
-      return;
-    }
-
-    const fps = 30;
-    const stream: MediaStream | null = (canvas as any).captureStream
-      ? canvas.captureStream(fps)
-      : (canvas as any).mozCaptureStream
-      ? (canvas as any).mozCaptureStream(fps)
-      : null;
-
-    if (!stream) {
-      setRecordingToast("Recording not supported in this browser");
-      return;
-    }
-
-    const candidates = [
-      "video/webm;codecs=vp9",
-      "video/webm;codecs=vp8",
-      "video/webm"
-    ];
-    let mimeType = "";
-    if (typeof MediaRecorder !== "undefined") {
-      for (const type of candidates) {
-        if ((MediaRecorder as any).isTypeSupported?.(type)) { mimeType = type; break; }
-      }
-    }
-
-    let recorder: MediaRecorder;
-    try {
-      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-    } catch (e) {
-      setRecordingToast("Failed to start recorder");
-      return;
-    }
-    mediaRecorderRef.current = recorder;
-    recordedChunksRef.current = [];
-
-    recorder.ondataavailable = (e: BlobEvent) => {
-      if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
-    };
-    recorder.onerror = () => {
-      setRecordingToast("Recording error");
-    };
-    recorder.onstop = () => {
-      try {
-        if (recordedChunksRef.current.length === 0) {
-          setRecordingToast("No data captured");
-        } else {
-          const outType = recorder.mimeType || "video/webm";
-          const blob = new Blob(recordedChunksRef.current, { type: outType });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${sanitizeFilename(recordingFilename || "grid-recording")}-${Date.now()}.webm`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          setRecordingToast("Recording saved");
-        }
-      } finally {
-        // Always stop stream tracks
-        stream.getTracks().forEach(t => t.stop());
-        setIsRecording(false);
-      }
-    };
-
-    try {
-      recorder.start(1000); // 1s timeslice ensures dataavailable fires
-      setIsRecording(true);
-      setRecordingToast("Recording started (press R to stop)");
-    } catch (e) {
-      setRecordingToast("Recorder start failed");
-    }
-  };
-
-  const stopRecording = () => {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state !== "inactive") {
-      try {
-        rec.requestData?.();
-      } catch {}
-      rec.stop();
-      setRecordingToast("Stopping recording…");
-    }
-  };
-  // === End Recording functions (clean) ===
-
-  return () => window.removeEventListener("keydown", handleGlobalShortcuts);
+    return () => window.removeEventListener("keydown", handleGlobalShortcuts);
   }, []);
 
 
@@ -2571,8 +2559,11 @@ if (e.key === 't' || e.key === 'T') {
                   Options
                 </button>
                 <button
+                  ref={clearButtonRef}
                   onClick={() => { clear(); setIsSavingColor(false); }}
                   style={{
+                    ...currentThemeConfig.clear,
+                    color: clearButtonColor,
                     padding: '4px 8px',
                     cursor: 'pointer',
                     fontSize: '0.9rem',
@@ -2580,7 +2571,6 @@ if (e.key === 't' || e.key === 'T') {
                     textAlign: 'center' as const,
                     transition: 'all 0.2s ease',
                     fontWeight: 'bold',
-                    ...currentThemeConfig.clear
                   }}
                 >
                   Clear
@@ -3483,7 +3473,7 @@ if (e.key === 't' || e.key === 'T') {
         {brushType === 'spray' && (
           <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
             <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Spray Density: {sprayDensity.toFixed(2)}</label>
-            <input type="range" step={0.05} min={0.05} max={1} value={sprayDensity} onChange={e => setSprayDensity(Number(e.target.value))} />
+            <input type="range" step={0.05} min={0.01} max={1} value={sprayDensity} onChange={e => setSprayDensity(Number(e.target.value))} />
           </div>
         )}
         {brushType === 'diagonal' && (
