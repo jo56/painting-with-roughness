@@ -2652,7 +2652,7 @@ if (e.key === 'Shift') {
 
             {showAutoControls && (
               <>
-                <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '6px', flexWrap: 'wrap' }}>
                   <button
                     onClick={() => { toggleAutoSpread(); setIsSavingColor(false); }}
                     disabled={!autoSpreadEnabled}
