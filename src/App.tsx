@@ -2652,7 +2652,7 @@ if (e.key === 'Shift') {
 
             {showAutoControls && (
               <>
-                <div style={{ display: 'flex', gap: '4px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                   <button
                     onClick={() => { toggleAutoSpread(); setIsSavingColor(false); }}
                     disabled={!autoSpreadEnabled}
@@ -2719,7 +2719,7 @@ if (e.key === 'Shift') {
             )}
 
             {showOptions && (
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {[
                   { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#52525b' : '#3a3a3c' },
                   { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#52525b' : '#3a3a3c' },
