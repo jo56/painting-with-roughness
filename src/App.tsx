@@ -2489,10 +2489,10 @@ if (e.key === 't' || e.key === 'T') {
         </div>
 
         <div style={{
-          maxHeight: panelMinimized ? '0px' : '2000px',
-          overflow: 'hidden',
+          maxHeight: panelMinimized ? '0px' : '80vh',
+          overflow: panelMinimized ? 'hidden' : 'auto',
           transition: 'max-height 0.3s ease'
-        }}>
+        }} className="scrollable-settings">
           <style>
             {`
               .scrollable-settings::-webkit-scrollbar {
@@ -2773,7 +2773,18 @@ if (e.key === 't' || e.key === 'T') {
             )}
             
             {showOptions && showStepControls && (
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              <div className="scrollable-settings" style={{
+                display: 'flex',
+                gap: '6px',
+                marginBottom: '12px',
+                flexWrap: 'wrap',
+                maxHeight: '200px',
+                overflowY: 'auto',
+                background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.3)',
+                border: 'none',
+                borderRadius: '0',
+                padding: '8px'
+              }}>
                 {[
                   { label: 'Spread Once', onClick: colorSpread },
                   { label: 'Add Dots', onClick: addRandomDots },
@@ -2980,7 +2991,7 @@ if (e.key === 't' || e.key === 'T') {
               }}>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '10px' }}>
                   <div style={{ flexGrow: 1}}>
-                    <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Spread Pattern:</label>
+                    <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Spread Pattern:</label>
                     <select
                       value={spreadPattern}
                       onChange={(e) => {
@@ -3104,7 +3115,7 @@ if (e.key === 't' || e.key === 'T') {
                           <select
                               value={flowDirection}
                               onChange={(e) => setFlowDirection(e.target.value as any)}
-                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
+                              style={{ padding: '4px 8px', borderRadius: '0', background: 'transparent', color: '#ffffff', border: 'none', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                           >
                               <option value="down">Down</option>
                               <option value="up">Up</option>
@@ -3179,7 +3190,7 @@ if (e.key === 't' || e.key === 'T') {
                             <select
                                 value={randomWalkMode}
                                 onChange={(e) => setRandomWalkMode(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
+                                style={{ padding: '4px 8px', borderRadius: '0', background: 'transparent', color: '#ffffff', border: 'none', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                             >
                                 <option value="any">8 Directions (Any)</option>
                                 <option value="cardinal">4 Directions (Cardinal)</option>
@@ -3233,7 +3244,7 @@ if (e.key === 't' || e.key === 'T') {
                             <select
                                 value={pulseDirection}
                                 onChange={(e) => setPulseDirection(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
+                                style={{ padding: '4px 8px', borderRadius: '0', background: 'transparent', color: '#ffffff', border: 'none', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                             >
                                 <option value="top-left">Top-Left</option>
                                 <option value="top-right">Top-Right</option>
@@ -3262,7 +3273,7 @@ if (e.key === 't' || e.key === 'T') {
                           <select
                               value={directionalBias}
                               onChange={(e) => setDirectionalBias(e.target.value as any)}
-                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
+                              style={{ padding: '4px 8px', borderRadius: '0', background: 'transparent', color: '#ffffff', border: 'none', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                           >
                                 <option value="up">Up</option>
                                 <option value="down">Down</option>
@@ -3449,13 +3460,13 @@ if (e.key === 't' || e.key === 'T') {
                 <div style={{ marginBottom: '10px' }}>
                   
         <div style={{ marginBottom: '12px' }}> {/* BRUSH PATCH */}
-          <label style={{ fontSize: '0.9rem', fontWeight: 500, display: 'block', marginBottom: '6px' }}>Brush Type</label>
+          <label style={{ fontSize: '0.9rem', fontWeight: '400', display: 'block', marginBottom: '6px', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Brush Type</label>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {(['square', 'circle', 'diagonal', 'spray'] as BrushType[]).map(type => (
               <button
                 key={type}
                 onClick={() => setBrushType(type)}
-                style={{ padding: '4px 8px', borderRadius: '6px', background: brushType === type ? '#8b5cf6' : '#3a3a3c', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
+                style={{ padding: '4px 8px', borderRadius: '0', background: 'transparent', color: brushType === type ? '#ffffff' : '#666666', border: 'none', fontFamily: 'monospace', letterSpacing: '0.3px', cursor: 'pointer', fontSize: '0.9rem', textDecoration: brushType === type ? 'underline' : 'none', textUnderlineOffset: brushType === type ? '4px' : '0' }}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
               </button>
@@ -3466,17 +3477,17 @@ if (e.key === 't' || e.key === 'T') {
         
         {brushType === 'spray' && (
           <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
-            <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Spray Density: {sprayDensity.toFixed(2)}</label>
+            <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Spray Density: {sprayDensity.toFixed(2)}</label>
             <input type="range" step={0.05} min={0.05} max={1} value={sprayDensity} onChange={e => setSprayDensity(Number(e.target.value))} />
           </div>
         )}
         {brushType === 'diagonal' && (
           <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
-            <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Diagonal Thickness: {diagonalThickness}</label>
+            <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Diagonal Thickness: {diagonalThickness}</label>
             <input type="range" min={1} max={100} value={diagonalThickness} onChange={e => setDiagonalThickness(Number(e.target.value))} />
           </div>
         )}
-<label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
+<label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Blend Mode:</label>
                   <select
                     value={blendMode}
                     onChange={(e) => setBlendMode(e.target.value)}
