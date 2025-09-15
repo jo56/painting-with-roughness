@@ -2074,14 +2074,14 @@ if (e.key === 'Shift') {
     const PANEL_HEIGHT = panelDimensions.current.height;
     const MARGIN = 20;
 
-    // Calculate new position under the mouse, clamped to viewport
+    // Calculate new position with header center under the mouse
     const newX = Math.max(
       MARGIN,
       Math.min(mouseX - PANEL_WIDTH / 2, window.innerWidth - PANEL_WIDTH - MARGIN)
     );
     const newY = Math.max(
       MARGIN,
-      Math.min(mouseY + 20, window.innerHeight - PANEL_HEIGHT - MARGIN)
+      Math.min(mouseY - 20, window.innerHeight - PANEL_HEIGHT - MARGIN)
     );
 
     setPanelPos({ x: newX, y: newY });
