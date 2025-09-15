@@ -1806,75 +1806,76 @@ const [panelPos, setPanelPos] = useState(() => {
   };
 
   useEffect(() => {
-    const handleSpacebar = (e: KeyboardEvent) => {
-// Space: toggle spread
-if (e.code === "Space") {
-  e.preventDefault();
-  toggleAutoSpread();
-  return;
-}
+    const handleGlobalShortcuts = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      // Ignore keybinds if user is typing in an input
+      if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.isContentEditable) {
+          return;
+      }
 
-// J: toggle dots
-if (e.code === "KeyJ") {
-  e.preventDefault();
-  toggleAutoDots();
-  return;
-}
+      // Tool switching
+      if (e.code === "KeyE") { e.preventDefault(); setTool('eraser'); return; }
+      if (e.code === "KeyF") { e.preventDefault(); setTool('fill'); return; }
+      if (e.code === "KeyB") { e.preventDefault(); setTool('brush'); return; }
+      
+      // Brush type switching (also sets tool to brush)
+      if (e.code === "Digit1") { e.preventDefault(); setBrushType('square'); setTool('brush'); return; }
+      if (e.code === "Digit2") { e.preventDefault(); setBrushType('circle'); setTool('brush'); return; }
+      if (e.code === "Digit3") { e.preventDefault(); setBrushType('diagonal'); setTool('brush'); return; }
+      if (e.code === "Digit4") { e.preventDefault(); setBrushType('spray'); setTool('brush'); return; }
+      
+      // Auto-mode toggles
+      if (e.code === "Space") { e.preventDefault(); toggleAutoSpread(); return; }
+      if (e.code === "KeyJ") { e.preventDefault(); toggleAutoDots(); return; }
+      if (e.code === "KeyK") { e.preventDefault(); toggleAutoShapes(); return; }
 
-// K: toggle shapes
-if (e.code === "KeyK") {
-  e.preventDefault();
-  toggleAutoShapes();
-  return;
-}
+      // Start/Stop All
+      if (e.code === "KeyL") {
+        e.preventDefault();
+        const anyRunning = runningRef.current || dotsRunningRef.current || shapesRunningRef.current;
+        if (anyRunning) {
+          // Stop all
+          if (runningRef.current) {
+            runningRef.current = false;
+            setAutoSpreading(false);
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+          }
+          if (dotsRunningRef.current) {
+            dotsRunningRef.current = false;
+            setAutoDots(false);
+            if (autoDotsRef.current) cancelAnimationFrame(autoDotsRef.current);
+          }
+          if (shapesRunningRef.current) {
+            shapesRunningRef.current = false;
+            setAutoShapes(false);
+            if (autoShapesRef.current) cancelAnimationFrame(autoShapesRef.current);
+          }
+        } else {
+          // Start all *enabled*
+          if (autoSpreadEnabledRef.current && !runningRef.current) {
+            runningRef.current = true;
+            setAutoSpreading(true);
+            if (spreadPatternRef.current === 'vein') walkers.current = [];
+            if (spreadPatternRef.current === 'strobe') strobeStateRef.current = true;
+            if (spreadPatternRef.current === 'ripple') ripplesRef.current = [];
+            runAutoSpread();
+          }
+          if (autoDotsEnabledRef.current && !dotsRunningRef.current) {
+            dotsRunningRef.current = true;
+            setAutoDots(true);
+            runAutoDots();
+          }
+          if (autoShapesEnabledRef.current && !shapesRunningRef.current) {
+            shapesRunningRef.current = true;
+            setAutoShapes(true);
+            runAutoShapes();
+          }
+        }
+        return;
+      }
+    };
 
-// L: Start All / Stop All (match button behavior)
-if (e.code === "KeyL") {
-  e.preventDefault();
-  const anyRunning = runningRef.current || dotsRunningRef.current || shapesRunningRef.current;
-  if (anyRunning) {
-    // Stop all (inline version of stopAll to avoid stale closures)
-    if (runningRef.current) {
-      runningRef.current = false;
-      setAutoSpreading(false);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    }
-    if (dotsRunningRef.current) {
-      dotsRunningRef.current = false;
-      setAutoDots(false);
-      if (autoDotsRef.current) cancelAnimationFrame(autoDotsRef.current);
-    }
-    if (shapesRunningRef.current) {
-      shapesRunningRef.current = false;
-      setAutoShapes(false);
-      if (autoShapesRef.current) cancelAnimationFrame(autoShapesRef.current);
-    }
-  } else {
-    // Start all *enabled* (inline version of startAllEnabled using refs)
-    if (autoSpreadEnabledRef.current && !runningRef.current) {
-      runningRef.current = true;
-      setAutoSpreading(true);
-      // Reset any pattern-specific state like the button does
-      if (spreadPatternRef.current === 'vein') walkers.current = [];
-      if (spreadPatternRef.current === 'strobe') strobeStateRef.current = true;
-      if (spreadPatternRef.current === 'ripple') ripplesRef.current = [];
-      runAutoSpread();
-    }
-    if (autoDotsEnabledRef.current && !dotsRunningRef.current) {
-      dotsRunningRef.current = true;
-      setAutoDots(true);
-      runAutoDots();
-    }
-    if (autoShapesEnabledRef.current && !shapesRunningRef.current) {
-      shapesRunningRef.current = true;
-      setAutoShapes(true);
-      runAutoShapes();
-    }
-  }
-  return;
-}
-};
-    window.addEventListener("keydown", handleSpacebar);
+    window.addEventListener("keydown", handleGlobalShortcuts);
     
   
   // === Recording functions (clean) ===
@@ -1974,7 +1975,7 @@ if (e.code === "KeyL") {
   };
   // === End Recording functions (clean) ===
 
-  return () => window.removeEventListener("keydown", handleSpacebar);
+  return () => window.removeEventListener("keydown", handleGlobalShortcuts);
   }, []);
 
 
@@ -3578,11 +3579,10 @@ if (e.key === 't' || e.key === 'T') {
       placeholder="Enter filename (no extension)"
       style={{
         width: '100%',
-        padding: '6px 8px',
-        marginBottom: '8px',
+        padding: '4px 8px',
         borderRadius: '0',
-        border: '1px solid #555',
-        background: '#2a2a2a',
+        border: '1px solid #333333',
+        background: '#1a1a1a',
         color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
         fontSize: '0.9rem',
       }}
