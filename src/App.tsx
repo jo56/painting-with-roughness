@@ -380,7 +380,9 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
         fontWeight: '400',
         letterSpacing: '0.5px',
         textShadow: 'none',
-        boxShadow: 'none'
+        boxShadow: 'none',
+        padding: '8px 0',
+        marginBottom: '8px'
       },
       button: (active: boolean, type?: string) => ({
         background: 'transparent',
@@ -394,7 +396,10 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
         textShadow: 'none',
         boxShadow: 'none',
         textDecoration: active ? 'underline' : 'none',
-        textUnderlineOffset: active ? '4px' : '0'
+        textUnderlineOffset: active ? '4px' : '0',
+        padding: '4px 8px',
+        minHeight: 'auto',
+        lineHeight: '1.2'
       }),
       clear: {
         background: 'transparent',
@@ -405,7 +410,10 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
         textTransform: 'none',
         fontWeight: '400',
         textShadow: 'none',
-        boxShadow: 'none'
+        boxShadow: 'none',
+        padding: '4px 8px',
+        minHeight: 'auto',
+        lineHeight: '1.2'
       },
       autoButton: (active: boolean, enabled: boolean) => ({
         background: 'transparent',
@@ -419,7 +427,10 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
         textShadow: 'none',
         boxShadow: 'none',
         textDecoration: active ? 'underline' : 'none',
-        textUnderlineOffset: active ? '4px' : '0'
+        textUnderlineOffset: active ? '4px' : '0',
+        padding: '4px 8px',
+        minHeight: 'auto',
+        lineHeight: '1.2'
       }),
       optionButton: (active: boolean) => ({
         background: 'transparent',
@@ -433,7 +444,10 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
         textShadow: 'none',
         boxShadow: 'none',
         textDecoration: active ? 'underline' : 'none',
-        textUnderlineOffset: active ? '4px' : '0'
+        textUnderlineOffset: active ? '4px' : '0',
+        padding: '4px 8px',
+        minHeight: 'auto',
+        lineHeight: '1.2'
       })
     },
     1: { // Minimal Typography Focus
