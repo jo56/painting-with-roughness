@@ -251,6 +251,7 @@ useEffect(() => { autoShapesEnabledRef.current = autoShapesEnabled; }, [autoShap
  // BRUSH PATCH
   const [panelMinimized, setPanelMinimized] = useState(false);
   const [panelVisible, setPanelVisible] = useState(true);
+  const [panelTransparent, setPanelTransparent] = useState(true);
   const panelDimensions = useRef({ width: 320, height: 400 });
   const [currentTheme] = useState(0); // Locked to void theme
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
@@ -367,7 +368,7 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
     0: { // Seamless Black Interface
       name: 'Void',
       panel: {
-        background: 'transparent',
+        background: panelTransparent ? 'transparent' : '#0a0a0a',
         border: 'none',
         borderRadius: '0',
         boxShadow: 'none',
@@ -2092,6 +2093,11 @@ if (e.key === 'Shift') {
   }
 }
 
+if (e.key === 't' || e.key === 'T') {
+  e.preventDefault();
+  setPanelTransparent(prev => !prev);
+}
+
 
     };
     
@@ -2203,7 +2209,7 @@ if (e.key === 'Shift') {
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isMobile, panelPos, panelVisible]);
+  }, [isMobile, panelPos, panelVisible, panelTransparent]);
 
   // Update stored panel dimensions when visible
   useEffect(() => {
@@ -3454,7 +3460,17 @@ if (e.key === 'Shift') {
   </label>
 </div>
 
-
+<div style={{ fontWeight: 600, marginBottom: '10px' }}>
+  <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <input
+      type="checkbox"
+      checked={panelTransparent}
+      onChange={(e) => setPanelTransparent(e.target.checked)}
+      style={{ cursor: 'pointer' }}
+    />
+    <span style={{ minWidth: '90px' }}>Transparent Toolbox</span>
+  </label>
+</div>
 
             {/* Recording (Visual Settings) - clean */}
             
