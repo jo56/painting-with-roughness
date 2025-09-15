@@ -250,6 +250,7 @@ useEffect(() => { autoShapesEnabledRef.current = autoShapesEnabled; }, [autoShap
  // BRUSH PATCH
  // BRUSH PATCH
   const [panelMinimized, setPanelMinimized] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState(0); // 0: sketch, 1: retro, 2: physical
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const [showVisualSettings, setShowVisualSettings] = useState(false);
@@ -359,6 +360,273 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
   useEffect(() => { scrambleSwapsRef.current = scrambleSwaps; }, [scrambleSwaps]);
   useEffect(() => { rippleChanceRef.current = rippleChance; }, [rippleChance]);
 
+  // Theme system
+  const themes = {
+    0: { // Seamless Black Interface
+      name: 'Void',
+      panel: {
+        background: '#000000',
+        border: 'none',
+        borderRadius: '0',
+        boxShadow: 'none',
+        backdropFilter: 'none'
+      },
+      header: {
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: '#ffffff',
+        fontFamily: 'monospace',
+        fontWeight: '400',
+        letterSpacing: '0.5px',
+        textShadow: 'none',
+        boxShadow: 'none'
+      },
+      button: (active: boolean, type?: string) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#666666',
+        fontFamily: 'monospace',
+        textTransform: 'none' as const,
+        letterSpacing: '0.3px',
+        fontWeight: active ? '500' : '400',
+        textShadow: 'none',
+        boxShadow: 'none',
+        textDecoration: active ? 'underline' : 'none',
+        textUnderlineOffset: active ? '4px' : '0'
+      }),
+      clear: {
+        background: 'transparent',
+        color: '#ff4444',
+        border: 'none',
+        borderRadius: '0',
+        fontFamily: 'monospace',
+        textTransform: 'none',
+        fontWeight: '400',
+        textShadow: 'none',
+        boxShadow: 'none'
+      },
+      autoButton: (active: boolean, enabled: boolean) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: enabled ? (active ? '#ffffff' : '#666666') : '#333333',
+        fontFamily: 'monospace',
+        fontWeight: active ? '500' : '400',
+        opacity: 1,
+        cursor: enabled ? 'pointer' : 'not-allowed',
+        textShadow: 'none',
+        boxShadow: 'none',
+        textDecoration: active ? 'underline' : 'none',
+        textUnderlineOffset: active ? '4px' : '0'
+      }),
+      optionButton: (active: boolean) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#666666',
+        fontFamily: 'monospace',
+        fontWeight: active ? '500' : '400',
+        textTransform: 'none' as const,
+        letterSpacing: '0.3px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        textDecoration: active ? 'underline' : 'none',
+        textUnderlineOffset: active ? '4px' : '0'
+      })
+    },
+    1: { // Minimal Typography Focus
+      name: 'Type',
+      panel: {
+        background: '#111111',
+        border: 'none',
+        borderRadius: '0',
+        boxShadow: 'none',
+        backdropFilter: 'none'
+      },
+      header: {
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: '#cccccc',
+        fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+        fontWeight: '300',
+        letterSpacing: '1px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        fontSize: '13px'
+      },
+      button: (active: boolean, type?: string) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#777777',
+        fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+        textTransform: 'lowercase' as const,
+        letterSpacing: '0.5px',
+        fontWeight: active ? '400' : '300',
+        fontSize: '12px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        position: 'relative' as const,
+        '&::after': active ? {
+          content: '◦',
+          position: 'absolute',
+          right: '-12px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          fontSize: '8px'
+        } : {}
+      }),
+      clear: {
+        background: 'transparent',
+        color: '#999999',
+        border: 'none',
+        borderRadius: '0',
+        fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+        textTransform: 'lowercase',
+        fontWeight: '300',
+        fontSize: '12px',
+        textShadow: 'none',
+        boxShadow: 'none'
+      },
+      autoButton: (active: boolean, enabled: boolean) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: enabled ? (active ? '#ffffff' : '#777777') : '#444444',
+        fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+        fontWeight: active ? '400' : '300',
+        fontSize: '12px',
+        textTransform: 'lowercase' as const,
+        letterSpacing: '0.5px',
+        opacity: 1,
+        cursor: enabled ? 'pointer' : 'not-allowed',
+        textShadow: 'none',
+        boxShadow: 'none',
+        position: 'relative' as const,
+        '&::after': active ? {
+          content: '◦',
+          position: 'absolute',
+          right: '-12px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          fontSize: '8px'
+        } : {}
+      }),
+      optionButton: (active: boolean) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#777777',
+        fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+        fontWeight: active ? '400' : '300',
+        fontSize: '12px',
+        textTransform: 'lowercase' as const,
+        letterSpacing: '0.5px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        position: 'relative' as const,
+        '&::after': active ? {
+          content: '◦',
+          position: 'absolute',
+          right: '-12px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          fontSize: '8px'
+        } : {}
+      })
+    },
+    2: { // Subtle Texture Variation
+      name: 'Rough',
+      panel: {
+        background: '#0a0a0a',
+        border: 'none',
+        borderRadius: '0',
+        boxShadow: 'none',
+        backdropFilter: 'none',
+        backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0)',
+        backgroundSize: '20px 20px'
+      },
+      header: {
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: '#e0e0e0',
+        fontFamily: 'system-ui, sans-serif',
+        fontWeight: '400',
+        letterSpacing: '0.8px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        textTransform: 'uppercase' as const,
+        fontSize: '11px'
+      },
+      button: (active: boolean, type?: string) => ({
+        background: active ? 'rgba(15, 15, 15, 0.8)' : 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#888888',
+        fontFamily: 'system-ui, sans-serif',
+        textTransform: 'none' as const,
+        letterSpacing: '0.2px',
+        fontWeight: '400',
+        fontSize: '13px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        borderLeft: active ? '2px solid #333333' : 'none',
+        paddingLeft: active ? '8px' : '0'
+      }),
+      clear: {
+        background: 'transparent',
+        color: '#aaaaaa',
+        border: 'none',
+        borderRadius: '0',
+        fontFamily: 'system-ui, sans-serif',
+        textTransform: 'none',
+        fontWeight: '400',
+        fontSize: '13px',
+        textShadow: 'none',
+        boxShadow: 'none'
+      },
+      autoButton: (active: boolean, enabled: boolean) => ({
+        background: active ? 'rgba(15, 15, 15, 0.8)' : 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: enabled ? (active ? '#ffffff' : '#888888') : '#444444',
+        fontFamily: 'system-ui, sans-serif',
+        fontWeight: '400',
+        fontSize: '13px',
+        opacity: 1,
+        cursor: enabled ? 'pointer' : 'not-allowed',
+        textShadow: 'none',
+        boxShadow: 'none',
+        borderLeft: active ? '2px solid #333333' : 'none',
+        paddingLeft: active ? '8px' : '0'
+      }),
+      optionButton: (active: boolean) => ({
+        background: active ? 'rgba(15, 15, 15, 0.8)' : 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#888888',
+        fontFamily: 'system-ui, sans-serif',
+        fontWeight: '400',
+        fontSize: '13px',
+        textTransform: 'none' as const,
+        letterSpacing: '0.2px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        borderLeft: active ? '2px solid #333333' : 'none',
+        paddingLeft: active ? '8px' : '0'
+      })
+    }
+  };
+
+  const toggleTheme = () => {
+    setCurrentTheme((prev) => (prev + 1) % 3);
+  };
+
+  const currentThemeConfig = themes[currentTheme as keyof typeof themes];
 
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -2129,31 +2397,46 @@ if (e.key === 'Shift') {
           top: isMobile ? undefined : panelPos.y,
           left: isMobile ? undefined : panelPos.x,
           margin: isMobile ? '0 auto' : undefined,
-          background: 'rgba(39, 39, 42, 0.95)',
-          padding: '12px',
-          borderRadius: '10px',
+          padding: '20px',
           width: isMobile ? 'calc(100% - 20px)': 'auto',
           maxWidth: '480px',
           zIndex: 1000,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          ...currentThemeConfig.panel
         }}
       >
         <div
           onMouseDown={handleHeaderMouseDown}
           style={{
-            fontWeight: 500,
-            marginBottom: '12px',
+            fontWeight: 600,
+            marginBottom: '16px',
             cursor: 'move',
-            padding: '4px',
-            background: 'rgba(63, 63, 70, 0.8)',
-            borderRadius: '6px',
-            fontSize: '1rem',
+            padding: '8px 12px',
+            fontSize: '18px',
             userSelect: 'none',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+            position: 'relative',
+            ...currentThemeConfig.header
           }}
         >
+          <button
+            onClick={toggleTheme}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              color: 'inherit',
+              cursor: 'pointer',
+              fontSize: '12px',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              marginRight: '8px',
+              fontFamily: 'inherit'
+            }}
+            title={`Switch to ${themes[(currentTheme + 1) % 3].name} theme`}
+          >
+            {currentThemeConfig.name}
+          </button>
           <span>painting-with-roughness</span>
           <button
             onClick={() => setPanelMinimized(prev => !prev)}
@@ -2198,14 +2481,12 @@ if (e.key === 'Shift') {
                     key={value}
                     onClick={() => { setTool(value); setIsSavingColor(false); }}
                     style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      background: tool === value ? '#52525b' : '#3a3a3c',
-                      color: '#fff',
-                      border: 'none',
+                      padding: '8px 16px',
                       cursor: 'pointer',
-                      fontWeight: 'normal',
-                      fontSize: '0.95rem'
+                      fontSize: '14px',
+                      minHeight: '36px',
+                      transition: 'all 0.2s ease',
+                      ...currentThemeConfig.button(tool === value, value)
                     }}
                   >
                     {label}
@@ -2214,14 +2495,12 @@ if (e.key === 'Shift') {
                 <button
                   onClick={() => setShowAutoControls(prev => !prev)}
                   style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    background: showAutoControls ? '#52525b' : '#3a3a3c',
-                    color: '#fff',
-                    border: 'none',
+                    padding: '8px 16px',
                     cursor: 'pointer',
-                    fontWeight: 'normal',
-                    fontSize: '0.95rem'
+                    fontSize: '14px',
+                    minHeight: '36px',
+                    transition: 'all 0.2s ease',
+                    ...currentThemeConfig.button(showAutoControls, 'auto')
                   }}
                 >
                   Auto
@@ -2229,14 +2508,12 @@ if (e.key === 'Shift') {
                 <button
                   onClick={() => setShowOptions(prev => !prev)}
                   style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    background: showOptions ? '#52525b' : '#3a3a3c',
-                    color: '#fff',
-                    border: 'none',
+                    padding: '8px 16px',
                     cursor: 'pointer',
-                    fontWeight: 'normal',
-                    fontSize: '0.95rem'
+                    fontSize: '14px',
+                    minHeight: '36px',
+                    transition: 'all 0.2s ease',
+                    ...currentThemeConfig.button(showOptions, 'options')
                   }}
                 >
                   Options
@@ -2244,14 +2521,13 @@ if (e.key === 'Shift') {
                 <button
                   onClick={() => { clear(); setIsSavingColor(false); }}
                   style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    background: '#3a3a3c',
-                    color: '#fff',
-                    border: 'none',
+                    padding: '8px 16px',
                     cursor: 'pointer',
-                    fontWeight: 'normal',
-                    fontSize: '0.95rem'
+                    fontSize: '14px',
+                    minHeight: '36px',
+                    transition: 'all 0.2s ease',
+                    fontWeight: 'bold',
+                    ...currentThemeConfig.clear
                   }}
                 >
                   Clear
@@ -2351,21 +2627,10 @@ if (e.key === 'Shift') {
                     disabled={!autoSpreadEnabled}
                     style={{
                       padding: '6px 12px',
-                      borderRadius: '6px',
-                      background: autoSpreading 
-                        ? '#3a3a3c' 
-                        : autoSpreadEnabled 
-                          ? '#3a3a3c' 
-                          : '#52525b',
-                      color: '#fff',
-                      border: 'none',
-                      cursor: autoSpreadEnabled ? 'pointer' : 'not-allowed',
-                      fontWeight: 'normal',
                       fontSize: '0.95rem',
                       whiteSpace: 'nowrap',
-                      opacity: autoSpreadEnabled ? 1 : 0.6,
-                      boxShadow: autoSpreading ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
-                      transition: 'box-shadow 0.2s ease-in-out'
+                      transition: 'all 0.2s ease',
+                      ...currentThemeConfig.autoButton(autoSpreading, autoSpreadEnabled)
                     }}
                   >
                     {autoSpreading ? 'Stop Spread' : 'Start Spread'}
@@ -2390,17 +2655,10 @@ if (e.key === 'Shift') {
                       disabled={!enabled}
                       style={{
                         padding: '6px 12px',
-                        borderRadius: '6px',
-                        background: enabled ? '#3a3a3c' : '#52525b',
-                        color: '#fff',
-                        border: 'none',
-                        cursor: enabled ? 'pointer' : 'not-allowed',
-                        fontWeight: 'normal',
                         fontSize: '0.95rem',
                         whiteSpace: 'nowrap',
-                        opacity: enabled ? 1 : 0.6,
-                        boxShadow: active ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
-                        transition: 'box-shadow 0.2s ease-in-out'
+                        transition: 'all 0.2s ease',
+                        ...currentThemeConfig.autoButton(active, enabled)
                       }}
                     >
                       {label}
@@ -2411,17 +2669,10 @@ if (e.key === 'Shift') {
                     disabled={!anyEnabled && !isAnyRunning}
                     style={{
                       padding: '6px 12px',
-                      borderRadius: '6px',
-                      background: anyEnabled || isAnyRunning ? '#3a3a3c' : '#52525b',
-                      color: '#fff',
-                      border: 'none',
-                      cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
-                      fontWeight: 'normal',
                       fontSize: '0.95rem',
                       whiteSpace: 'nowrap',
-                      opacity: anyEnabled || isAnyRunning ? 1 : 0.6,
-                      boxShadow: isAnyRunning ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
-                      transition: 'box-shadow 0.2s ease-in-out'
+                      transition: 'all 0.2s ease',
+                      ...currentThemeConfig.autoButton(isAnyRunning, anyEnabled || isAnyRunning)
                     }}
                   >
                     {isAnyRunning ? 'Stop All' : 'Start All'}
@@ -2438,25 +2689,25 @@ if (e.key === 'Shift') {
                   { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#52525b' : '#3a3a3c' },
                   { label: 'Generative', onClick: () => setShowGenerativeSettings(prev => !prev), bg: showGenerativeSettings ? '#52525b' : '#3a3a3c' },
                   { label: 'Steps', onClick: () => setShowStepControls(prev => !prev), bg: showStepControls ? '#52525b' : '#3a3a3c' }
-                ].map(({ label, onClick, bg }) => (
+                ].map(({ label, onClick, bg }) => {
+                  const active = bg === '#52525b';
+                  return (
                   <button
                     key={label}
                     onClick={onClick}
                     style={{
                       padding: '6px 12px',
-                      borderRadius: '6px',
-                      background: bg,
-                      color: '#fff',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontWeight: 'normal',
                       fontSize: '0.95rem',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      ...currentThemeConfig.optionButton(active)
                     }}
                   >
                     {label}
                   </button>
-                ))}
+                  )
+                })}
               </div>
             )}
             
