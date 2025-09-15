@@ -365,7 +365,7 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
     0: { // Seamless Black Interface
       name: 'Void',
       panel: {
-        background: '#0a0a0a',
+        background: 'transparent',
         border: 'none',
         borderRadius: '0',
         boxShadow: 'none',
@@ -2416,7 +2416,7 @@ if (e.key === 'Shift') {
           padding: '20px',
           width: isMobile ? 'calc(100% - 20px)': 'auto',
           maxWidth: '480px',
-          zIndex: 1000,
+          zIndex: 10,
           ...currentThemeConfig.panel
         }}
       >
