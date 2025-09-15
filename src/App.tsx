@@ -2592,9 +2592,12 @@ if (e.key === 'Shift') {
                       height: '32px',
                       borderRadius: '6px',
                       border: selectedColor === palette.length ? '2px solid #fff' : '1px solid #666',
-                      background: customColor,
+                      background: `linear-gradient(135deg, ${customColor} 25%, transparent 25%, transparent 50%, ${customColor} 50%, ${customColor} 75%, transparent 75%)`,
                       cursor: 'pointer',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                     onClick={() => {
                         const colorInput = panelRef.current?.querySelector('input[type="color"]') as HTMLInputElement;
@@ -2617,6 +2620,8 @@ if (e.key === 'Shift') {
                         height: '52px',
                         border: 'none',
                         cursor: 'pointer',
+                        opacity: 0,
+                        pointerEvents: 'none'
                       }}
                     />
                   </div>
