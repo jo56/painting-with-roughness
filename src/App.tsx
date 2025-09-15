@@ -426,6 +426,7 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
         cursor: enabled ? 'pointer' : 'not-allowed',
         textShadow: 'none',
         boxShadow: 'none',
+        outline: 'none',
         textDecoration: active ? 'underline' : 'none',
         textUnderlineOffset: active ? '4px' : '0',
         padding: '4px 8px',
@@ -519,6 +520,7 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
         cursor: enabled ? 'pointer' : 'not-allowed',
         textShadow: 'none',
         boxShadow: 'none',
+        outline: 'none',
         position: 'relative' as const,
         '&::after': active ? {
           content: '◦',
@@ -541,6 +543,7 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
         letterSpacing: '0.5px',
         textShadow: 'none',
         boxShadow: 'none',
+        padding: '4px 8px',
         position: 'relative' as const,
         '&::after': active ? {
           content: '◦',
@@ -615,6 +618,7 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
         cursor: enabled ? 'pointer' : 'not-allowed',
         textShadow: 'none',
         boxShadow: 'none',
+        outline: 'none',
         borderLeft: active ? '2px solid #333333' : 'none',
         paddingLeft: active ? '8px' : '0'
       }),
@@ -630,6 +634,7 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
         letterSpacing: '0.2px',
         textShadow: 'none',
         boxShadow: 'none',
+        padding: '4px 8px',
         borderLeft: active ? '2px solid #333333' : 'none',
         paddingLeft: active ? '8px' : '0'
       })
@@ -2495,10 +2500,11 @@ if (e.key === 'Shift') {
                     key={value}
                     onClick={() => { setTool(value); setIsSavingColor(false); }}
                     style={{
-                      padding: '8px 16px',
+                      padding: '4px 8px',
                       cursor: 'pointer',
-                      fontSize: '14px',
-                      minHeight: '36px',
+                      fontSize: '0.9rem',
+                      minWidth: '60px',
+                      textAlign: 'center' as const,
                       transition: 'all 0.2s ease',
                       ...currentThemeConfig.button(tool === value, value)
                     }}
@@ -2509,10 +2515,11 @@ if (e.key === 'Shift') {
                 <button
                   onClick={() => setShowAutoControls(prev => !prev)}
                   style={{
-                    padding: '8px 16px',
+                    padding: '4px 8px',
                     cursor: 'pointer',
-                    fontSize: '14px',
-                    minHeight: '36px',
+                    fontSize: '0.9rem',
+                    minWidth: '50px',
+                    textAlign: 'center' as const,
                     transition: 'all 0.2s ease',
                     ...currentThemeConfig.button(showAutoControls, 'auto')
                   }}
@@ -2522,10 +2529,11 @@ if (e.key === 'Shift') {
                 <button
                   onClick={() => setShowOptions(prev => !prev)}
                   style={{
-                    padding: '8px 16px',
+                    padding: '4px 8px',
                     cursor: 'pointer',
-                    fontSize: '14px',
-                    minHeight: '36px',
+                    fontSize: '0.9rem',
+                    minWidth: '65px',
+                    textAlign: 'center' as const,
                     transition: 'all 0.2s ease',
                     ...currentThemeConfig.button(showOptions, 'options')
                   }}
@@ -2535,10 +2543,11 @@ if (e.key === 'Shift') {
                 <button
                   onClick={() => { clear(); setIsSavingColor(false); }}
                   style={{
-                    padding: '8px 16px',
+                    padding: '4px 8px',
                     cursor: 'pointer',
-                    fontSize: '14px',
-                    minHeight: '36px',
+                    fontSize: '0.9rem',
+                    minWidth: '50px',
+                    textAlign: 'center' as const,
                     transition: 'all 0.2s ease',
                     fontWeight: 'bold',
                     ...currentThemeConfig.clear
@@ -2612,18 +2621,22 @@ if (e.key === 'Shift') {
                     title={isSavingColor ? "Cancel saving" : "Save this color to a slot"}
                     style={{
                         visibility: selectedColor === palette.length ? 'visible' : 'hidden',
-                        padding: '6px 0',
+                        padding: '4px 8px',
                         height: '32px',
-                        borderRadius: '6px',
-                        background: isSavingColor ? '#54a0ff' : '#3a3a3c',
-                        color: '#fff',
+                        borderRadius: '0',
+                        background: 'transparent',
+                        color: isSavingColor ? '#ffffff' : '#666666',
                         border: 'none',
                         cursor: 'pointer',
-                        fontSize: '0.95rem',
+                        fontSize: '0.9rem',
+                        fontFamily: 'monospace',
                         fontWeight: 'normal',
                         whiteSpace: 'nowrap',
                         minWidth: '75px',
-                        textAlign: 'center'
+                        textAlign: 'center',
+                        outline: 'none',
+                        textDecoration: isSavingColor ? 'underline' : 'none',
+                        textUnderlineOffset: isSavingColor ? '4px' : '0'
                     }}
                   >
                     {isSavingColor ? 'Cancel' : 'Save'}
@@ -2644,6 +2657,8 @@ if (e.key === 'Shift') {
                       fontSize: '0.9rem',
                       whiteSpace: 'nowrap',
                       transition: 'all 0.2s ease',
+                      minWidth: '80px',
+                      textAlign: 'center' as const,
                       ...currentThemeConfig.autoButton(autoSpreading, autoSpreadEnabled)
                     }}
                   >
@@ -2672,6 +2687,8 @@ if (e.key === 'Shift') {
                         fontSize: '0.9rem',
                         whiteSpace: 'nowrap',
                         transition: 'all 0.2s ease',
+                        minWidth: '80px',
+                        textAlign: 'center' as const,
                         ...currentThemeConfig.autoButton(active, enabled)
                       }}
                     >
@@ -2686,6 +2703,8 @@ if (e.key === 'Shift') {
                       fontSize: '0.9rem',
                       whiteSpace: 'nowrap',
                       transition: 'all 0.2s ease',
+                      minWidth: '80px',
+                      textAlign: 'center' as const,
                       ...currentThemeConfig.autoButton(isAnyRunning, anyEnabled || isAnyRunning)
                     }}
                   >
@@ -2710,10 +2729,12 @@ if (e.key === 'Shift') {
                     key={label}
                     onClick={onClick}
                     style={{
-                      padding: '6px 12px',
-                      fontSize: '0.95rem',
+                      padding: '4px 8px',
+                      fontSize: '0.9rem',
                       whiteSpace: 'nowrap',
                       cursor: 'pointer',
+                      minWidth: '70px',
+                      textAlign: 'center' as const,
                       transition: 'all 0.2s ease',
                       ...currentThemeConfig.optionButton(active)
                     }}
@@ -2736,14 +2757,14 @@ if (e.key === 'Shift') {
                     key={label}
                     onClick={() => { onClick(); setIsSavingColor(false); }}
                     style={{
-                      padding: '6px 12px',
+                      padding: '4px 8px',
                       borderRadius: '6px',
                       background: '#3a3a3c',
                       color: '#fff',
                       border: 'none',
                       cursor: 'pointer',
                       fontWeight: 'normal',
-                      fontSize: '0.95rem',
+                      fontSize: '0.9rem',
                       whiteSpace: 'nowrap'
                     }}
                   >
@@ -2929,13 +2950,14 @@ if (e.key === 'Shift') {
                    <button
                     onClick={resetGenerativeSettings}
                     style={{
-                      padding: '6px 12px',
+                      padding: '4px 8px',
                       borderRadius: '6px',
                       background: '#3a3a3c',
                       color: '#fff',
                       border: 'none',
                       cursor: 'pointer',
                       alignSelf: 'flex-end',
+                      fontSize: '0.9rem',
                       height: '29px'
                     }}
                     title="Reset generative settings to default"
@@ -3360,7 +3382,7 @@ if (e.key === 'Shift') {
               <button
                 key={type}
                 onClick={() => setBrushType(type)}
-                style={{ padding: '6px 12px', borderRadius: '6px', background: brushType === type ? '#8b5cf6' : '#3a3a3c', color: '#fff', border: 'none', cursor: 'pointer' }}
+                style={{ padding: '4px 8px', borderRadius: '6px', background: brushType === type ? '#8b5cf6' : '#3a3a3c', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
               </button>
