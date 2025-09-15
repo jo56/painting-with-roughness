@@ -125,7 +125,7 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
 
   return (
         <div style={{ marginBottom: '8px' }}>
-            <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>{label}:</label>
+            <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>{label}:</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                 {numbers.map(num => (
                     <label key={num} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: '#404040', padding: '4px 8px', borderRadius: '4px', userSelect: 'none' }}>
@@ -250,6 +250,10 @@ useEffect(() => { autoShapesEnabledRef.current = autoShapesEnabled; }, [autoShap
  // BRUSH PATCH
  // BRUSH PATCH
   const [panelMinimized, setPanelMinimized] = useState(false);
+  const [panelVisible, setPanelVisible] = useState(true);
+  const [panelTransparent, setPanelTransparent] = useState(true);
+  const panelDimensions = useRef({ width: 320, height: 400 });
+  const [currentTheme] = useState(0); // Locked to void theme
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const [showVisualSettings, setShowVisualSettings] = useState(false);
@@ -359,6 +363,289 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
   useEffect(() => { scrambleSwapsRef.current = scrambleSwaps; }, [scrambleSwaps]);
   useEffect(() => { rippleChanceRef.current = rippleChance; }, [rippleChance]);
 
+  // Theme system
+  const themes = {
+    0: { // Seamless Black Interface
+      name: 'Void',
+      panel: {
+        background: panelTransparent ? 'transparent' : '#0a0a0a',
+        border: 'none',
+        borderRadius: '0',
+        boxShadow: 'none',
+        backdropFilter: 'none'
+      },
+      header: {
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: '#ffffff',
+        fontFamily: 'monospace',
+        fontWeight: '400',
+        letterSpacing: '0.5px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        padding: '8px 0',
+        marginBottom: '8px'
+      },
+      button: (active: boolean, type?: string) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#666666',
+        fontFamily: 'monospace',
+        textTransform: 'none' as const,
+        letterSpacing: '0.3px',
+        fontWeight: active ? '500' : '400',
+        textShadow: 'none',
+        boxShadow: 'none',
+        textDecoration: active ? 'underline' : 'none',
+        textUnderlineOffset: active ? '4px' : '0',
+        padding: '4px 8px',
+        minHeight: 'auto',
+        lineHeight: '1.2'
+      }),
+      clear: {
+        background: 'transparent',
+        color: '#ff6b6b',
+        border: 'none',
+        borderRadius: '0',
+        fontFamily: 'monospace',
+        textTransform: 'none',
+        fontWeight: '400',
+        textShadow: 'none',
+        boxShadow: 'none',
+        padding: '4px 8px',
+        minHeight: 'auto',
+        lineHeight: '1.2'
+      },
+      autoButton: (active: boolean, enabled: boolean) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: enabled ? (active ? '#ffffff' : '#666666') : '#333333',
+        fontFamily: 'monospace',
+        fontWeight: active ? '500' : '400',
+        opacity: 1,
+        cursor: enabled ? 'pointer' : 'not-allowed',
+        textShadow: 'none',
+        boxShadow: 'none',
+        outline: 'none',
+        textDecoration: active ? 'underline' : 'none',
+        textUnderlineOffset: active ? '4px' : '0',
+        padding: '4px 8px',
+        minHeight: 'auto',
+        lineHeight: '1.2'
+      }),
+      optionButton: (active: boolean) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#666666',
+        fontFamily: 'monospace',
+        fontWeight: active ? '500' : '400',
+        textTransform: 'none' as const,
+        letterSpacing: '0.3px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        textDecoration: active ? 'underline' : 'none',
+        textUnderlineOffset: active ? '4px' : '0',
+        padding: '4px 8px',
+        minHeight: 'auto',
+        lineHeight: '1.2'
+      })
+    },
+    1: { // Minimal Typography Focus
+      name: 'Type',
+      panel: {
+        background: '#111111',
+        border: 'none',
+        borderRadius: '0',
+        boxShadow: 'none',
+        backdropFilter: 'none'
+      },
+      header: {
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: '#cccccc',
+        fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+        fontWeight: '300',
+        letterSpacing: '1px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        fontSize: '13px'
+      },
+      button: (active: boolean, type?: string) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#777777',
+        fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+        textTransform: 'lowercase' as const,
+        letterSpacing: '0.5px',
+        fontWeight: active ? '400' : '300',
+        fontSize: '12px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        position: 'relative' as const,
+        '&::after': active ? {
+          content: '◦',
+          position: 'absolute',
+          right: '-12px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          fontSize: '8px'
+        } : {}
+      }),
+      clear: {
+        background: 'transparent',
+        color: '#999999',
+        border: 'none',
+        borderRadius: '0',
+        fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+        textTransform: 'lowercase',
+        fontWeight: '300',
+        fontSize: '12px',
+        textShadow: 'none',
+        boxShadow: 'none'
+      },
+      autoButton: (active: boolean, enabled: boolean) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: enabled ? (active ? '#ffffff' : '#777777') : '#444444',
+        fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+        fontWeight: active ? '400' : '300',
+        fontSize: '12px',
+        textTransform: 'lowercase' as const,
+        letterSpacing: '0.5px',
+        opacity: 1,
+        cursor: enabled ? 'pointer' : 'not-allowed',
+        textShadow: 'none',
+        boxShadow: 'none',
+        outline: 'none',
+        position: 'relative' as const,
+        '&::after': active ? {
+          content: '◦',
+          position: 'absolute',
+          right: '-12px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          fontSize: '8px'
+        } : {}
+      }),
+      optionButton: (active: boolean) => ({
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#777777',
+        fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+        fontWeight: active ? '400' : '300',
+        fontSize: '12px',
+        textTransform: 'lowercase' as const,
+        letterSpacing: '0.5px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        padding: '4px 8px',
+        position: 'relative' as const,
+        '&::after': active ? {
+          content: '◦',
+          position: 'absolute',
+          right: '-12px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          fontSize: '8px'
+        } : {}
+      })
+    },
+    2: { // Subtle Texture Variation
+      name: 'Rough',
+      panel: {
+        background: '#0a0a0a',
+        border: 'none',
+        borderRadius: '0',
+        boxShadow: 'none',
+        backdropFilter: 'none',
+        backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0)',
+        backgroundSize: '20px 20px'
+      },
+      header: {
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: '#e0e0e0',
+        fontFamily: 'system-ui, sans-serif',
+        fontWeight: '400',
+        letterSpacing: '0.8px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        textTransform: 'uppercase' as const,
+        fontSize: '11px'
+      },
+      button: (active: boolean, type?: string) => ({
+        background: active ? 'rgba(15, 15, 15, 0.8)' : 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#888888',
+        fontFamily: 'system-ui, sans-serif',
+        textTransform: 'none' as const,
+        letterSpacing: '0.2px',
+        fontWeight: '400',
+        fontSize: '13px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        borderLeft: active ? '2px solid #333333' : 'none',
+        paddingLeft: active ? '8px' : '0'
+      }),
+      clear: {
+        background: 'transparent',
+        color: '#aaaaaa',
+        border: 'none',
+        borderRadius: '0',
+        fontFamily: 'system-ui, sans-serif',
+        textTransform: 'none',
+        fontWeight: '400',
+        fontSize: '13px',
+        textShadow: 'none',
+        boxShadow: 'none'
+      },
+      autoButton: (active: boolean, enabled: boolean) => ({
+        background: active ? 'rgba(15, 15, 15, 0.8)' : 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: enabled ? (active ? '#ffffff' : '#888888') : '#444444',
+        fontFamily: 'system-ui, sans-serif',
+        fontWeight: '400',
+        fontSize: '13px',
+        opacity: 1,
+        cursor: enabled ? 'pointer' : 'not-allowed',
+        textShadow: 'none',
+        boxShadow: 'none',
+        outline: 'none',
+        borderLeft: active ? '2px solid #333333' : 'none',
+        paddingLeft: active ? '8px' : '0'
+      }),
+      optionButton: (active: boolean) => ({
+        background: active ? 'rgba(15, 15, 15, 0.8)' : 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        color: active ? '#ffffff' : '#888888',
+        fontFamily: 'system-ui, sans-serif',
+        fontWeight: '400',
+        fontSize: '13px',
+        textTransform: 'none' as const,
+        letterSpacing: '0.2px',
+        textShadow: 'none',
+        boxShadow: 'none',
+        padding: '4px 8px',
+        borderLeft: active ? '2px solid #333333' : 'none',
+        paddingLeft: active ? '8px' : '0'
+      })
+    }
+  };
+
+
+  const currentThemeConfig = themes[currentTheme as keyof typeof themes];
 
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -1770,29 +2057,45 @@ if (e.code === "KeyL") {
     const handleKeyDown = (e: KeyboardEvent) => {
 if (e.key === 'Shift') {
   e.preventDefault();
-  setIsMobile(false);
+  console.log('Shift pressed, panelVisible:', panelVisible);
 
-  // Use mouse position if available, else center
-  const mouseX = mousePos.current.x || window.innerWidth / 2;
-  const mouseY = mousePos.current.y || window.innerHeight / 2;
+  if (!panelVisible) {
+    // If panel is invisible, show it at mouse position
+    console.log('Making panel visible');
+    setIsMobile(false);
+    setPanelVisible(true);
+    setPanelMinimized(false);
 
-  // Get actual panel size
-  const panelEl = panelRef.current;
-  const PANEL_WIDTH = panelEl?.offsetWidth || 320;
-  const PANEL_HEIGHT = panelEl?.offsetHeight || 400;
-  const MARGIN = 20;
+    // Use mouse position if available, else center
+    const mouseX = mousePos.current.x || window.innerWidth / 2;
+    const mouseY = mousePos.current.y || window.innerHeight / 2;
 
-  // Calculate new position under the mouse, clamped to viewport
-  const newX = Math.max(
-    MARGIN,
-    Math.min(mouseX - PANEL_WIDTH / 2, window.innerWidth - PANEL_WIDTH - MARGIN)
-  );
-  const newY = Math.max(
-    MARGIN,
-    Math.min(mouseY + 20, window.innerHeight - PANEL_HEIGHT - MARGIN)
-  );
+    // Use stored panel dimensions
+    const PANEL_WIDTH = panelDimensions.current.width;
+    const PANEL_HEIGHT = panelDimensions.current.height;
+    const MARGIN = 20;
 
-  setPanelPos({ x: newX, y: newY });
+    // Calculate new position with header center under the mouse
+    const newX = Math.max(
+      MARGIN,
+      Math.min(mouseX - PANEL_WIDTH / 2, window.innerWidth - PANEL_WIDTH - MARGIN)
+    );
+    const newY = Math.max(
+      MARGIN,
+      Math.min(mouseY - 20, window.innerHeight - PANEL_HEIGHT - MARGIN)
+    );
+
+    setPanelPos({ x: newX, y: newY });
+  } else {
+    // If panel is visible, make it invisible
+    console.log('Making panel invisible');
+    setPanelVisible(false);
+  }
+}
+
+if (e.key === 't' || e.key === 'T') {
+  e.preventDefault();
+  setPanelTransparent(prev => !prev);
 }
 
 
@@ -1906,7 +2209,17 @@ if (e.key === 'Shift') {
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isMobile, panelPos]);
+  }, [isMobile, panelPos, panelVisible, panelTransparent]);
+
+  // Update stored panel dimensions when visible
+  useEffect(() => {
+    if (panelVisible && panelRef.current) {
+      const rect = panelRef.current.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        panelDimensions.current = { width: rect.width, height: rect.height };
+      }
+    }
+  }, [panelVisible, panelMinimized]);
 
   const handleRowsChange = useCallback((newRows: number) => {
     setRows(newRows);
@@ -2116,7 +2429,7 @@ if (e.key === 'Shift') {
 
 
       {recordingToast && (
-        <div style={{ position: 'fixed', top: 12, right: 12, background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '8px 12px', borderRadius: '6px', fontSize: '0.9rem', zIndex: 2000 }}>
+        <div style={{ position: 'fixed', top: 12, right: 12, background: 'rgba(0,0,0,0.8)', color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px', padding: '8px 12px', borderRadius: '0', fontSize: '0.9rem', zIndex: 2000 }}>
           {recordingToast}
         </div>
       )}
@@ -2129,29 +2442,28 @@ if (e.key === 'Shift') {
           top: isMobile ? undefined : panelPos.y,
           left: isMobile ? undefined : panelPos.x,
           margin: isMobile ? '0 auto' : undefined,
-          background: 'rgba(39, 39, 42, 0.95)',
-          padding: '12px',
-          borderRadius: '10px',
+          padding: '20px',
           width: isMobile ? 'calc(100% - 20px)': 'auto',
           maxWidth: '480px',
-          zIndex: 1000,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          zIndex: 10,
+          display: panelVisible ? 'block' : 'none',
+          ...currentThemeConfig.panel
         }}
       >
         <div
           onMouseDown={handleHeaderMouseDown}
           style={{
-            fontWeight: 500,
-            marginBottom: '12px',
+            fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px',
+            marginBottom: '16px',
             cursor: 'move',
-            padding: '4px',
-            background: 'rgba(63, 63, 70, 0.8)',
-            borderRadius: '6px',
-            fontSize: '1rem',
+            padding: '8px 12px',
+            fontSize: '18px',
             userSelect: 'none',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+            position: 'relative',
+            ...currentThemeConfig.header
           }}
         >
           <span>painting-with-roughness</span>
@@ -2160,7 +2472,7 @@ if (e.key === 'Shift') {
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#fff',
+              color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
               cursor: 'pointer',
               fontSize: '1.2rem',
               width: '24px',
@@ -2177,10 +2489,29 @@ if (e.key === 'Shift') {
         </div>
 
         <div style={{
-          maxHeight: panelMinimized ? '0px' : '2000px',
-          overflow: 'hidden',
+          maxHeight: panelMinimized ? '0px' : '80vh',
+          overflow: panelMinimized ? 'hidden' : 'auto',
           transition: 'max-height 0.3s ease'
-        }}>
+        }} className="scrollable-settings">
+          <style>
+            {`
+              .scrollable-settings::-webkit-scrollbar {
+                display: none;
+              }
+              .scrollable-settings {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+              select option {
+                background: #1a1a1a !important;
+                color: #ffffff !important;
+              }
+              select:focus option:checked {
+                background: #333333 !important;
+                color: #ffffff !important;
+              }
+            `}
+          </style>
           <div style={{
             opacity: panelMinimized ? 0 : 1,
             transition: 'opacity 0.3s ease',
@@ -2198,14 +2529,13 @@ if (e.key === 'Shift') {
                     key={value}
                     onClick={() => { setTool(value); setIsSavingColor(false); }}
                     style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      background: tool === value ? '#52525b' : '#3a3a3c',
-                      color: '#fff',
-                      border: 'none',
+                      padding: '4px 8px',
                       cursor: 'pointer',
-                      fontWeight: 'normal',
-                      fontSize: '0.95rem'
+                      fontSize: '0.9rem',
+                      minWidth: '60px',
+                      textAlign: 'center' as const,
+                      transition: 'all 0.2s ease',
+                      ...currentThemeConfig.button(tool === value, value)
                     }}
                   >
                     {label}
@@ -2214,14 +2544,13 @@ if (e.key === 'Shift') {
                 <button
                   onClick={() => setShowAutoControls(prev => !prev)}
                   style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    background: showAutoControls ? '#52525b' : '#3a3a3c',
-                    color: '#fff',
-                    border: 'none',
+                    padding: '4px 8px',
                     cursor: 'pointer',
-                    fontWeight: 'normal',
-                    fontSize: '0.95rem'
+                    fontSize: '0.9rem',
+                    minWidth: '50px',
+                    textAlign: 'center' as const,
+                    transition: 'all 0.2s ease',
+                    ...currentThemeConfig.button(showAutoControls, 'auto')
                   }}
                 >
                   Auto
@@ -2229,14 +2558,13 @@ if (e.key === 'Shift') {
                 <button
                   onClick={() => setShowOptions(prev => !prev)}
                   style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    background: showOptions ? '#52525b' : '#3a3a3c',
-                    color: '#fff',
-                    border: 'none',
+                    padding: '4px 8px',
                     cursor: 'pointer',
-                    fontWeight: 'normal',
-                    fontSize: '0.95rem'
+                    fontSize: '0.9rem',
+                    minWidth: '65px',
+                    textAlign: 'center' as const,
+                    transition: 'all 0.2s ease',
+                    ...currentThemeConfig.button(showOptions, 'options')
                   }}
                 >
                   Options
@@ -2244,14 +2572,14 @@ if (e.key === 'Shift') {
                 <button
                   onClick={() => { clear(); setIsSavingColor(false); }}
                   style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    background: '#3a3a3c',
-                    color: '#fff',
-                    border: 'none',
+                    padding: '4px 8px',
                     cursor: 'pointer',
-                    fontWeight: 'normal',
-                    fontSize: '0.95rem'
+                    fontSize: '0.9rem',
+                    minWidth: '50px',
+                    textAlign: 'center' as const,
+                    transition: 'all 0.2s ease',
+                    fontWeight: 'bold',
+                    ...currentThemeConfig.clear
                   }}
                 >
                   Clear
@@ -2261,7 +2589,7 @@ if (e.key === 'Shift') {
 
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', padding: '4px' }}>
                 {palette.slice(1).map((color, index) => (
                   <button
                       key={index + 1}
@@ -2271,8 +2599,8 @@ if (e.key === 'Shift') {
                       width: '32px',
                       height: '32px',
                       background: color,
-                      border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
-                      borderRadius: '6px',
+                      border: selectedColor === index + 1 ? '2px solid #fff' : '1px solid #666',
+                      borderRadius: '0',
                       cursor: 'pointer',
                       outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
                       outlineOffset: '2px',
@@ -2287,11 +2615,14 @@ if (e.key === 'Shift') {
                       position: 'relative',
                       width: '32px',
                       height: '32px',
-                      borderRadius: '6px',
-                      border: selectedColor === palette.length ? '3px solid #fff' : '1px solid #666',
-                      background: customColor,
+                      borderRadius: '0',
+                      border: selectedColor === palette.length ? '2px solid #fff' : '1px solid #666',
+                      background: `linear-gradient(135deg, ${customColor} 25%, transparent 25%, transparent 50%, ${customColor} 50%, ${customColor} 75%, transparent 75%)`,
                       cursor: 'pointer',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                     onClick={() => {
                         const colorInput = panelRef.current?.querySelector('input[type="color"]') as HTMLInputElement;
@@ -2314,6 +2645,8 @@ if (e.key === 'Shift') {
                         height: '52px',
                         border: 'none',
                         cursor: 'pointer',
+                        opacity: 0,
+                        pointerEvents: 'none'
                       }}
                     />
                   </div>
@@ -2322,50 +2655,45 @@ if (e.key === 'Shift') {
                     title={isSavingColor ? "Cancel saving" : "Save this color to a slot"}
                     style={{
                         visibility: selectedColor === palette.length ? 'visible' : 'hidden',
-                        padding: '6px 0',
+                        padding: '4px 8px',
                         height: '32px',
-                        borderRadius: '6px',
-                        background: isSavingColor ? '#54a0ff' : '#3a3a3c',
-                        color: '#fff',
+                        borderRadius: '0',
+                        background: 'transparent',
+                        color: isSavingColor ? '#ffffff' : '#666666',
                         border: 'none',
                         cursor: 'pointer',
-                        fontSize: '0.95rem',
+                        fontSize: '0.9rem',
+                        fontFamily: 'monospace',
                         fontWeight: 'normal',
                         whiteSpace: 'nowrap',
                         minWidth: '75px',
-                        textAlign: 'center'
+                        textAlign: 'center',
+                        outline: 'none',
+                        textDecoration: isSavingColor ? 'underline' : 'none',
+                        textUnderlineOffset: isSavingColor ? '4px' : '0'
                     }}
                   >
                     {isSavingColor ? 'Cancel' : 'Save'}
                   </button>
                 </div>
               </div>
-              {isSavingColor && <div style={{fontSize: '0.8rem', color: '#9ca3af', marginTop: '6px'}}>Select a color slot to replace it.</div>}
+              {isSavingColor && <div style={{fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace', marginTop: '6px'}}>Select a color slot to replace it.</div>}
             </div>
 
             {showAutoControls && (
               <>
-                <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                   <button
                     onClick={() => { toggleAutoSpread(); setIsSavingColor(false); }}
                     disabled={!autoSpreadEnabled}
                     style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      background: autoSpreading 
-                        ? '#3a3a3c' 
-                        : autoSpreadEnabled 
-                          ? '#3a3a3c' 
-                          : '#52525b',
-                      color: '#fff',
-                      border: 'none',
-                      cursor: autoSpreadEnabled ? 'pointer' : 'not-allowed',
-                      fontWeight: 'normal',
-                      fontSize: '0.95rem',
+                      padding: '4px 8px',
+                      fontSize: '0.9rem',
                       whiteSpace: 'nowrap',
-                      opacity: autoSpreadEnabled ? 1 : 0.6,
-                      boxShadow: autoSpreading ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
-                      transition: 'box-shadow 0.2s ease-in-out'
+                      transition: 'all 0.2s ease',
+                      minWidth: '80px',
+                      textAlign: 'center' as const,
+                      ...currentThemeConfig.autoButton(autoSpreading, autoSpreadEnabled)
                     }}
                   >
                     {autoSpreading ? 'Stop Spread' : 'Start Spread'}
@@ -2389,18 +2717,13 @@ if (e.key === 'Shift') {
                       onClick={() => { onClick(); setIsSavingColor(false); }}
                       disabled={!enabled}
                       style={{
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        background: enabled ? '#3a3a3c' : '#52525b',
-                        color: '#fff',
-                        border: 'none',
-                        cursor: enabled ? 'pointer' : 'not-allowed',
-                        fontWeight: 'normal',
-                        fontSize: '0.95rem',
+                        padding: '4px 8px',
+                        fontSize: '0.9rem',
                         whiteSpace: 'nowrap',
-                        opacity: enabled ? 1 : 0.6,
-                        boxShadow: active ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
-                        transition: 'box-shadow 0.2s ease-in-out'
+                        transition: 'all 0.2s ease',
+                        minWidth: '80px',
+                        textAlign: 'center' as const,
+                        ...currentThemeConfig.autoButton(active, enabled)
                       }}
                     >
                       {label}
@@ -2410,18 +2733,13 @@ if (e.key === 'Shift') {
                     onClick={() => { isAnyRunning ? stopAll() : startAllEnabled(); setIsSavingColor(false); }}
                     disabled={!anyEnabled && !isAnyRunning}
                     style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      background: anyEnabled || isAnyRunning ? '#3a3a3c' : '#52525b',
-                      color: '#fff',
-                      border: 'none',
-                      cursor: anyEnabled || isAnyRunning ? 'pointer' : 'not-allowed',
-                      fontWeight: 'normal',
-                      fontSize: '0.95rem',
+                      padding: '4px 8px',
+                      fontSize: '0.9rem',
                       whiteSpace: 'nowrap',
-                      opacity: anyEnabled || isAnyRunning ? 1 : 0.6,
-                      boxShadow: isAnyRunning ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none',
-                      transition: 'box-shadow 0.2s ease-in-out'
+                      transition: 'all 0.2s ease',
+                      minWidth: '80px',
+                      textAlign: 'center' as const,
+                      ...currentThemeConfig.autoButton(isAnyRunning, anyEnabled || isAnyRunning)
                     }}
                   >
                     {isAnyRunning ? 'Stop All' : 'Start All'}
@@ -2431,37 +2749,44 @@ if (e.key === 'Shift') {
             )}
 
             {showOptions && (
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {[
                   { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#52525b' : '#3a3a3c' },
                   { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#52525b' : '#3a3a3c' },
                   { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#52525b' : '#3a3a3c' },
                   { label: 'Generative', onClick: () => setShowGenerativeSettings(prev => !prev), bg: showGenerativeSettings ? '#52525b' : '#3a3a3c' },
                   { label: 'Steps', onClick: () => setShowStepControls(prev => !prev), bg: showStepControls ? '#52525b' : '#3a3a3c' }
-                ].map(({ label, onClick, bg }) => (
+                ].map(({ label, onClick, bg }) => {
+                  const active = bg === '#52525b';
+                  return (
                   <button
                     key={label}
                     onClick={onClick}
                     style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      background: bg,
-                      color: '#fff',
-                      border: 'none',
+                      padding: '4px 8px',
+                      fontSize: '0.9rem',
+                      whiteSpace: 'nowrap',
                       cursor: 'pointer',
-                      fontWeight: 'normal',
-                      fontSize: '0.95rem',
-                      whiteSpace: 'nowrap'
+                      minWidth: '70px',
+                      textAlign: 'center' as const,
+                      transition: 'all 0.2s ease',
+                      ...currentThemeConfig.optionButton(active)
                     }}
                   >
                     {label}
                   </button>
-                ))}
+                  )
+                })}
               </div>
             )}
             
             {showOptions && showStepControls && (
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              <div style={{
+                display: 'flex',
+                gap: '6px',
+                marginBottom: '6px',
+                flexWrap: 'wrap'
+              }}>
                 {[
                   { label: 'Spread Once', onClick: colorSpread },
                   { label: 'Add Dots', onClick: addRandomDots },
@@ -2471,14 +2796,14 @@ if (e.key === 'Shift') {
                     key={label}
                     onClick={() => { onClick(); setIsSavingColor(false); }}
                     style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      background: '#3a3a3c',
-                      color: '#fff',
+                      padding: '4px 8px',
+                      borderRadius: '0',
+                      background: 'transparent',
+                      color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
                       border: 'none',
                       cursor: 'pointer',
                       fontWeight: 'normal',
-                      fontSize: '0.95rem',
+                      fontSize: '0.9rem',
                       whiteSpace: 'nowrap'
                     }}
                   >
@@ -2489,15 +2814,31 @@ if (e.key === 'Shift') {
             )}
 
             {showOptions && (showSpeedSettings || showCanvasSettings) && (
-              <div style={{ 
-                display: 'grid', 
+              <div className="scrollable-settings" style={{
+                display: 'grid',
                 gridTemplateColumns: showSpeedSettings && showCanvasSettings ? 'repeat(2, 1fr)' : '1fr',
-                gap: '12px', 
-                marginBottom: '12px' 
+                gap: '12px',
+                marginBottom: '12px',
+                maxHeight: '300px',
+                overflowY: 'auto'
               }}>
                 {showSpeedSettings && (
-                  <div>
-                    <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb' }}>
+                  <div style={{
+                    background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.5)',
+                    border: 'none',
+                    borderRadius: '0',
+                    padding: '8px'
+                  }}>
+                    <label style={{
+                      fontWeight: '400',
+                      marginBottom: '8px',
+                      display: 'block',
+                      fontSize: '1rem',
+                      color: '#ffffff',
+                      fontFamily: 'monospace',
+                      letterSpacing: '0.5px',
+                      textTransform: 'uppercase'
+                    }}>
                       Speed Controls
                     </label>
                     {[
@@ -2508,8 +2849,18 @@ if (e.key === 'Shift') {
                     ].map(([label, value, min, max, step, setter, unit], idx) => (
                       <div key={idx} style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>{label}:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+                          <label style={{
+                            fontSize: '0.85rem',
+                            fontWeight: '400',
+                            fontFamily: 'monospace',
+                            color: '#ffffff',
+                            letterSpacing: '0.3px'
+                          }}>{label}:</label>
+                          <span style={{
+                            fontSize: '0.8rem',
+                            color: '#666666',
+                            fontFamily: 'monospace'
+                          }}>
                             {label === 'Spread Rate' ? `${Math.round((value as number) * 100)}${unit}` : `${value}${unit}`}
                           </span>
                         </div>
@@ -2528,16 +2879,22 @@ if (e.key === 'Shift') {
                 )}
 
 {showCanvasSettings && (
-  <div>
-    <label
-      style={{
-        fontWeight: 600,
-        marginBottom: '8px',
-        display: 'block',
-        fontSize: '0.9rem',
-        color: '#e5e7eb'
-      }}
-    >
+  <div style={{
+    background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.5)',
+    border: 'none',
+    borderRadius: '0',
+    padding: '8px'
+  }}>
+    <label style={{
+      fontWeight: '400',
+      marginBottom: '8px',
+      display: 'block',
+      fontSize: '1rem',
+      color: '#ffffff',
+      fontFamily: 'monospace',
+      letterSpacing: '0.5px',
+      textTransform: 'uppercase'
+    }}>
       Canvas Settings
     </label>
     {[
@@ -2555,7 +2912,7 @@ if (e.key === 'Shift') {
             marginBottom: '2px'
           }}
         >
-          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>
+          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
             {label}:
           </label>
 
@@ -2578,7 +2935,7 @@ if (e.key === 'Shift') {
               style={{
                 width: '60px',
                 fontSize: '0.8rem',
-                color: '#9ca3af',
+                color: '#666666', fontFamily: 'monospace',
                 textAlign: 'right',
                 background: 'transparent',
                 border: 'none',
@@ -2601,7 +2958,7 @@ if (e.key === 'Shift') {
               }}
             />
           ) : (
-            <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+            <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>
               {`${value}${unit}`}
             </span>
           )}
@@ -2627,22 +2984,30 @@ if (e.key === 'Shift') {
             )}
             
             {showOptions && showGenerativeSettings && (
-              <div style={{ marginBottom: '12px' }}>
+              <div className="scrollable-settings" style={{
+                marginBottom: '12px',
+                padding: '8px',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.5)',
+                border: 'none',
+                borderRadius: '0'
+              }}>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '10px' }}>
                   <div style={{ flexGrow: 1}}>
-                    <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Spread Pattern:</label>
+                    <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', fontSize: '0.95rem' }}>Spread Pattern:</label>
                     <select
                       value={spreadPattern}
                       onChange={(e) => {
                           if (e.target.value === 'vein') walkers.current = []; // Reset walkers
                           setSpreadPattern(e.target.value as any);
                       }}
-                      style={{ 
-                        padding: '4px 8px', 
-                        borderRadius: '6px', 
-                        background: '#3a3a3c', 
-                        color: '#fff', 
-                        border: 'none',
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '0',
+                        background: '#1a1a1a',
+                        color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
+                        border: '1px solid #333333',
                         width: '100%'
                       }}
                     >
@@ -2664,13 +3029,14 @@ if (e.key === 'Shift') {
                    <button
                     onClick={resetGenerativeSettings}
                     style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      background: '#3a3a3c',
-                      color: '#fff',
+                      padding: '4px 8px',
+                      borderRadius: '0',
+                      background: 'transparent',
+                      color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
                       border: 'none',
                       cursor: 'pointer',
                       alignSelf: 'flex-end',
+                      fontSize: '0.9rem',
                       height: '29px'
                     }}
                     title="Reset generative settings to default"
@@ -2680,11 +3046,11 @@ if (e.key === 'Shift') {
                 </div>
                 
                 {spreadPattern === 'ripple' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Ripple Chance:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(rippleChance*100)}%</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Ripple Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(rippleChance*100)}%</span>
                           </div>
                           <input type="range" min={0.01} max={0.5} step={0.01} value={rippleChance} onChange={(e) => setRippleChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -2692,11 +3058,11 @@ if (e.key === 'Shift') {
                 )}
 
                 {spreadPattern === 'scramble' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Swaps per Step:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{scrambleSwaps}</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Swaps per Step:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{scrambleSwaps}</span>
                           </div>
                           <input type="range" min={1} max={100} value={scrambleSwaps} onChange={(e) => setScrambleSwaps(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -2704,11 +3070,11 @@ if (e.key === 'Shift') {
                 )}
                 
                 {spreadPattern === 'vortex' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Vortex Count:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{vortexCount}</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Vortex Count:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{vortexCount}</span>
                           </div>
                           <input type="range" min={1} max={50} value={vortexCount} onChange={(e) => setVortexCount(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -2716,18 +3082,18 @@ if (e.key === 'Shift') {
                 )}
 
                 {spreadPattern === 'strobe' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div style={{ marginBottom: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Expand Threshold:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{strobeExpandThreshold} Neighbors</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Expand Threshold:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{strobeExpandThreshold} Neighbors</span>
                           </div>
                           <input type="range" min={1} max={8} value={strobeExpandThreshold} onChange={(e) => setStrobeExpandThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Contract Threshold:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{strobeContractThreshold} Neighbors</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Contract Threshold:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{strobeContractThreshold} Neighbors</span>
                           </div>
                           <input type="range" min={1} max={8} value={strobeContractThreshold} onChange={(e) => setStrobeContractThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -2735,11 +3101,11 @@ if (e.key === 'Shift') {
                 )}
                 
                 {spreadPattern === 'jitter' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Jitter Chance:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(jitterChance*100)}%</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Jitter Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(jitterChance*100)}%</span>
                           </div>
                           <input type="range" min={0} max={1} step={0.05} value={jitterChance} onChange={(e) => setJitterChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -2747,13 +3113,13 @@ if (e.key === 'Shift') {
                 )}
                 
                 {spreadPattern === 'flow' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div style={{ marginBottom: '10px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
+                          <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
                           <select
                               value={flowDirection}
                               onChange={(e) => setFlowDirection(e.target.value as any)}
-                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
+                              style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                           >
                               <option value="down">Down</option>
                               <option value="up">Up</option>
@@ -2763,8 +3129,8 @@ if (e.key === 'Shift') {
                       </div>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Flow Chance:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(flowChance*100)}%</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Flow Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(flowChance*100)}%</span>
                           </div>
                           <input type="range" min={0} max={1} step={0.05} value={flowChance} onChange={(e) => setFlowChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -2772,18 +3138,18 @@ if (e.key === 'Shift') {
                 )}
 
                 {spreadPattern === 'vein' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                     <div style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Seek Strength:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(veinSeekStrength*100)}%</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Seek Strength:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(veinSeekStrength*100)}%</span>
                         </div>
                         <input type="range" min={0} max={1} step={0.05} value={veinSeekStrength} onChange={(e) => setVeinSeekStrength(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                     </div>
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Branching Chance:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(veinBranchChance*100)}%</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Branching Chance:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(veinBranchChance*100)}%</span>
                         </div>
                         <input type="range" min={0} max={0.5} step={0.01} value={veinBranchChance} onChange={(e) => setVeinBranchChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                     </div>
@@ -2791,11 +3157,11 @@ if (e.key === 'Shift') {
                 )}
 
                 {spreadPattern === 'crystallize' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Growth Threshold:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{crystallizeThreshold} Neighbors</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Growth Threshold:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{crystallizeThreshold} Neighbors</span>
                         </div>
                         <input type="range" min={1} max={8} value={crystallizeThreshold} onChange={(e) => setCrystallizeThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                     </div>
@@ -2803,18 +3169,18 @@ if (e.key === 'Shift') {
                 )}
                 
                 {spreadPattern === 'erosion' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                      <div style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Erosion Rate:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(erosionRate*100)}%</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Erosion Rate:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(erosionRate*100)}%</span>
                         </div>
                         <input type="range" min={0.01} max={1} step={0.01} value={erosionRate} onChange={(e) => setErosionRate(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                     </div>
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Core Protection:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{erosionSolidity} Neighbors</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Core Protection:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{erosionSolidity} Neighbors</span>
                         </div>
                         <input type="range" min={1} max={8} value={erosionSolidity} onChange={(e) => setErosionSolidity(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                     </div>
@@ -2822,13 +3188,13 @@ if (e.key === 'Shift') {
                 )}
 
                 {spreadPattern === 'random' && (
-                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                         <div style={{ marginBottom: '10px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Walk Mode:</label>
+                            <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Walk Mode:</label>
                             <select
                                 value={randomWalkMode}
                                 onChange={(e) => setRandomWalkMode(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
+                                style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                             >
                                 <option value="any">8 Directions (Any)</option>
                                 <option value="cardinal">4 Directions (Cardinal)</option>
@@ -2836,8 +3202,8 @@ if (e.key === 'Shift') {
                         </div>
                         <div style={{ marginBottom: '8px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Spread Count:</label>
-                            <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{randomWalkSpreadCount}</span>
+                            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Spread Count:</label>
+                            <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{randomWalkSpreadCount}</span>
                             </div>
                             <input
                             type="range" min={1} max={8} step={1} value={randomWalkSpreadCount}
@@ -2849,7 +3215,7 @@ if (e.key === 'Shift') {
                 )}
 
                 {spreadPattern === 'conway' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                     <RuleEditor label="Survive Counts" rules={conwayRules.survive} onChange={(newSurvive) => setConwayRules(r => ({ ...r, survive: newSurvive }))} />
 
                     <RuleEditor label="Birth Counts" rules={conwayRules.born} onChange={(newBorn) => setConwayRules(r => ({ ...r, born: newBorn }))} />
@@ -2857,7 +3223,7 @@ if (e.key === 'Shift') {
                 )}
                 
                 {spreadPattern === 'tendrils' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                      <RuleEditor label="Survive Counts" rules={tendrilsRules.survive} onChange={(newSurvive) => setTendrilsRules(r => ({ ...r, survive: newSurvive }))} />
 
                      <RuleEditor label="Birth Counts" rules={tendrilsRules.born} onChange={(newBorn) => setTendrilsRules(r => ({ ...r, born: newBorn }))} />
@@ -2865,11 +3231,11 @@ if (e.key === 'Shift') {
                 )}
                 
                 {spreadPattern === 'pulse' && (
-                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                         <div style={{ marginBottom: '8px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Pulse Speed:</label>
-                            <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{pulseSpeed}</span>
+                            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Pulse Speed:</label>
+                            <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{pulseSpeed}</span>
                             </div>
                             <input
                             type="range" min={1} max={60} value={pulseSpeed}
@@ -2878,11 +3244,11 @@ if (e.key === 'Shift') {
                             />
                         </div>
                         <div style={{ marginBottom: '10px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
+                            <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
                             <select
                                 value={pulseDirection}
                                 onChange={(e) => setPulseDirection(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
+                                style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                             >
                                 <option value="top-left">Top-Left</option>
                                 <option value="top-right">Top-Right</option>
@@ -2905,13 +3271,13 @@ if (e.key === 'Shift') {
                 )}
 
                 {spreadPattern === 'directional' && (
-                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div style={{ marginBottom: '10px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Bias Direction:</label>
+                          <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Bias Direction:</label>
                           <select
                               value={directionalBias}
                               onChange={(e) => setDirectionalBias(e.target.value as any)}
-                              style={{ padding: '4px 8px', borderRadius: '6px', background: '#3a3a3c', color: '#fff', border: 'none', width: '100%' }}
+                              style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
                           >
                                 <option value="up">Up</option>
                                 <option value="down">Down</option>
@@ -2925,8 +3291,8 @@ if (e.key === 'Shift') {
                       </div>
                       <div style={{ marginBottom: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Bias Strength:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(directionalBiasStrength * 100)}%</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Bias Strength:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(directionalBiasStrength * 100)}%</span>
                           </div>
                           <input
                           type="range" min={0} max={1} step={0.05} value={directionalBiasStrength}
@@ -2937,7 +3303,7 @@ if (e.key === 'Shift') {
                     </div>
                 )}
 
-                <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb', marginTop: '12px' }}>
+                <label style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '8px', display: 'block', fontSize: '0.95rem', marginTop: '12px' }}>
                     Allowed Random Colors
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '8px' }}>
@@ -3051,7 +3417,7 @@ if (e.key === 'Shift') {
                                     gap: '4px', 
                                     cursor: 'pointer',
                                     padding: '2px',
-                                    borderRadius: '6px',
+                                    borderRadius: '0',
                                     outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
                                     outlineOffset: '2px',
                                     transition: 'outline 0.2s',
@@ -3085,17 +3451,26 @@ if (e.key === 'Shift') {
             )}
 
             {showOptions && showVisualSettings && (
-              <>
+              <div className="scrollable-settings" style={{
+                maxHeight: '400px',
+                overflowY: 'auto',
+                background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.3)',
+                border: 'none',
+                borderRadius: '0',
+                padding: '8px',
+                marginBottom: '12px'
+              }}>
+                <>
                 <div style={{ marginBottom: '10px' }}>
                   
         <div style={{ marginBottom: '12px' }}> {/* BRUSH PATCH */}
-          <label style={{ fontSize: '0.9rem', fontWeight: 500, display: 'block', marginBottom: '6px' }}>Brush Type</label>
+          <label style={{ fontSize: '0.95rem', fontWeight: '400', display: 'block', marginBottom: '6px', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px' }}>Brush Type</label>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {(['square', 'circle', 'diagonal', 'spray'] as BrushType[]).map(type => (
               <button
                 key={type}
                 onClick={() => setBrushType(type)}
-                style={{ padding: '6px 12px', borderRadius: '6px', background: brushType === type ? '#8b5cf6' : '#3a3a3c', color: '#fff', border: 'none', cursor: 'pointer' }}
+                style={{ padding: '4px 8px', borderRadius: '0', background: 'transparent', color: brushType === type ? '#ffffff' : '#666666', border: 'none', fontFamily: 'monospace', letterSpacing: '0.3px', cursor: 'pointer', fontSize: '0.9rem', textDecoration: brushType === type ? 'underline' : 'none', textUnderlineOffset: brushType === type ? '4px' : '0' }}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
               </button>
@@ -3106,25 +3481,25 @@ if (e.key === 'Shift') {
         
         {brushType === 'spray' && (
           <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
-            <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Spray Density: {sprayDensity.toFixed(2)}</label>
+            <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Spray Density: {sprayDensity.toFixed(2)}</label>
             <input type="range" step={0.05} min={0.05} max={1} value={sprayDensity} onChange={e => setSprayDensity(Number(e.target.value))} />
           </div>
         )}
         {brushType === 'diagonal' && (
           <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
-            <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Diagonal Thickness: {diagonalThickness}</label>
+            <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Diagonal Thickness: {diagonalThickness}</label>
             <input type="range" min={1} max={100} value={diagonalThickness} onChange={e => setDiagonalThickness(Number(e.target.value))} />
           </div>
         )}
-<label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Blend Mode:</label>
+<label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Blend Mode:</label>
                   <select
                     value={blendMode}
                     onChange={(e) => setBlendMode(e.target.value)}
                     style={{ 
                       padding: '4px 8px', 
-                      borderRadius: '6px', 
-                      background: '#3a3a3c', 
-                      color: '#fff', 
+                      borderRadius: '0', 
+                      background: 'transparent', 
+                      color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px', 
                       border: 'none',
                       width: '100%'
                     }}
@@ -3135,7 +3510,7 @@ if (e.key === 'Shift') {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                  <label style={{ fontWeight: 600 }}>Background:</label>
+                  <label style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Background:</label>
                   <input 
                     type="color" 
                     value={backgroundColor} 
@@ -3146,7 +3521,7 @@ if (e.key === 'Shift') {
 
                 
 
-<div style={{ fontWeight: 600, marginBottom: '10px' }}>
+<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
   <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <input 
       type="checkbox" 
@@ -3158,11 +3533,21 @@ if (e.key === 'Shift') {
   </label>
 </div>
 
-
+<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
+  <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <input
+      type="checkbox"
+      checked={panelTransparent}
+      onChange={(e) => setPanelTransparent(e.target.checked)}
+      style={{ cursor: 'pointer' }}
+    />
+    <span style={{ minWidth: '90px' }}>Transparent Toolbox</span>
+  </label>
+</div>
 
             {/* Recording (Visual Settings) - clean */}
             
-<div style={{ fontWeight: 600, marginBottom: '10px' }}>
+<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
   <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <input
       type="checkbox"
@@ -3195,21 +3580,22 @@ if (e.key === 'Shift') {
         width: '100%',
         padding: '6px 8px',
         marginBottom: '8px',
-        borderRadius: '6px',
+        borderRadius: '0',
         border: '1px solid #555',
         background: '#2a2a2a',
-        color: '#fff',
+        color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
         fontSize: '0.9rem',
       }}
     />
-    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>
+    <div style={{ fontSize: '0.75rem', color: '#666666', fontFamily: 'monospace', marginTop: '4px' }}>
       Press <strong>R</strong> to start/stop recording
     </div>
   </div>
 )}
 
 
-              </>
+                </>
+              </div>
             )}
           </div>
         </div>
