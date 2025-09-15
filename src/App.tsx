@@ -125,7 +125,7 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
 
   return (
         <div style={{ marginBottom: '8px' }}>
-            <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>{label}:</label>
+            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', display: 'block', marginBottom: '4px' }}>{label}:</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                 {numbers.map(num => (
                     <label key={num} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: '#404040', padding: '4px 8px', borderRadius: '4px', userSelect: 'none' }}>
@@ -2429,7 +2429,7 @@ if (e.key === 't' || e.key === 'T') {
 
 
       {recordingToast && (
-        <div style={{ position: 'fixed', top: 12, right: 12, background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '8px 12px', borderRadius: '6px', fontSize: '0.9rem', zIndex: 2000 }}>
+        <div style={{ position: 'fixed', top: 12, right: 12, background: 'rgba(0,0,0,0.8)', color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px', padding: '8px 12px', borderRadius: '0', fontSize: '0.9rem', zIndex: 2000 }}>
           {recordingToast}
         </div>
       )}
@@ -2453,7 +2453,7 @@ if (e.key === 't' || e.key === 'T') {
         <div
           onMouseDown={handleHeaderMouseDown}
           style={{
-            fontWeight: 600,
+            fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px',
             marginBottom: '16px',
             cursor: 'move',
             padding: '8px 12px',
@@ -2472,7 +2472,7 @@ if (e.key === 't' || e.key === 'T') {
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#fff',
+              color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
               cursor: 'pointer',
               fontSize: '1.2rem',
               width: '24px',
@@ -2592,7 +2592,7 @@ if (e.key === 't' || e.key === 'T') {
                       height: '32px',
                       background: color,
                       border: selectedColor === index + 1 ? '2px solid #fff' : '1px solid #666',
-                      borderRadius: '6px',
+                      borderRadius: '0',
                       cursor: 'pointer',
                       outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
                       outlineOffset: '2px',
@@ -2607,7 +2607,7 @@ if (e.key === 't' || e.key === 'T') {
                       position: 'relative',
                       width: '32px',
                       height: '32px',
-                      borderRadius: '6px',
+                      borderRadius: '0',
                       border: selectedColor === palette.length ? '2px solid #fff' : '1px solid #666',
                       background: `linear-gradient(135deg, ${customColor} 25%, transparent 25%, transparent 50%, ${customColor} 50%, ${customColor} 75%, transparent 75%)`,
                       cursor: 'pointer',
@@ -2669,7 +2669,7 @@ if (e.key === 't' || e.key === 'T') {
                   </button>
                 </div>
               </div>
-              {isSavingColor && <div style={{fontSize: '0.8rem', color: '#9ca3af', marginTop: '6px'}}>Select a color slot to replace it.</div>}
+              {isSavingColor && <div style={{fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace', marginTop: '6px'}}>Select a color slot to replace it.</div>}
             </div>
 
             {showAutoControls && (
@@ -2795,9 +2795,9 @@ if (e.key === 't' || e.key === 'T') {
                     onClick={() => { onClick(); setIsSavingColor(false); }}
                     style={{
                       padding: '4px 8px',
-                      borderRadius: '6px',
-                      background: '#3a3a3c',
-                      color: '#fff',
+                      borderRadius: '0',
+                      background: 'transparent',
+                      color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
                       border: 'none',
                       cursor: 'pointer',
                       fontWeight: 'normal',
@@ -2908,7 +2908,7 @@ if (e.key === 't' || e.key === 'T') {
             marginBottom: '2px'
           }}
         >
-          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>
+          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
             {label}:
           </label>
 
@@ -2931,7 +2931,7 @@ if (e.key === 't' || e.key === 'T') {
               style={{
                 width: '60px',
                 fontSize: '0.8rem',
-                color: '#9ca3af',
+                color: '#666666', fontFamily: 'monospace',
                 textAlign: 'right',
                 background: 'transparent',
                 border: 'none',
@@ -2954,7 +2954,7 @@ if (e.key === 't' || e.key === 'T') {
               }}
             />
           ) : (
-            <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
+            <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>
               {`${value}${unit}`}
             </span>
           )}
@@ -3000,9 +3000,9 @@ if (e.key === 't' || e.key === 'T') {
                       }}
                       style={{ 
                         padding: '4px 8px', 
-                        borderRadius: '6px', 
-                        background: '#3a3a3c', 
-                        color: '#fff', 
+                        borderRadius: '0', 
+                        background: 'transparent', 
+                        color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px', 
                         border: 'none',
                         width: '100%'
                       }}
@@ -3026,9 +3026,9 @@ if (e.key === 't' || e.key === 'T') {
                     onClick={resetGenerativeSettings}
                     style={{
                       padding: '4px 8px',
-                      borderRadius: '6px',
-                      background: '#3a3a3c',
-                      color: '#fff',
+                      borderRadius: '0',
+                      background: 'transparent',
+                      color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
                       border: 'none',
                       cursor: 'pointer',
                       alignSelf: 'flex-end',
@@ -3042,11 +3042,11 @@ if (e.key === 't' || e.key === 'T') {
                 </div>
                 
                 {spreadPattern === 'ripple' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Ripple Chance:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(rippleChance*100)}%</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Ripple Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(rippleChance*100)}%</span>
                           </div>
                           <input type="range" min={0.01} max={0.5} step={0.01} value={rippleChance} onChange={(e) => setRippleChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -3054,11 +3054,11 @@ if (e.key === 't' || e.key === 'T') {
                 )}
 
                 {spreadPattern === 'scramble' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Swaps per Step:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{scrambleSwaps}</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Swaps per Step:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{scrambleSwaps}</span>
                           </div>
                           <input type="range" min={1} max={100} value={scrambleSwaps} onChange={(e) => setScrambleSwaps(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -3066,11 +3066,11 @@ if (e.key === 't' || e.key === 'T') {
                 )}
                 
                 {spreadPattern === 'vortex' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Vortex Count:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{vortexCount}</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Vortex Count:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{vortexCount}</span>
                           </div>
                           <input type="range" min={1} max={50} value={vortexCount} onChange={(e) => setVortexCount(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -3078,18 +3078,18 @@ if (e.key === 't' || e.key === 'T') {
                 )}
 
                 {spreadPattern === 'strobe' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div style={{ marginBottom: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Expand Threshold:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{strobeExpandThreshold} Neighbors</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Expand Threshold:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{strobeExpandThreshold} Neighbors</span>
                           </div>
                           <input type="range" min={1} max={8} value={strobeExpandThreshold} onChange={(e) => setStrobeExpandThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Contract Threshold:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{strobeContractThreshold} Neighbors</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Contract Threshold:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{strobeContractThreshold} Neighbors</span>
                           </div>
                           <input type="range" min={1} max={8} value={strobeContractThreshold} onChange={(e) => setStrobeContractThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -3097,11 +3097,11 @@ if (e.key === 't' || e.key === 'T') {
                 )}
                 
                 {spreadPattern === 'jitter' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Jitter Chance:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(jitterChance*100)}%</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Jitter Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(jitterChance*100)}%</span>
                           </div>
                           <input type="range" min={0} max={1} step={0.05} value={jitterChance} onChange={(e) => setJitterChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -3109,9 +3109,9 @@ if (e.key === 't' || e.key === 'T') {
                 )}
                 
                 {spreadPattern === 'flow' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div style={{ marginBottom: '10px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
                           <select
                               value={flowDirection}
                               onChange={(e) => setFlowDirection(e.target.value as any)}
@@ -3125,8 +3125,8 @@ if (e.key === 't' || e.key === 'T') {
                       </div>
                       <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Flow Chance:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(flowChance*100)}%</span>
+                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Flow Chance:</label>
+                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(flowChance*100)}%</span>
                           </div>
                           <input type="range" min={0} max={1} step={0.05} value={flowChance} onChange={(e) => setFlowChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                       </div>
@@ -3134,18 +3134,18 @@ if (e.key === 't' || e.key === 'T') {
                 )}
 
                 {spreadPattern === 'vein' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                     <div style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Seek Strength:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(veinSeekStrength*100)}%</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Seek Strength:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(veinSeekStrength*100)}%</span>
                         </div>
                         <input type="range" min={0} max={1} step={0.05} value={veinSeekStrength} onChange={(e) => setVeinSeekStrength(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                     </div>
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Branching Chance:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(veinBranchChance*100)}%</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Branching Chance:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(veinBranchChance*100)}%</span>
                         </div>
                         <input type="range" min={0} max={0.5} step={0.01} value={veinBranchChance} onChange={(e) => setVeinBranchChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                     </div>
@@ -3153,11 +3153,11 @@ if (e.key === 't' || e.key === 'T') {
                 )}
 
                 {spreadPattern === 'crystallize' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Growth Threshold:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{crystallizeThreshold} Neighbors</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Growth Threshold:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{crystallizeThreshold} Neighbors</span>
                         </div>
                         <input type="range" min={1} max={8} value={crystallizeThreshold} onChange={(e) => setCrystallizeThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                     </div>
@@ -3165,18 +3165,18 @@ if (e.key === 't' || e.key === 'T') {
                 )}
                 
                 {spreadPattern === 'erosion' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                      <div style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Erosion Rate:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(erosionRate*100)}%</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Erosion Rate:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(erosionRate*100)}%</span>
                         </div>
                         <input type="range" min={0.01} max={1} step={0.01} value={erosionRate} onChange={(e) => setErosionRate(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                     </div>
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Core Protection:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{erosionSolidity} Neighbors</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Core Protection:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{erosionSolidity} Neighbors</span>
                         </div>
                         <input type="range" min={1} max={8} value={erosionSolidity} onChange={(e) => setErosionSolidity(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
                     </div>
@@ -3184,9 +3184,9 @@ if (e.key === 't' || e.key === 'T') {
                 )}
 
                 {spreadPattern === 'random' && (
-                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                         <div style={{ marginBottom: '10px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Walk Mode:</label>
+                            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', display: 'block', marginBottom: '4px' }}>Walk Mode:</label>
                             <select
                                 value={randomWalkMode}
                                 onChange={(e) => setRandomWalkMode(e.target.value as any)}
@@ -3198,8 +3198,8 @@ if (e.key === 't' || e.key === 'T') {
                         </div>
                         <div style={{ marginBottom: '8px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Spread Count:</label>
-                            <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{randomWalkSpreadCount}</span>
+                            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Spread Count:</label>
+                            <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{randomWalkSpreadCount}</span>
                             </div>
                             <input
                             type="range" min={1} max={8} step={1} value={randomWalkSpreadCount}
@@ -3211,7 +3211,7 @@ if (e.key === 't' || e.key === 'T') {
                 )}
 
                 {spreadPattern === 'conway' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                     <RuleEditor label="Survive Counts" rules={conwayRules.survive} onChange={(newSurvive) => setConwayRules(r => ({ ...r, survive: newSurvive }))} />
 
                     <RuleEditor label="Birth Counts" rules={conwayRules.born} onChange={(newBorn) => setConwayRules(r => ({ ...r, born: newBorn }))} />
@@ -3219,7 +3219,7 @@ if (e.key === 't' || e.key === 'T') {
                 )}
                 
                 {spreadPattern === 'tendrils' && (
-                  <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                      <RuleEditor label="Survive Counts" rules={tendrilsRules.survive} onChange={(newSurvive) => setTendrilsRules(r => ({ ...r, survive: newSurvive }))} />
 
                      <RuleEditor label="Birth Counts" rules={tendrilsRules.born} onChange={(newBorn) => setTendrilsRules(r => ({ ...r, born: newBorn }))} />
@@ -3227,11 +3227,11 @@ if (e.key === 't' || e.key === 'T') {
                 )}
                 
                 {spreadPattern === 'pulse' && (
-                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                         <div style={{ marginBottom: '8px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Pulse Speed:</label>
-                            <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{pulseSpeed}</span>
+                            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Pulse Speed:</label>
+                            <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{pulseSpeed}</span>
                             </div>
                             <input
                             type="range" min={1} max={60} value={pulseSpeed}
@@ -3240,7 +3240,7 @@ if (e.key === 't' || e.key === 'T') {
                             />
                         </div>
                         <div style={{ marginBottom: '10px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
+                            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
                             <select
                                 value={pulseDirection}
                                 onChange={(e) => setPulseDirection(e.target.value as any)}
@@ -3267,9 +3267,9 @@ if (e.key === 't' || e.key === 'T') {
                 )}
 
                 {spreadPattern === 'directional' && (
-                    <div style={{background: '#2c2c2e', padding: '8px', borderRadius: '6px'}}>
+                    <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div style={{ marginBottom: '10px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Bias Direction:</label>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', display: 'block', marginBottom: '4px' }}>Bias Direction:</label>
                           <select
                               value={directionalBias}
                               onChange={(e) => setDirectionalBias(e.target.value as any)}
@@ -3287,8 +3287,8 @@ if (e.key === 't' || e.key === 'T') {
                       </div>
                       <div style={{ marginBottom: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 500 }}>Bias Strength:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{Math.round(directionalBiasStrength * 100)}%</span>
+                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Bias Strength:</label>
+                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(directionalBiasStrength * 100)}%</span>
                           </div>
                           <input
                           type="range" min={0} max={1} step={0.05} value={directionalBiasStrength}
@@ -3299,7 +3299,7 @@ if (e.key === 't' || e.key === 'T') {
                     </div>
                 )}
 
-                <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb', marginTop: '12px' }}>
+                <label style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb', marginTop: '12px' }}>
                     Allowed Random Colors
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '8px' }}>
@@ -3413,7 +3413,7 @@ if (e.key === 't' || e.key === 'T') {
                                     gap: '4px', 
                                     cursor: 'pointer',
                                     padding: '2px',
-                                    borderRadius: '6px',
+                                    borderRadius: '0',
                                     outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
                                     outlineOffset: '2px',
                                     transition: 'outline 0.2s',
@@ -3493,9 +3493,9 @@ if (e.key === 't' || e.key === 'T') {
                     onChange={(e) => setBlendMode(e.target.value)}
                     style={{ 
                       padding: '4px 8px', 
-                      borderRadius: '6px', 
-                      background: '#3a3a3c', 
-                      color: '#fff', 
+                      borderRadius: '0', 
+                      background: 'transparent', 
+                      color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px', 
                       border: 'none',
                       width: '100%'
                     }}
@@ -3506,7 +3506,7 @@ if (e.key === 't' || e.key === 'T') {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                  <label style={{ fontWeight: 600 }}>Background:</label>
+                  <label style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Background:</label>
                   <input 
                     type="color" 
                     value={backgroundColor} 
@@ -3517,7 +3517,7 @@ if (e.key === 't' || e.key === 'T') {
 
                 
 
-<div style={{ fontWeight: 600, marginBottom: '10px' }}>
+<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', marginBottom: '10px' }}>
   <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <input 
       type="checkbox" 
@@ -3529,7 +3529,7 @@ if (e.key === 't' || e.key === 'T') {
   </label>
 </div>
 
-<div style={{ fontWeight: 600, marginBottom: '10px' }}>
+<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', marginBottom: '10px' }}>
   <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <input
       type="checkbox"
@@ -3543,7 +3543,7 @@ if (e.key === 't' || e.key === 'T') {
 
             {/* Recording (Visual Settings) - clean */}
             
-<div style={{ fontWeight: 600, marginBottom: '10px' }}>
+<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', marginBottom: '10px' }}>
   <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <input
       type="checkbox"
@@ -3576,14 +3576,14 @@ if (e.key === 't' || e.key === 'T') {
         width: '100%',
         padding: '6px 8px',
         marginBottom: '8px',
-        borderRadius: '6px',
+        borderRadius: '0',
         border: '1px solid #555',
         background: '#2a2a2a',
-        color: '#fff',
+        color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
         fontSize: '0.9rem',
       }}
     />
-    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>
+    <div style={{ fontSize: '0.75rem', color: '#666666', fontFamily: 'monospace', marginTop: '4px' }}>
       Press <strong>R</strong> to start/stop recording
     </div>
   </div>
