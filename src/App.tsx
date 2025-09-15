@@ -365,7 +365,7 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
     0: { // Seamless Black Interface
       name: 'Void',
       panel: {
-        background: '#000000',
+        background: '#0a0a0a',
         border: 'none',
         borderRadius: '0',
         boxShadow: 'none',
@@ -403,7 +403,7 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
       }),
       clear: {
         background: 'transparent',
-        color: '#ff4444',
+        color: '#ff6b6b',
         border: 'none',
         borderRadius: '0',
         fontFamily: 'monospace',
