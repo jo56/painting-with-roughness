@@ -2550,7 +2550,7 @@ if (e.key === 'Shift') {
                       width: '32px',
                       height: '32px',
                       background: color,
-                      border: selectedColor === index + 1 ? '3px solid #fff' : '1px solid #666',
+                      border: selectedColor === index + 1 ? '2px solid #fff' : '1px solid #666',
                       borderRadius: '6px',
                       cursor: 'pointer',
                       outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
@@ -2567,7 +2567,7 @@ if (e.key === 'Shift') {
                       width: '32px',
                       height: '32px',
                       borderRadius: '6px',
-                      border: selectedColor === palette.length ? '3px solid #fff' : '1px solid #666',
+                      border: selectedColor === palette.length ? '2px solid #fff' : '1px solid #666',
                       background: customColor,
                       cursor: 'pointer',
                       overflow: 'hidden'
