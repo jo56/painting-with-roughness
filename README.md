@@ -11,10 +11,12 @@ The canvas is responsive; use the controls to start/stop, step, randomize, and c
 
 ### Controls
 
-You can get rid of the settings window by dragging it downwards offscreen.  
+**Shift** toggles menu visibility. Pressing **Shift** once will cause the toolbox to disappear. Pressing **Shift** again will cause it to reappear where your mouse is.
 
-Pressing **Shift** will cause it to reappear where your mouse is.
+ **T** toggles menu transparency
 
-**Space**,**J**,**K**,**L** toggle **Spread**, **Dots**,**Shapes**,**All** respectivley.
+Use **W**,**A**,**S**,**D** or **Up**,**Left**,**Down**,**Right** to toggle directoins for certain spread patterns.
 
-Pres **R** to toggle recording when enabled
+Press **Space**,**J**,**K**,**L** to toggle **Spread**, **Dots**,**Shapes**,**All** respectively.
+
+Press **R** to toggle recording when enabled
