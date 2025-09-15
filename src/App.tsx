@@ -250,7 +250,7 @@ useEffect(() => { autoShapesEnabledRef.current = autoShapesEnabled; }, [autoShap
  // BRUSH PATCH
  // BRUSH PATCH
   const [panelMinimized, setPanelMinimized] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState(0); // 0: sketch, 1: retro, 2: physical
+  const [currentTheme] = useState(0); // Locked to void theme
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const [showVisualSettings, setShowVisualSettings] = useState(false);
@@ -641,9 +641,6 @@ const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
     }
   };
 
-  const toggleTheme = () => {
-    setCurrentTheme((prev) => (prev + 1) % 3);
-  };
 
   const currentThemeConfig = themes[currentTheme as keyof typeof themes];
 
@@ -2439,23 +2436,6 @@ if (e.key === 'Shift') {
             ...currentThemeConfig.header
           }}
         >
-          <button
-            onClick={toggleTheme}
-            style={{
-              background: 'rgba(255,255,255,0.2)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              color: 'inherit',
-              cursor: 'pointer',
-              fontSize: '12px',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              marginRight: '8px',
-              fontFamily: 'inherit'
-            }}
-            title={`Switch to ${themes[(currentTheme + 1) % 3].name} theme`}
-          >
-            {currentThemeConfig.name}
-          </button>
           <span>painting-with-roughness</span>
           <button
             onClick={() => setPanelMinimized(prev => !prev)}
@@ -2560,7 +2540,7 @@ if (e.key === 'Shift') {
 
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', padding: '4px' }}>
                 {palette.slice(1).map((color, index) => (
                   <button
                       key={index + 1}
@@ -2913,7 +2893,7 @@ if (e.key === 'Shift') {
             )}
             
             {showOptions && showGenerativeSettings && (
-              <div style={{ marginBottom: '12px' }}>
+              <div style={{ marginBottom: '12px', padding: '4px' }}>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '10px' }}>
                   <div style={{ flexGrow: 1}}>
                     <label style={{ fontWeight: 600, marginBottom: '6px', display: 'block' }}>Spread Pattern:</label>
