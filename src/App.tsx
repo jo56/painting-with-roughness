@@ -125,7 +125,7 @@ function RuleEditor({ label, rules, onChange }: { label: string, rules: number[]
 
   return (
         <div style={{ marginBottom: '8px' }}>
-            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', display: 'block', marginBottom: '4px' }}>{label}:</label>
+            <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>{label}:</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                 {numbers.map(num => (
                     <label key={num} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: '#404040', padding: '4px 8px', borderRadius: '4px', userSelect: 'none' }}>
@@ -2831,10 +2831,11 @@ if (e.key === 't' || e.key === 'T') {
                       fontWeight: '400',
                       marginBottom: '8px',
                       display: 'block',
-                      fontSize: '0.9rem',
+                      fontSize: '1rem',
                       color: '#ffffff',
                       fontFamily: 'monospace',
-                      letterSpacing: '0.3px'
+                      letterSpacing: '0.5px',
+                      textTransform: 'uppercase'
                     }}>
                       Speed Controls
                     </label>
@@ -2886,10 +2887,11 @@ if (e.key === 't' || e.key === 'T') {
       fontWeight: '400',
       marginBottom: '8px',
       display: 'block',
-      fontSize: '0.9rem',
+      fontSize: '1rem',
       color: '#ffffff',
       fontFamily: 'monospace',
-      letterSpacing: '0.3px'
+      letterSpacing: '0.5px',
+      textTransform: 'uppercase'
     }}>
       Canvas Settings
     </label>
@@ -2991,7 +2993,7 @@ if (e.key === 't' || e.key === 'T') {
               }}>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '10px' }}>
                   <div style={{ flexGrow: 1}}>
-                    <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Spread Pattern:</label>
+                    <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', fontSize: '0.95rem' }}>Spread Pattern:</label>
                     <select
                       value={spreadPattern}
                       onChange={(e) => {
@@ -3111,7 +3113,7 @@ if (e.key === 't' || e.key === 'T') {
                 {spreadPattern === 'flow' && (
                   <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div style={{ marginBottom: '10px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
+                          <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
                           <select
                               value={flowDirection}
                               onChange={(e) => setFlowDirection(e.target.value as any)}
@@ -3186,7 +3188,7 @@ if (e.key === 't' || e.key === 'T') {
                 {spreadPattern === 'random' && (
                     <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                         <div style={{ marginBottom: '10px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', display: 'block', marginBottom: '4px' }}>Walk Mode:</label>
+                            <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Walk Mode:</label>
                             <select
                                 value={randomWalkMode}
                                 onChange={(e) => setRandomWalkMode(e.target.value as any)}
@@ -3240,7 +3242,7 @@ if (e.key === 't' || e.key === 'T') {
                             />
                         </div>
                         <div style={{ marginBottom: '10px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
+                            <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
                             <select
                                 value={pulseDirection}
                                 onChange={(e) => setPulseDirection(e.target.value as any)}
@@ -3269,7 +3271,7 @@ if (e.key === 't' || e.key === 'T') {
                 {spreadPattern === 'directional' && (
                     <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
                       <div style={{ marginBottom: '10px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', display: 'block', marginBottom: '4px' }}>Bias Direction:</label>
+                          <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Bias Direction:</label>
                           <select
                               value={directionalBias}
                               onChange={(e) => setDirectionalBias(e.target.value as any)}
@@ -3299,7 +3301,7 @@ if (e.key === 't' || e.key === 'T') {
                     </div>
                 )}
 
-                <label style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', marginBottom: '8px', display: 'block', fontSize: '0.9rem', color: '#e5e7eb', marginTop: '12px' }}>
+                <label style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '8px', display: 'block', fontSize: '0.95rem', marginTop: '12px' }}>
                     Allowed Random Colors
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '8px' }}>
@@ -3460,7 +3462,7 @@ if (e.key === 't' || e.key === 'T') {
                 <div style={{ marginBottom: '10px' }}>
                   
         <div style={{ marginBottom: '12px' }}> {/* BRUSH PATCH */}
-          <label style={{ fontSize: '0.9rem', fontWeight: '400', display: 'block', marginBottom: '6px', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Brush Type</label>
+          <label style={{ fontSize: '0.95rem', fontWeight: '400', display: 'block', marginBottom: '6px', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px' }}>Brush Type</label>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {(['square', 'circle', 'diagonal', 'spray'] as BrushType[]).map(type => (
               <button
@@ -3517,7 +3519,7 @@ if (e.key === 't' || e.key === 'T') {
 
                 
 
-<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', marginBottom: '10px' }}>
+<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
   <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <input 
       type="checkbox" 
@@ -3529,7 +3531,7 @@ if (e.key === 't' || e.key === 'T') {
   </label>
 </div>
 
-<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', marginBottom: '10px' }}>
+<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
   <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <input
       type="checkbox"
@@ -3543,7 +3545,7 @@ if (e.key === 't' || e.key === 'T') {
 
             {/* Recording (Visual Settings) - clean */}
             
-<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', marginBottom: '10px' }}>
+<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
   <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <input
       type="checkbox"
