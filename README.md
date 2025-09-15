@@ -15,12 +15,14 @@ The canvas is responsive; use the controls to start/stop, step, randomize, and c
 
 **T** toggles menu transparency.
 
-Use **W**,**A**,**S**,**D** or **Up**,**Left**,**Down**,**Right** to toggle directoins for certain spread patterns.
+Use **W**,**A**,**S**,**D** or **Up**, **Left**, **Down**, **Right** to toggle directions for certain spread patterns.
 
-Use **B**,**F**,**E** to toggle **Brush**, **Fill**,**Erase** respectively.
+Use **B**,**F**,**E** to toggle **Brush**, **Fill**, **Erase** respectively.
 
 Use **1**,**2**,**3**,**4** to toggle **Brush (Square)**, **Brush (Circle)**, **Brush (Diagonal)**, **Brush (Spray)** respectively.
 
-Press **Space**,**J**,**K**,**L** to toggle **Spread**, **Dots**,**Shapes**,**All** respectively.
+Press **Space**, **J**, **K**, **L** to toggle auto **Spread**, **Dots**, **Shapes**, **All** respectively.
 
-Press **R** to toggle recording when enabled.
+Press **\[** and **\]** to adjust **Brush Size**. Press **O** and **P** to adjust **Diagonal Thickness** and **Spray Density** when corresponding brush types are enabled.
+
+Press **R** to toggle **Recording** when enabled.
