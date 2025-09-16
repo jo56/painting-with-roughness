@@ -9,7 +9,7 @@ This project uses **Vite + React + TypeScript**. The primary app is `src/App.tsx
 
 The canvas is responsive; use the controls to start/stop, step, randomize, and clear the simulation.
 
-Warning:
+### Warning:
 This program may cause rapidly flashing light effects depending on how the settings are configured.
 
 These effects become rapid at high speeds, so it might be worth testing on slower speeds first if you are concerned.
