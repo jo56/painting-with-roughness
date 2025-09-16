@@ -250,8 +250,8 @@ useEffect(() => { autoShapesEnabledRef.current = autoShapesEnabled; }, [autoShap
   const [blendMode, setBlendMode] = useState(defaults.blendMode);
   const [tool, setTool] = useState('brush');
   const [brushType, setBrushType] = useState<BrushType>('square');
-    const [sprayDensity, setSprayDensity] = useState(0.3); // BRUSH PATCH
-  const [diagonalThickness, setDiagonalThickness] = useState(1);
+    const [sprayDensity, setSprayDensity] = useState(0.2); // BRUSH PATCH
+  const [diagonalThickness, setDiagonalThickness] = useState(5);
   const brushTypeRef = useRef<BrushType>('square'); // BRUSH PATCH
     const sprayDensityRef = useRef(sprayDensity); // BRUSH PATCH
   const diagonalThicknessRef = useRef(diagonalThickness); // BRUSH PATCH
@@ -1871,19 +1871,19 @@ const [panelPos, setPanelPos] = useState(() => {
         }
 
         // Brush Size
-        if (e.code === 'BracketLeft') {
+        if (e.code === 'Digit9') {
             e.preventDefault();
             setBrushSize(currentSize => Math.max(1, currentSize - 1));
             return;
         }
-        if (e.code === 'BracketRight') {
+        if (e.code === 'Digit0') {
             e.preventDefault();
             setBrushSize(currentSize => Math.min(100, currentSize + 1));
             return;
         }
 
         // Brush-Specific Controls
-        if (e.code === 'KeyO') {
+        if (e.code === 'BracketLeft') {
             e.preventDefault();
             if (brushTypeRef.current === 'diagonal') {
                 setDiagonalThickness(d => Math.max(1, d - 1));
@@ -1892,7 +1892,7 @@ const [panelPos, setPanelPos] = useState(() => {
             }
             return;
         }
-        if (e.code === 'KeyP') {
+        if (e.code === 'BracketRight') {
             e.preventDefault();
             if (brushTypeRef.current === 'diagonal') {
                 setDiagonalThickness(d => Math.min(100, d + 1));
@@ -1908,10 +1908,20 @@ const [panelPos, setPanelPos] = useState(() => {
         if (e.code === "KeyB") { e.preventDefault(); setTool('brush'); return; }
         
         // Brush type switching (also sets tool to brush)
-        if (e.code === "Digit1") { e.preventDefault(); setBrushType('square'); setTool('brush'); return; }
-        if (e.code === "Digit2") { e.preventDefault(); setBrushType('circle'); setTool('brush'); return; }
-        if (e.code === "Digit3") { e.preventDefault(); setBrushType('diagonal'); setTool('brush'); return; }
-        if (e.code === "Digit4") { e.preventDefault(); setBrushType('spray'); setTool('brush'); return; }
+        if (e.code === "KeyU") { e.preventDefault(); setBrushType('square'); setTool('brush'); return; }
+        if (e.code === "KeyI") { e.preventDefault(); setBrushType('circle'); setTool('brush'); return; }
+        if (e.code === "KeyO") { e.preventDefault(); setBrushType('diagonal'); setTool('brush'); return; }
+        if (e.code === "KeyP") { e.preventDefault(); setBrushType('spray'); setTool('brush'); return; }
+
+        // Palette color selection
+        if (e.code === "Digit1") { e.preventDefault(); setSelectedColor(1); return; }
+        if (e.code === "Digit2") { e.preventDefault(); setSelectedColor(2); return; }
+        if (e.code === "Digit3") { e.preventDefault(); setSelectedColor(3); return; }
+        if (e.code === "Digit4") { e.preventDefault(); setSelectedColor(4); return; }
+        if (e.code === "Digit5") { e.preventDefault(); setSelectedColor(5); return; }
+        if (e.code === "Digit6") { e.preventDefault(); setSelectedColor(6); return; }
+        if (e.code === "Digit7") { e.preventDefault(); setSelectedColor(7); return; }
+        if (e.code === "Digit8") { e.preventDefault(); setSelectedColor(8); return; }
         
         // Auto-mode toggles
         if (e.code === "Space") { e.preventDefault(); toggleAutoSpread(); return; }
