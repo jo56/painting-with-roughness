@@ -250,8 +250,8 @@ useEffect(() => { autoShapesEnabledRef.current = autoShapesEnabled; }, [autoShap
   const [blendMode, setBlendMode] = useState(defaults.blendMode);
   const [tool, setTool] = useState('brush');
   const [brushType, setBrushType] = useState<BrushType>('square');
-    const [sprayDensity, setSprayDensity] = useState(0.3); // BRUSH PATCH
-  const [diagonalThickness, setDiagonalThickness] = useState(1);
+    const [sprayDensity, setSprayDensity] = useState(0.2); // BRUSH PATCH
+  const [diagonalThickness, setDiagonalThickness] = useState(5);
   const brushTypeRef = useRef<BrushType>('square'); // BRUSH PATCH
     const sprayDensityRef = useRef(sprayDensity); // BRUSH PATCH
   const diagonalThicknessRef = useRef(diagonalThickness); // BRUSH PATCH
