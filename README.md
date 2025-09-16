@@ -18,7 +18,7 @@ The effect can be easier to induce depending on the current count settings, such
 
 ### Controls
 
-Press **1-8** to swap to one of the 8 colors in the current palette
+Press **1-8** to swap to one of the 8 colors in the current palette.
 
 **Shift** toggles menu visibility. Pressing **Shift** once will cause the toolbox to disappear. Pressing **Shift** again will cause it to reappear where your mouse is.
 
