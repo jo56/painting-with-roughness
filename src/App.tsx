@@ -263,7 +263,7 @@ useEffect(() => { autoShapesEnabledRef.current = autoShapesEnabled; }, [autoShap
  // BRUSH PATCH
   const [panelMinimized, setPanelMinimized] = useState(false);
   const [panelVisible, setPanelVisible] = useState(true);
-  const [panelTransparent, setPanelTransparent] = useState(true);
+  const [panelTransparent, setPanelTransparent] = useState(false);
   const panelDimensions = useRef({ width: 320, height: 400 });
   const [currentTheme] = useState(0); // Locked to void theme
   const [showSpeedSettings, setShowSpeedSettings] = useState(false);
