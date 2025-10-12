@@ -1,6 +1,6 @@
 # painting-with-roughness
 
-Paint-like art application that incorporates generative cellular automata spread patterns into its painting toolbox
+Paint-like art application that incorporates generative cellular automata spread patterns in its painting toolbox
 
 ### Quick Start
 
