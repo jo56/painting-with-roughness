@@ -1,6 +1,18 @@
 # painting-with-roughness
 
-Paint-like art application that incorporates generative cellular automata spread patterns into its painting toolbox
+  <div align="center">
+      <a href="https://jo56.github.io/painting-with-roughness" target="_blank">
+          <img src="assets/painting-with-roughness-title.png" alt="painting-with-roughness title">
+      </a>
+      <br>
+      <a href="https://jo56.github.io/painting-with-roughness" target="_blank">
+          <b>https://jo56.github.io/painting-with-roughness</b>
+      </a>
+    <br>
+    Paint-like art application that incorporates generative cellular automata spread patterns into its painting toolbox
+  </div>
+
+  <br>
 
 ### Quick Start
 
