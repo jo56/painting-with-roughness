@@ -12,8 +12,6 @@
     Paint-like art application that incorporates generative cellular automata spread patterns into its painting toolbox
   </div>
 
-  <br>
-
 ### Quick Start
 
 1. `npm install`  
