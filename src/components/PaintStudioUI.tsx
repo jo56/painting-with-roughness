@@ -1,5 +1,4 @@
 import React from 'react';
-import type { BrushType, SpreadPattern } from '../types';
 import { ToolBar } from './ToolBar';
 import { PaletteSection } from './PaletteSection';
 import { AutoControls } from './AutoControls';
@@ -10,13 +9,23 @@ import { CanvasSettings } from './CanvasSettings';
 import { GenerativeSettings } from './GenerativeSettings';
 import { VisualSettings } from './VisualSettings';
 import { MainPanel } from './MainPanel';
+import { useCanvasStore } from '../stores/canvasStore';
+import { usePaintStore } from '../stores/paintStore';
+import { useAutomationStore } from '../stores/automationStore';
+import { useGenerativeStore } from '../stores/generativeStore';
+import { useUIStore } from '../stores/uiStore';
+import { THEMES } from '../utils/themes';
 
+/**
+ * Refactored PaintStudioUI - Now reads from stores directly
+ * Dramatically reduced props from 100+ to just refs and handlers
+ */
 export interface PaintStudioUIProps {
-  // Canvas refs
-  canvasRef: React.RefObject<HTMLCanvasElement>;
-  canvasContainerRef: React.RefObject<HTMLDivElement>;
-  panelRef: React.RefObject<HTMLDivElement>;
-  clearButtonRef: React.RefObject<HTMLButtonElement>;
+  // Canvas refs (still needed for DOM access)
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  canvasContainerRef: React.RefObject<HTMLDivElement | null>;
+  panelRef: React.RefObject<HTMLDivElement | null>;
+  clearButtonRef: React.RefObject<HTMLButtonElement | null>;
 
   // Mouse handlers
   handleMouseDown: (e: React.MouseEvent) => void;
@@ -24,214 +33,48 @@ export interface PaintStudioUIProps {
   handleMouseMove: (e: React.MouseEvent) => void;
   handleHeaderMouseDown: (e: React.MouseEvent) => void;
 
-  // UI state
-  isMobile: boolean;
-  tool: string;
-  backgroundColor: string;
-  panelVisible: boolean;
-  panelPos: { x: number; y: number };
-  panelMinimized: boolean;
+  // Recording toast (from useRecording hook)
   recordingToast: string | null;
-  showAutoControls: boolean;
-  showOptions: boolean;
-  showSpeedSettings: boolean;
-  showCanvasSettings: boolean;
-  showVisualSettings: boolean;
-  showGenerativeSettings: boolean;
-  showStepControls: boolean;
-  isSavingColor: boolean;
-  clearButtonColor: string;
-  panelTransparent: boolean;
-
-  // Settings state
-  selectedColor: number;
-  palette: string[];
-  customColor: string;
-  brushSize: number;
-  brushType: BrushType;
-  blendMode: string;
-  rows: number;
-  cols: number;
-  cellSize: number;
-  showGrid: boolean;
-  spreadPattern: SpreadPattern;
-  autoSpreading: boolean;
-  autoDots: boolean;
-  autoShapes: boolean;
-  autoSpreadSpeed: number;
-  autoDotsSpeed: number;
-  autoShapesSpeed: number;
-
-  // Pattern-specific settings
-  rippleChance: number;
-  scrambleSwaps: number;
-  vortexCount: number;
-  strobeExpandThreshold: number;
-  strobeContractThreshold: number;
-  jitterChance: number;
-  flowDirection: string;
-  flowChance: number;
-  veinSeekStrength: number;
-  veinBranchChance: number;
-  crystallizeThreshold: number;
-  erosionRate: number;
-  erosionSolidity: number;
-  pulseDirection: string;
-  pulseOvertakes: boolean;
-  pulseSpeed: number;
-  spreadProbability: number;
-  randomWalkMode: string;
-  randomWalkSpreadCount: number;
-  directionalBias: string;
-  directionalBiasStrength: number;
-  diagonalThickness: number;
-  sprayDensity: number;
-  conwayRules: { born: number[]; survive: number[] };
-  tendrilsRules: { born: number[]; survive: number[] };
-  recordEnabled: boolean;
-  recordingFilename: string;
-  isRecording: boolean;
-  generativeColorIndices: number[];
-  autoSpreadEnabled: boolean;
-  autoDotsEnabled: boolean;
-  autoShapesEnabled: boolean;
-
-  // Setters
-  setTool: (tool: string) => void;
-  setIsSavingColor: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setShowAutoControls: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setPanelMinimized: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setShowOptions: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setShowSpeedSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setShowCanvasSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setShowVisualSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setShowGenerativeSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setShowStepControls: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setSelectedColor: (value: number) => void;
-  setCustomColor: (value: string) => void;
-  setBrushSize: (value: number) => void;
-  setBrushType: (value: BrushType) => void;
-  setBlendMode: (value: string) => void;
-  setCellSize: (value: number) => void;
-  setShowGrid: (value: boolean) => void;
-  setBackgroundColor: (value: string) => void;
-  setPanelTransparent: (value: boolean) => void;
-  setSpreadPattern: (value: SpreadPattern) => void;
-  setAutoSpreadSpeed: (value: number) => void;
-  setAutoDotsSpeed: (value: number) => void;
-  setAutoShapesSpeed: (value: number) => void;
-  setRippleChance: (value: number) => void;
-  setScrambleSwaps: (value: number) => void;
-  setVortexCount: (value: number) => void;
-  setStrobeExpandThreshold: (value: number) => void;
-  setStrobeContractThreshold: (value: number) => void;
-  setJitterChance: (value: number) => void;
-  setFlowDirection: (value: string) => void;
-  setFlowChance: (value: number) => void;
-  setVeinSeekStrength: (value: number) => void;
-  setVeinBranchChance: (value: number) => void;
-  setCrystallizeThreshold: (value: number) => void;
-  setErosionRate: (value: number) => void;
-  setErosionSolidity: (value: number) => void;
-  setPulseDirection: (value: string) => void;
-  setPulseOvertakes: (value: boolean) => void;
-  setPulseSpeed: (value: number) => void;
-  setSpreadProbability: (value: number) => void;
-  setRandomWalkMode: (value: string) => void;
-  setRandomWalkSpreadCount: (value: number) => void;
-  setDirectionalBias: (value: string) => void;
-  setDirectionalBiasStrength: (value: number) => void;
-  setDiagonalThickness: (value: number) => void;
-  setSprayDensity: (value: number) => void;
-  setConwayRules: (value: { born: number[]; survive: number[] } | ((prev: { born: number[]; survive: number[] }) => { born: number[]; survive: number[] })) => void;
-  setTendrilsRules: (value: { born: number[]; survive: number[] } | ((prev: { born: number[]; survive: number[] }) => { born: number[]; survive: number[] })) => void;
-  setRecordEnabled: (value: boolean) => void;
-  setRecordingFilename: (value: string) => void;
-  setGenerativeColorIndices: (value: number[]) => void;
-  setAutoSpreadEnabled: (value: boolean) => void;
-  setAutoDotsEnabled: (value: boolean) => void;
-  setAutoShapesEnabled: (value: boolean) => void;
-  setPalette: (value: string[] | ((prev: string[]) => string[])) => void;
-
-  // Functions
-  clear: () => void;
-  toggleAutoSpread: () => void;
-  toggleAutoDots: () => void;
-  toggleAutoShapes: () => void;
-  handlePaletteClick: (index: number) => void;
-  colorSpread: () => void;
-  addRandomDots: () => void;
-  addRandomShapes: () => void;
-  handleRowsChange: (value: number) => void;
-  handleColsChange: (value: number) => void;
-  resetGenerativeSettings: () => void;
-  handleGenerativeColorToggle: (colorIndex: number) => void;
-
-  // Theme
-  currentThemeConfig: any;
-
-  // Optional refs
-  walkersRef?: React.MutableRefObject<{r: number, c: number, color: number}[]>;
 }
 
 export function PaintStudioUI(props: PaintStudioUIProps) {
-  const {
-    canvasRef,
-    canvasContainerRef,
-    panelRef,
-    clearButtonRef,
-    handleMouseDown,
-    handleMouseUp,
-    handleMouseMove,
-    handleHeaderMouseDown,
-    isMobile,
-    tool,
-    backgroundColor,
-    panelVisible,
-    panelPos,
-    panelMinimized,
-    recordingToast,
-    showAutoControls,
-    showOptions,
-    showSpeedSettings,
-    showCanvasSettings,
-    showVisualSettings,
-    showGenerativeSettings,
-    showStepControls,
-    isSavingColor,
-    clearButtonColor,
-    panelTransparent,
-    currentThemeConfig,
-  } = props;
+  // Read from stores
+  const canvasState = useCanvasStore();
+  const paintState = usePaintStore();
+  const automationState = useAutomationStore();
+  const generativeState = useGenerativeStore();
+  const uiState = useUIStore();
+
+  const currentThemeConfig = THEMES[uiState.currentTheme as keyof typeof THEMES](uiState.panelTransparent);
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '100vh',
-      background: 'black',
-      display: 'flex',
-      flexDirection: isMobile ? 'column' : 'row',
-      alignItems: 'flex-start',
-      color: '#fff'
-    }}>
-      {/* Canvas */}
-      <div ref={canvasContainerRef} style={{ padding: '10px', display: 'inline-block' }}>
-        <canvas
-          ref={canvasRef}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseUp}
-          style={{
-            display: 'block',
-            cursor: tool === 'fill' ? 'pointer' : 'crosshair',
-            background: backgroundColor
-          }}
-        />
+    <>
+      {/* Canvas Container */}
+      <div style={{
+        width: '100%',
+        minHeight: '100vh',
+        background: 'black',
+        display: 'flex',
+        flexDirection: uiState.isMobile ? 'column' : 'row',
+        alignItems: 'flex-start',
+        color: '#fff'
+      }}>
+        <div ref={props.canvasContainerRef} style={{ padding: '10px', display: 'inline-block' }}>
+          <canvas
+            ref={props.canvasRef}
+            onMouseDown={props.handleMouseDown}
+            onMouseUp={props.handleMouseUp}
+            onMouseMove={props.handleMouseMove}
+            style={{
+              cursor: paintState.tool === 'fill' ? 'pointer' : 'crosshair',
+              display: 'block'
+            }}
+          />
+        </div>
       </div>
 
       {/* Recording Toast */}
-      {recordingToast && (
+      {props.recordingToast && (
         <div style={{
           position: 'fixed',
           top: 12,
@@ -245,215 +88,236 @@ export function PaintStudioUI(props: PaintStudioUIProps) {
           fontSize: '0.9rem',
           zIndex: 2000
         }}>
-          {recordingToast}
+          {props.recordingToast}
         </div>
       )}
 
-      {/* Main Panel with all controls */}
+      {/* Panel */}
       <MainPanel
-        panelRef={panelRef}
-        isMobile={isMobile}
-        panelVisible={panelVisible}
-        panelPos={panelPos}
-        panelMinimized={panelMinimized}
-        handleHeaderMouseDown={handleHeaderMouseDown}
-        setPanelMinimized={props.setPanelMinimized}
+        panelRef={props.panelRef}
+        panelVisible={uiState.panelVisible}
+        panelPos={uiState.panelPos}
+        panelMinimized={uiState.panelMinimized}
+        isMobile={uiState.isMobile}
         currentThemeConfig={currentThemeConfig}
+        handleHeaderMouseDown={props.handleHeaderMouseDown}
+        setPanelMinimized={uiState.setPanelMinimized}
       >
-        {/* ToolBar */}
+        {/* Toolbar */}
         <ToolBar
-          tool={tool}
-          setTool={props.setTool}
-          setIsSavingColor={props.setIsSavingColor}
-          showAutoControls={showAutoControls}
-          setShowAutoControls={props.setShowAutoControls}
-          themeConfig={currentThemeConfig}
+          tool={paintState.tool}
+          setTool={paintState.setTool}
+          setIsSavingColor={paintState.setIsSavingColor}
+          showAutoControls={uiState.showAutoControls}
+          setShowAutoControls={uiState.setShowAutoControls}
+          currentThemeConfig={currentThemeConfig}
+          clearButtonRef={props.clearButtonRef}
+          clear={canvasState.clear}
+          clearButtonColor={canvasState.clearButtonColor}
         />
 
-        {/* Palette Section */}
+        {/* Palette */}
         <PaletteSection
-          palette={props.palette}
-          selectedColor={props.selectedColor}
-          customColor={props.customColor}
-          isSavingColor={isSavingColor}
-          panelRef={panelRef}
-          handlePaletteClick={props.handlePaletteClick}
-          setCustomColor={props.setCustomColor}
-          setSelectedColor={props.setSelectedColor}
-          setIsSavingColor={props.setIsSavingColor}
+          panelRef={props.panelRef}
+          palette={paintState.palette}
+          selectedColor={paintState.selectedColor}
+          customColor={paintState.customColor}
+          isSavingColor={paintState.isSavingColor}
+          setCustomColor={paintState.setCustomColor}
+          setSelectedColor={paintState.setSelectedColor}
+          setIsSavingColor={paintState.setIsSavingColor}
+          handlePaletteClick={paintState.handlePaletteClick}
         />
 
         {/* Auto Controls */}
-        {showAutoControls && (
+        {uiState.showAutoControls && (
           <AutoControls
-            autoSpreading={props.autoSpreading}
-            autoDots={props.autoDots}
-            autoShapes={props.autoShapes}
-            autoSpreadEnabled={props.autoSpreadEnabled}
-            autoDotsEnabled={props.autoDotsEnabled}
-            autoShapesEnabled={props.autoShapesEnabled}
-            toggleAutoSpread={props.toggleAutoSpread}
-            toggleAutoDots={props.toggleAutoDots}
-            toggleAutoShapes={props.toggleAutoShapes}
-            setIsSavingColor={props.setIsSavingColor}
-            themeConfig={currentThemeConfig}
+            showAutoControls={uiState.showAutoControls}
+            setShowAutoControls={uiState.setShowAutoControls}
+            autoSpreading={automationState.autoSpreading}
+            autoDots={automationState.autoDots}
+            autoShapes={automationState.autoShapes}
+            autoSpreadEnabled={automationState.autoSpreadEnabled}
+            autoDotsEnabled={automationState.autoDotsEnabled}
+            autoShapesEnabled={automationState.autoShapesEnabled}
+            toggleAutoSpread={automationState.toggleAutoSpread}
+            toggleAutoDots={automationState.toggleAutoDots}
+            toggleAutoShapes={automationState.toggleAutoShapes}
+            setAutoSpreadEnabled={automationState.setAutoSpreadEnabled}
+            setAutoDotsEnabled={automationState.setAutoDotsEnabled}
+            setAutoShapesEnabled={automationState.setAutoShapesEnabled}
+            setIsSavingColor={paintState.setIsSavingColor}
+            currentThemeConfig={currentThemeConfig}
           />
         )}
 
         {/* Options Toggle */}
-        {showOptions && (
+        {uiState.showOptions && (
           <OptionsToggle
-            showSpeedSettings={showSpeedSettings}
-            showCanvasSettings={showCanvasSettings}
-            showVisualSettings={showVisualSettings}
-            showGenerativeSettings={showGenerativeSettings}
-            showStepControls={showStepControls}
-            setShowSpeedSettings={props.setShowSpeedSettings}
-            setShowCanvasSettings={props.setShowCanvasSettings}
-            setShowVisualSettings={props.setShowVisualSettings}
-            setShowGenerativeSettings={props.setShowGenerativeSettings}
-            setShowStepControls={props.setShowStepControls}
-            themeConfig={currentThemeConfig}
+            showOptions={uiState.showOptions}
+            setShowOptions={uiState.setShowOptions}
+            showSpeedSettings={uiState.showSpeedSettings}
+            showCanvasSettings={uiState.showCanvasSettings}
+            showVisualSettings={uiState.showVisualSettings}
+            showGenerativeSettings={uiState.showGenerativeSettings}
+            showStepControls={uiState.showStepControls}
+            setShowSpeedSettings={uiState.setShowSpeedSettings}
+            setShowCanvasSettings={uiState.setShowCanvasSettings}
+            setShowVisualSettings={uiState.setShowVisualSettings}
+            setShowGenerativeSettings={uiState.setShowGenerativeSettings}
+            setShowStepControls={uiState.setShowStepControls}
+            currentThemeConfig={currentThemeConfig}
           />
         )}
 
-        {/* Step Controls */}
-        {showOptions && showStepControls && (
+        {/* Setting Sections */}
+        {uiState.showOptions && uiState.showStepControls && (
           <StepControls
-            colorSpread={props.colorSpread}
-            addRandomDots={props.addRandomDots}
-            addRandomShapes={props.addRandomShapes}
-            setIsSavingColor={props.setIsSavingColor}
+            showStepControls={uiState.showStepControls}
+            setShowStepControls={uiState.setShowStepControls}
+            colorSpread={automationState.colorSpread}
+            addRandomDots={automationState.addRandomDots}
+            addRandomShapes={automationState.addRandomShapes}
+            setIsSavingColor={paintState.setIsSavingColor}
+            currentThemeConfig={currentThemeConfig}
           />
         )}
 
-        {/* Speed and Canvas Settings */}
-        {showOptions && (showSpeedSettings || showCanvasSettings) && (
+        {/* Grid layout for Speed and Canvas Settings */}
+        {uiState.showOptions && (uiState.showSpeedSettings || uiState.showCanvasSettings) && (
           <div className="scrollable-settings" style={{
             display: 'grid',
-            gridTemplateColumns: showSpeedSettings && showCanvasSettings ? 'repeat(2, 1fr)' : '1fr',
+            gridTemplateColumns: uiState.showSpeedSettings && uiState.showCanvasSettings ? 'repeat(2, 1fr)' : '1fr',
             gap: '12px',
             marginBottom: '12px',
             maxHeight: '300px',
             overflowY: 'auto'
           }}>
-            {showSpeedSettings && (
+            {uiState.showSpeedSettings && (
               <SpeedSettings
-                spreadProbability={props.spreadProbability}
-                autoSpreadSpeed={props.autoSpreadSpeed}
-                autoDotsSpeed={props.autoDotsSpeed}
-                autoShapesSpeed={props.autoShapesSpeed}
-                setSpreadProbability={props.setSpreadProbability}
-                setAutoSpreadSpeed={props.setAutoSpreadSpeed}
-                setAutoDotsSpeed={props.setAutoDotsSpeed}
-                setAutoShapesSpeed={props.setAutoShapesSpeed}
-                panelTransparent={panelTransparent}
-              />
+                  showSpeedSettings={uiState.showSpeedSettings}
+                  setShowSpeedSettings={uiState.setShowSpeedSettings}
+                  autoSpreadSpeed={automationState.autoSpreadSpeed}
+                  autoDotsSpeed={automationState.autoDotsSpeed}
+                  autoShapesSpeed={automationState.autoShapesSpeed}
+                  spreadProbability={generativeState.spreadProbability}
+                  setAutoSpreadSpeed={automationState.setAutoSpreadSpeed}
+                  setAutoDotsSpeed={automationState.setAutoDotsSpeed}
+                  setAutoShapesSpeed={automationState.setAutoShapesSpeed}
+                  setSpreadProbability={generativeState.setSpreadProbability}
+                  panelTransparent={uiState.panelTransparent}
+                  currentThemeConfig={currentThemeConfig}
+                />
             )}
 
-            {showCanvasSettings && (
+            {uiState.showCanvasSettings && (
               <CanvasSettings
-                brushSize={props.brushSize}
-                cellSize={props.cellSize}
-                rows={props.rows}
-                cols={props.cols}
-                setBrushSize={props.setBrushSize}
-                setCellSize={props.setCellSize}
-                handleRowsChange={props.handleRowsChange}
-                handleColsChange={props.handleColsChange}
-                panelTransparent={panelTransparent}
-              />
+                  showCanvasSettings={uiState.showCanvasSettings}
+                  setShowCanvasSettings={uiState.setShowCanvasSettings}
+                  brushSize={paintState.brushSize}
+                  rows={canvasState.rows}
+                  cols={canvasState.cols}
+                  cellSize={canvasState.cellSize}
+                  setBrushSize={paintState.setBrushSize}
+                  handleRowsChange={canvasState.handleRowsChange}
+                  handleColsChange={canvasState.handleColsChange}
+                  setCellSize={canvasState.setCellSize}
+                  panelTransparent={uiState.panelTransparent}
+                  currentThemeConfig={currentThemeConfig}
+                />
             )}
           </div>
         )}
 
-        {/* Generative Settings */}
-        {showOptions && showGenerativeSettings && (
-          <GenerativeSettings
-            spreadPattern={props.spreadPattern}
-            setSpreadPattern={props.setSpreadPattern}
-            resetGenerativeSettings={props.resetGenerativeSettings}
-            panelTransparent={panelTransparent}
-            isSavingColor={isSavingColor}
-            customColor={props.customColor}
-            palette={props.palette}
-            generativeColorIndices={props.generativeColorIndices}
-            handleGenerativeColorToggle={props.handleGenerativeColorToggle}
-            setIsSavingColor={props.setIsSavingColor}
-            setPalette={props.setPalette}
-            setSelectedColor={props.setSelectedColor}
-            rippleChance={props.rippleChance}
-            setRippleChance={props.setRippleChance}
-            scrambleSwaps={props.scrambleSwaps}
-            setScrambleSwaps={props.setScrambleSwaps}
-            vortexCount={props.vortexCount}
-            setVortexCount={props.setVortexCount}
-            strobeExpandThreshold={props.strobeExpandThreshold}
-            setStrobeExpandThreshold={props.setStrobeExpandThreshold}
-            strobeContractThreshold={props.strobeContractThreshold}
-            setStrobeContractThreshold={props.setStrobeContractThreshold}
-            jitterChance={props.jitterChance}
-            setJitterChance={props.setJitterChance}
-            flowDirection={props.flowDirection}
-            setFlowDirection={props.setFlowDirection}
-            flowChance={props.flowChance}
-            setFlowChance={props.setFlowChance}
-            veinSeekStrength={props.veinSeekStrength}
-            setVeinSeekStrength={props.setVeinSeekStrength}
-            veinBranchChance={props.veinBranchChance}
-            setVeinBranchChance={props.setVeinBranchChance}
-            crystallizeThreshold={props.crystallizeThreshold}
-            setCrystallizeThreshold={props.setCrystallizeThreshold}
-            erosionRate={props.erosionRate}
-            setErosionRate={props.setErosionRate}
-            erosionSolidity={props.erosionSolidity}
-            setErosionSolidity={props.setErosionSolidity}
-            randomWalkMode={props.randomWalkMode}
-            setRandomWalkMode={props.setRandomWalkMode}
-            randomWalkSpreadCount={props.randomWalkSpreadCount}
-            setRandomWalkSpreadCount={props.setRandomWalkSpreadCount}
-            conwayRules={props.conwayRules}
-            setConwayRules={props.setConwayRules}
-            tendrilsRules={props.tendrilsRules}
-            setTendrilsRules={props.setTendrilsRules}
-            pulseSpeed={props.pulseSpeed}
-            setPulseSpeed={props.setPulseSpeed}
-            pulseDirection={props.pulseDirection}
-            setPulseDirection={props.setPulseDirection}
-            pulseOvertakes={props.pulseOvertakes}
-            setPulseOvertakes={props.setPulseOvertakes}
-            directionalBias={props.directionalBias}
-            setDirectionalBias={props.setDirectionalBias}
-            directionalBiasStrength={props.directionalBiasStrength}
-            setDirectionalBiasStrength={props.setDirectionalBiasStrength}
-            walkersRef={props.walkersRef}
-          />
+        {uiState.showOptions && uiState.showVisualSettings && (
+          <VisualSettings
+              showVisualSettings={uiState.showVisualSettings}
+              setShowVisualSettings={uiState.setShowVisualSettings}
+              backgroundColor={canvasState.backgroundColor}
+              showGrid={canvasState.showGrid}
+              brushType={paintState.brushType}
+              blendMode={paintState.blendMode}
+              diagonalThickness={paintState.diagonalThickness}
+              sprayDensity={paintState.sprayDensity}
+              palette={paintState.palette}
+              recordEnabled={uiState.recordEnabled}
+              recordingFilename={uiState.recordingFilename}
+              panelTransparent={uiState.panelTransparent}
+              setBackgroundColor={canvasState.setBackgroundColor}
+              setShowGrid={canvasState.setShowGrid}
+              setBrushType={paintState.setBrushType}
+              setBlendMode={paintState.setBlendMode}
+              setDiagonalThickness={paintState.setDiagonalThickness}
+              setSprayDensity={paintState.setSprayDensity}
+              setPalette={paintState.setPalette}
+              setRecordEnabled={uiState.setRecordEnabled}
+              setRecordingFilename={uiState.setRecordingFilename}
+              setPanelTransparent={uiState.setPanelTransparent}
+              currentThemeConfig={currentThemeConfig}
+            />
         )}
 
-        {/* Visual Settings */}
-        {showOptions && showVisualSettings && (
-          <VisualSettings
-            brushType={props.brushType}
-            setBrushType={props.setBrushType}
-            sprayDensity={props.sprayDensity}
-            setSprayDensity={props.setSprayDensity}
-            diagonalThickness={props.diagonalThickness}
-            setDiagonalThickness={props.setDiagonalThickness}
-            blendMode={props.blendMode}
-            setBlendMode={props.setBlendMode}
-            backgroundColor={backgroundColor}
-            setBackgroundColor={props.setBackgroundColor}
-            showGrid={props.showGrid}
-            setShowGrid={props.setShowGrid}
-            panelTransparent={panelTransparent}
-            setPanelTransparent={props.setPanelTransparent}
-            recordEnabled={props.recordEnabled}
-            setRecordEnabled={props.setRecordEnabled}
-            recordingFilename={props.recordingFilename}
-            setRecordingFilename={props.setRecordingFilename}
-          />
+        {uiState.showOptions && uiState.showGenerativeSettings && (
+          <GenerativeSettings
+              showGenerativeSettings={uiState.showGenerativeSettings}
+              setShowGenerativeSettings={uiState.setShowGenerativeSettings}
+              spreadPattern={generativeState.spreadPattern}
+              spreadProbability={generativeState.spreadProbability}
+              generativeColorIndices={generativeState.generativeColorIndices}
+              palette={paintState.palette}
+              pulseSpeed={generativeState.pulseSpeed}
+              pulseOvertakes={generativeState.pulseOvertakes}
+              pulseDirection={generativeState.pulseDirection}
+              directionalBias={generativeState.directionalBias}
+              directionalBiasStrength={generativeState.directionalBiasStrength}
+              randomWalkSpreadCount={generativeState.randomWalkSpreadCount}
+              randomWalkMode={generativeState.randomWalkMode}
+              conwayRules={generativeState.conwayRules}
+              tendrilsRules={generativeState.tendrilsRules}
+              veinSeekStrength={generativeState.veinSeekStrength}
+              veinBranchChance={generativeState.veinBranchChance}
+              crystallizeThreshold={generativeState.crystallizeThreshold}
+              erosionRate={generativeState.erosionRate}
+              erosionSolidity={generativeState.erosionSolidity}
+              flowDirection={generativeState.flowDirection}
+              flowChance={generativeState.flowChance}
+              jitterChance={generativeState.jitterChance}
+              vortexCount={generativeState.vortexCount}
+              strobeExpandThreshold={generativeState.strobeExpandThreshold}
+              strobeContractThreshold={generativeState.strobeContractThreshold}
+              scrambleSwaps={generativeState.scrambleSwaps}
+              rippleChance={generativeState.rippleChance}
+              setSpreadPattern={generativeState.setSpreadPattern}
+              setSpreadProbability={generativeState.setSpreadProbability}
+              setPulseSpeed={generativeState.setPulseSpeed}
+              setPulseOvertakes={generativeState.setPulseOvertakes}
+              setPulseDirection={generativeState.setPulseDirection}
+              setDirectionalBias={generativeState.setDirectionalBias}
+              setDirectionalBiasStrength={generativeState.setDirectionalBiasStrength}
+              setRandomWalkSpreadCount={generativeState.setRandomWalkSpreadCount}
+              setRandomWalkMode={generativeState.setRandomWalkMode}
+              setConwayRules={generativeState.setConwayRules}
+              setTendrilsRules={generativeState.setTendrilsRules}
+              setVeinSeekStrength={generativeState.setVeinSeekStrength}
+              setVeinBranchChance={generativeState.setVeinBranchChance}
+              setCrystallizeThreshold={generativeState.setCrystallizeThreshold}
+              setErosionRate={generativeState.setErosionRate}
+              setErosionSolidity={generativeState.setErosionSolidity}
+              setFlowDirection={generativeState.setFlowDirection}
+              setFlowChance={generativeState.setFlowChance}
+              setJitterChance={generativeState.setJitterChance}
+              setVortexCount={generativeState.setVortexCount}
+              setStrobeExpandThreshold={generativeState.setStrobeExpandThreshold}
+              setStrobeContractThreshold={generativeState.setStrobeContractThreshold}
+              setScrambleSwaps={generativeState.setScrambleSwaps}
+              setRippleChance={generativeState.setRippleChance}
+              handleGenerativeColorToggle={generativeState.handleGenerativeColorToggle}
+              resetGenerativeSettings={generativeState.resetGenerativeSettings}
+              panelTransparent={uiState.panelTransparent}
+              currentThemeConfig={currentThemeConfig}
+            />
         )}
       </MainPanel>
-    </div>
+    </>
   );
 }

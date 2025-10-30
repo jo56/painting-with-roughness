@@ -1,58 +1,27 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { createEmptyGrid } from '../utils/grid';
+import { useEffect, useRef, useCallback } from 'react';
+import { useCanvasStore } from '../stores/canvasStore';
+import { usePaintStore } from '../stores/paintStore';
+import { useUIStore } from '../stores/uiStore';
 import { rgbToHex } from '../utils/color';
+import { THEMES } from '../utils/themes';
 
 const GRID_COLOR = '#27272a';
 
-export interface UseCanvasStateReturn {
-  canvasRef: React.RefObject<HTMLCanvasElement>;
-  canvasContainerRef: React.RefObject<HTMLDivElement>;
-  clearButtonRef: React.RefObject<HTMLButtonElement>;
-  cellSize: number;
-  rows: number;
-  cols: number;
-  grid: number[][];
-  showGrid: boolean;
-  backgroundColor: string;
-  clearButtonColor: string;
-  setCellSize: (size: number) => void;
-  setRows: (rows: number) => void;
-  setCols: (cols: number) => void;
-  setGrid: React.Dispatch<React.SetStateAction<number[][]>>;
-  setShowGrid: (show: boolean) => void;
-  setBackgroundColor: (color: string) => void;
-  handleRowsChange: (newRows: number) => void;
-  handleColsChange: (newCols: number) => void;
-  clear: () => void;
-  draw: () => void;
-  updateClearButtonColor: () => void;
-}
-
-export function useCanvasState(
-  palette: string[],
-  customColor: string,
-  panelVisible: boolean,
-  currentThemeConfig: any
-): UseCanvasStateReturn {
+/**
+ * Hook to handle canvas rendering and DOM-specific operations
+ * This hook doesn't own state - it reads from stores and renders
+ */
+export function useCanvasRendering() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
   const clearButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const defaults = {
-    cellSize: 10,
-    rows: 100,
-    cols: 165,
-    showGrid: false,
-    backgroundColor: '#0a0a0a',
-  };
+  const { grid, rows, cols, cellSize, backgroundColor, showGrid } = useCanvasStore();
+  const { palette, customColor } = usePaintStore();
+  const { panelVisible, currentTheme, panelTransparent } = useUIStore();
+  const setClearButtonColor = useCanvasStore((state) => state.setClearButtonColor);
 
-  const [cellSize, setCellSize] = useState(defaults.cellSize);
-  const [rows, setRows] = useState(defaults.rows);
-  const [cols, setCols] = useState(defaults.cols);
-  const [grid, setGrid] = useState<number[][]>(() => createEmptyGrid(defaults.rows, defaults.cols));
-  const [showGrid, setShowGrid] = useState(defaults.showGrid);
-  const [backgroundColor, setBackgroundColor] = useState(defaults.backgroundColor);
-  const [clearButtonColor, setClearButtonColor] = useState('#ff6b6b');
+  const currentThemeConfig = THEMES[currentTheme as keyof typeof THEMES](panelTransparent);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -132,64 +101,21 @@ export function useCanvasState(
       console.error("Could not get image data from canvas:", e);
       setClearButtonColor(defaultClearColor);
     }
-  }, [panelVisible, currentThemeConfig]);
+  }, [panelVisible, currentThemeConfig, setClearButtonColor]);
 
-  const handleRowsChange = useCallback((newRows: number) => {
-    setRows(newRows);
-    setGrid(currentGrid => {
-      const newGrid = createEmptyGrid(newRows, cols);
-      const oldRows = currentGrid.length;
-      for (let r = 0; r < Math.min(oldRows, newRows); r++) {
-        const oldCols = currentGrid[r]?.length ?? 0;
-        for (let c = 0; c < Math.min(oldCols, cols); c++) {
-          newGrid[r][c] = currentGrid[r][c];
-        }
-      }
-      return newGrid;
-    });
-  }, [cols]);
+  useEffect(() => {
+    draw();
+  }, [draw]);
 
-  const handleColsChange = useCallback((newCols: number) => {
-    setCols(newCols);
-    setGrid(currentGrid =>
-      currentGrid.map(row => {
-        const newRow = new Array(newCols).fill(0);
-        const oldLength = row.length;
-        for (let c = 0; c < Math.min(oldLength, newCols); c++) {
-          newRow[c] = row[c];
-        }
-        return newRow;
-      })
-    );
-  }, []);
-
-  const clear = useCallback(() => {
-    setGrid(createEmptyGrid(rows, cols));
-  }, [rows, cols]);
-
-  useEffect(() => draw(), [draw]);
+  useEffect(() => {
+    const timeoutId = setTimeout(updateClearButtonColor, 100);
+    return () => clearTimeout(timeoutId);
+  }, [grid, updateClearButtonColor]);
 
   return {
     canvasRef,
     canvasContainerRef,
     clearButtonRef,
-    cellSize,
-    rows,
-    cols,
-    grid,
-    showGrid,
-    backgroundColor,
-    clearButtonColor,
-    setCellSize,
-    setRows,
-    setCols,
-    setGrid,
-    setShowGrid,
-    setBackgroundColor,
-    handleRowsChange,
-    handleColsChange,
-    clear,
-    draw,
     updateClearButtonColor,
   };
 }

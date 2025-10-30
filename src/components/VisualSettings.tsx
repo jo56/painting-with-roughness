@@ -2,45 +2,55 @@ import React from 'react';
 import type { BrushType } from '../types';
 
 interface VisualSettingsProps {
-  brushType: BrushType;
-  setBrushType: (value: BrushType) => void;
-  sprayDensity: number;
-  setSprayDensity: (value: number) => void;
-  diagonalThickness: number;
-  setDiagonalThickness: (value: number) => void;
-  blendMode: string;
-  setBlendMode: (value: string) => void;
+  showVisualSettings: boolean;
+  setShowVisualSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
   backgroundColor: string;
-  setBackgroundColor: (value: string) => void;
   showGrid: boolean;
-  setShowGrid: (value: boolean) => void;
-  panelTransparent: boolean;
-  setPanelTransparent: (value: boolean) => void;
+  brushType: BrushType;
+  blendMode: 'replace' | 'overlay';
+  diagonalThickness: number;
+  sprayDensity: number;
+  palette: string[];
   recordEnabled: boolean;
-  setRecordEnabled: (value: boolean) => void;
   recordingFilename: string;
+  panelTransparent: boolean;
+  setBackgroundColor: (value: string) => void;
+  setShowGrid: (value: boolean) => void;
+  setBrushType: (value: BrushType) => void;
+  setBlendMode: (value: 'replace' | 'overlay') => void;
+  setDiagonalThickness: (value: number) => void;
+  setSprayDensity: (value: number) => void;
+  setPalette: (value: string[] | ((prev: string[]) => string[])) => void;
+  setRecordEnabled: (value: boolean) => void;
   setRecordingFilename: (value: string) => void;
+  setPanelTransparent: (value: boolean) => void;
+  currentThemeConfig: any;
 }
 
 export function VisualSettings({
-  brushType,
-  setBrushType,
-  sprayDensity,
-  setSprayDensity,
-  diagonalThickness,
-  setDiagonalThickness,
-  blendMode,
-  setBlendMode,
+  showVisualSettings,
+  setShowVisualSettings,
   backgroundColor,
-  setBackgroundColor,
   showGrid,
-  setShowGrid,
-  panelTransparent,
-  setPanelTransparent,
+  brushType,
+  blendMode,
+  diagonalThickness,
+  sprayDensity,
+  palette,
   recordEnabled,
-  setRecordEnabled,
   recordingFilename,
+  panelTransparent,
+  setBackgroundColor,
+  setShowGrid,
+  setBrushType,
+  setBlendMode,
+  setDiagonalThickness,
+  setSprayDensity,
+  setPalette,
+  setRecordEnabled,
   setRecordingFilename,
+  setPanelTransparent,
+  currentThemeConfig,
 }: VisualSettingsProps) {
   return (
     <div className="scrollable-settings" style={{
@@ -55,11 +65,19 @@ export function VisualSettings({
       <div style={{ marginBottom: '10px' }}>
         {/* Brush Type */}
         <div style={{ marginBottom: '12px' }}>
-          <label style={{ fontSize: '0.95rem', fontWeight: '400', display: 'block', marginBottom: '6px', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px' }}>
+          <label style={{
+            fontSize: '0.95rem',
+            fontWeight: '400',
+            display: 'block',
+            marginBottom: '6px',
+            fontFamily: 'monospace',
+            color: '#ffffff',
+            letterSpacing: '0.4px'
+          }}>
             Brush Type
           </label>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {(['square', 'circle', 'diagonal', 'spray'] as BrushType[]).map(type => (
+            {(['square', 'circle', 'diagonal', 'spray'] as BrushType[]).map((type) => (
               <button
                 key={type}
                 onClick={() => setBrushType(type)}
@@ -86,7 +104,15 @@ export function VisualSettings({
         {/* Spray Density */}
         {brushType === 'spray' && (
           <div style={{ marginBottom: '10px' }}>
-            <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>
+            <label style={{
+              fontWeight: '400',
+              marginBottom: '6px',
+              display: 'block',
+              fontFamily: 'monospace',
+              color: '#ffffff',
+              letterSpacing: '0.3px',
+              fontSize: '0.9rem'
+            }}>
               Spray Density: {sprayDensity.toFixed(2)}
             </label>
             <input
@@ -103,7 +129,15 @@ export function VisualSettings({
         {/* Diagonal Thickness */}
         {brushType === 'diagonal' && (
           <div style={{ marginBottom: '10px' }}>
-            <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>
+            <label style={{
+              fontWeight: '400',
+              marginBottom: '6px',
+              display: 'block',
+              fontFamily: 'monospace',
+              color: '#ffffff',
+              letterSpacing: '0.3px',
+              fontSize: '0.9rem'
+            }}>
               Diagonal Thickness: {diagonalThickness}
             </label>
             <input
@@ -117,114 +151,122 @@ export function VisualSettings({
         )}
 
         {/* Blend Mode */}
-        <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>
-          Blend Mode:
-        </label>
-        <select
-          value={blendMode}
-          onChange={(e) => setBlendMode(e.target.value)}
-          style={{
-            padding: '4px 8px',
-            borderRadius: '0',
-            background: 'transparent',
-            color: '#ffffff',
-            fontFamily: 'monospace',
-            letterSpacing: '0.3px',
-            border: 'none',
-            width: '100%'
-          }}
-        >
-          <option value="replace">Replace</option>
-          <option value="overlay">Overlay</option>
-        </select>
-      </div>
-
-      {/* Background Color */}
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-        <label style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
-          Background:
-        </label>
-        <input
-          type="color"
-          value={backgroundColor}
-          onChange={e => setBackgroundColor(e.target.value)}
-          style={{ marginLeft: '8px' }}
-        />
-      </div>
-
-      {/* Show Grid */}
-      <div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input
-            type="checkbox"
-            checked={showGrid}
-            onChange={e => setShowGrid(e.target.checked)}
-            style={{ cursor: 'pointer' }}
-          />
-          <span style={{ minWidth: '90px' }}>Show Grid</span>
-        </label>
-      </div>
-
-      {/* Transparent Toolbox */}
-      <div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input
-            type="checkbox"
-            checked={panelTransparent}
-            onChange={(e) => setPanelTransparent(e.target.checked)}
-            style={{ cursor: 'pointer' }}
-          />
-          <span style={{ minWidth: '90px' }}>Transparent Toolbox</span>
-        </label>
-      </div>
-
-      {/* Recording */}
-      <div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input
-            type="checkbox"
-            checked={recordEnabled}
-            onChange={(e) => setRecordEnabled(e.target.checked)}
-            style={{ cursor: 'pointer' }}
-          />
-          <span style={{ minWidth: '90px' }}>Recording</span>
-        </label>
-      </div>
-
-      {recordEnabled && (
         <div style={{ marginBottom: '10px' }}>
-          <label
-            style={{
-              display: 'block',
-              fontSize: '0.8rem',
-              color: '#d1d5db',
-              marginBottom: '6px',
-            }}
-          >
-            Filename:
+          <label style={{
+            fontWeight: '400',
+            marginBottom: '6px',
+            display: 'block',
+            fontFamily: 'monospace',
+            color: '#ffffff',
+            letterSpacing: '0.3px',
+            fontSize: '0.9rem'
+          }}>
+            Blend Mode:
           </label>
-          <input
-            type="text"
-            value={recordingFilename}
-            onChange={(e) => setRecordingFilename(e.target.value)}
-            placeholder="Enter filename (no extension)"
+          <select
+            value={blendMode}
+            onChange={(e) => setBlendMode(e.target.value as 'replace' | 'overlay')}
             style={{
-              width: '100%',
               padding: '4px 8px',
               borderRadius: '0',
-              border: '1px solid #333333',
-              background: '#1a1a1a',
+              background: 'transparent',
               color: '#ffffff',
               fontFamily: 'monospace',
               letterSpacing: '0.3px',
-              fontSize: '0.9rem',
+              border: 'none',
+              width: '100%'
             }}
-          />
-          <div style={{ fontSize: '0.75rem', color: '#666666', fontFamily: 'monospace', marginTop: '4px' }}>
-            Press <strong>R</strong> to start/stop recording
-          </div>
+          >
+            <option value="replace">Replace</option>
+            <option value="overlay">Overlay</option>
+          </select>
         </div>
-      )}
+
+        {/* Background Color */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+          <label style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Background:</label>
+          <input
+            type="color"
+            value={backgroundColor}
+            onChange={e => setBackgroundColor(e.target.value)}
+            style={{ marginLeft: '8px' }}
+          />
+        </div>
+
+        {/* Show Grid */}
+        <div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="checkbox"
+              checked={showGrid}
+              onChange={(e) => setShowGrid(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+            <span style={{ minWidth: '90px' }}>Show Grid</span>
+          </label>
+        </div>
+
+        {/* Transparent Toolbox */}
+        <div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="checkbox"
+              checked={panelTransparent}
+              onChange={(e) => setPanelTransparent(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+            <span style={{ minWidth: '90px' }}>Transparent Toolbox</span>
+          </label>
+        </div>
+
+        {/* Recording Controls */}
+        <div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="checkbox"
+              checked={recordEnabled}
+              onChange={(e) => setRecordEnabled(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+            <span style={{ minWidth: '90px' }}>Recording</span>
+          </label>
+        </div>
+
+        {recordEnabled && (
+          <div style={{ marginBottom: '10px' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.8rem',
+                color: '#d1d5db',
+                marginBottom: '6px',
+              }}
+            >
+              Filename:
+            </label>
+            <input
+              type="text"
+              value={recordingFilename}
+              onChange={(e) => setRecordingFilename(e.target.value)}
+              placeholder="Enter filename (no extension)"
+              style={{
+                width: '100%',
+                padding: '4px 8px',
+                borderRadius: '0',
+                border: '1px solid #333333',
+                background: '#1a1a1a',
+                color: '#ffffff',
+                fontFamily: 'monospace',
+                letterSpacing: '0.3px',
+                fontSize: '0.9rem',
+              }}
+            />
+            <div style={{ fontSize: '0.75rem', color: '#666666', fontFamily: 'monospace', marginTop: '4px' }}>
+              Press <strong>R</strong> to start/stop recording
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,15 +1,15 @@
 import { useEffect, useRef } from 'react';
-import type { Direction, SpreadPattern } from '../types';
+import type { Direction } from '../types';
+import { useUIStore } from '../stores/uiStore';
+import { useGenerativeStore } from '../stores/generativeStore';
 
-interface DirectionalControlsDeps {
-  showGenerativeSettings: boolean;
-  spreadPattern: SpreadPattern;
-  setPulseDirection: (direction: Direction) => void;
-  setDirectionalBias: (bias: 'none' | Direction) => void;
-  setFlowDirection: (direction: Direction) => void;
-}
-
-export function useDirectionalControls(deps: DirectionalControlsDeps): void {
+/**
+ * Hook to handle WASD directional controls for generative patterns
+ * Reads from and updates UI and generative stores
+ */
+export function useDirectionalControls(): void {
+  const { showGenerativeSettings } = useUIStore();
+  const { spreadPattern, setPulseDirection, setDirectionalBias, setFlowDirection } = useGenerativeStore();
   const pressedKeys = useRef(new Set<string>());
 
   useEffect(() => {
@@ -30,12 +30,12 @@ export function useDirectionalControls(deps: DirectionalControlsDeps): void {
         const isDiagonal = newDirection.includes('-');
         const isCardinal = !isDiagonal;
 
-        if (deps.spreadPattern === 'pulse' && isDiagonal) {
-          deps.setPulseDirection(newDirection);
-        } else if (deps.spreadPattern === 'directional') {
-          deps.setDirectionalBias(newDirection);
-        } else if (deps.spreadPattern === 'flow' && isCardinal) {
-          deps.setFlowDirection(newDirection);
+        if (spreadPattern === 'pulse' && isDiagonal) {
+          setPulseDirection(newDirection);
+        } else if (spreadPattern === 'directional') {
+          setDirectionalBias(newDirection);
+        } else if (spreadPattern === 'flow' && isCardinal) {
+          setFlowDirection(newDirection);
         }
       }
     };
@@ -46,7 +46,7 @@ export function useDirectionalControls(deps: DirectionalControlsDeps): void {
     const relevantCodes = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!deps.showGenerativeSettings || (deps.spreadPattern !== 'pulse' && deps.spreadPattern !== 'directional' && deps.spreadPattern !== 'flow')) {
+      if (!showGenerativeSettings || (spreadPattern !== 'pulse' && spreadPattern !== 'directional' && spreadPattern !== 'flow')) {
         return;
       }
 
@@ -72,5 +72,5 @@ export function useDirectionalControls(deps: DirectionalControlsDeps): void {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [deps]);
+  }, [showGenerativeSettings, spreadPattern, setPulseDirection, setDirectionalBias, setFlowDirection]);
 }

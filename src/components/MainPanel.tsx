@@ -1,12 +1,12 @@
 import React from 'react';
 
 interface MainPanelProps {
-  panelRef: React.RefObject<HTMLDivElement>;
+  panelRef: React.RefObject<HTMLDivElement | null>;
   isMobile: boolean;
   panelPos: { x: number; y: number };
   panelVisible: boolean;
   panelMinimized: boolean;
-  setPanelMinimized: React.Dispatch<React.SetStateAction<boolean>>;
+  setPanelMinimized: (minimized: boolean | ((prev: boolean) => boolean)) => void;
   currentThemeConfig: any;
   handleHeaderMouseDown: (e: React.MouseEvent) => void;
   children: React.ReactNode;

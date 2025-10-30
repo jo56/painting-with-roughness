@@ -1,17 +1,23 @@
 import React from 'react';
 
 interface StepControlsProps {
+  showStepControls: boolean;
+  setShowStepControls: (value: boolean | ((prev: boolean) => boolean)) => void;
   colorSpread: () => void;
   addRandomDots: () => void;
   addRandomShapes: () => void;
-  setIsSavingColor: (value: boolean | ((prev: boolean) => boolean)) => void;
+  setIsSavingColor: (value: boolean) => void;
+  currentThemeConfig: any;
 }
 
 export function StepControls({
+  showStepControls,
+  setShowStepControls,
   colorSpread,
   addRandomDots,
   addRandomShapes,
   setIsSavingColor,
+  currentThemeConfig,
 }: StepControlsProps) {
   const actions = [
     { label: 'Spread Once', onClick: colorSpread },
@@ -30,8 +36,8 @@ export function StepControls({
         <button
           key={label}
           onClick={() => {
-            onClick();
             setIsSavingColor(false);
+            onClick();
           }}
           style={{
             padding: '4px 8px',

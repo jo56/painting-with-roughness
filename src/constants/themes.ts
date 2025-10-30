@@ -1,6 +1,5 @@
-import type { ThemeConfig } from "../types";
-
-export const VOID_THEME: ThemeConfig = {
+// Legacy theme config - no longer using
+export const VOID_THEME = {
   background: "#0a0a0f",
   panelBg: "rgba(15,15,25,0.95)",
   panelBorder: "#1a1a2e",

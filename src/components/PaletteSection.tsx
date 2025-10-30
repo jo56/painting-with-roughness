@@ -5,7 +5,7 @@ interface PaletteSectionProps {
   selectedColor: number;
   customColor: string;
   isSavingColor: boolean;
-  panelRef: React.RefObject<HTMLDivElement>;
+  panelRef: React.RefObject<HTMLDivElement | null>;
   handlePaletteClick: (index: number) => void;
   setCustomColor: (value: string) => void;
   setSelectedColor: (value: number) => void;

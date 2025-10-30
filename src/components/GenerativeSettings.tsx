@@ -1,20 +1,20 @@
 import React from 'react';
-import type { SpreadPattern } from '../types';
+import type { SpreadPattern, Direction } from '../types';
 import { RuleEditor } from './RuleEditor';
 
 interface GenerativeSettingsProps {
+  showGenerativeSettings: boolean;
+  setShowGenerativeSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
   spreadPattern: SpreadPattern;
+  spreadProbability: number;
   setSpreadPattern: (value: SpreadPattern) => void;
+  setSpreadProbability: (value: number) => void;
   resetGenerativeSettings: () => void;
-  panelTransparent: boolean;
-  isSavingColor: boolean;
-  customColor: string;
   palette: string[];
   generativeColorIndices: number[];
   handleGenerativeColorToggle: (colorIndex: number) => void;
-  setIsSavingColor: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setPalette: (value: string[] | ((prev: string[]) => string[])) => void;
-  setSelectedColor: (value: number) => void;
+  panelTransparent: boolean;
+  currentThemeConfig: any;
 
   // Pattern-specific settings
   rippleChance: number;
@@ -29,8 +29,8 @@ interface GenerativeSettingsProps {
   setStrobeContractThreshold: (value: number) => void;
   jitterChance: number;
   setJitterChance: (value: number) => void;
-  flowDirection: string;
-  setFlowDirection: (value: string) => void;
+  flowDirection: Direction;
+  setFlowDirection: (value: Direction) => void;
   flowChance: number;
   setFlowChance: (value: number) => void;
   veinSeekStrength: number;
@@ -43,44 +43,41 @@ interface GenerativeSettingsProps {
   setErosionRate: (value: number) => void;
   erosionSolidity: number;
   setErosionSolidity: (value: number) => void;
-  randomWalkMode: string;
-  setRandomWalkMode: (value: string) => void;
+  randomWalkMode: 'any' | 'cardinal';
+  setRandomWalkMode: (value: 'any' | 'cardinal') => void;
   randomWalkSpreadCount: number;
   setRandomWalkSpreadCount: (value: number) => void;
   conwayRules: { born: number[]; survive: number[] };
-  setConwayRules: (value: { born: number[]; survive: number[] } | ((prev: { born: number[]; survive: number[] }) => { born: number[]; survive: number[] })) => void;
+  setConwayRules: (value: { born: number[]; survive: number[] }) => void;
   tendrilsRules: { born: number[]; survive: number[] };
-  setTendrilsRules: (value: { born: number[]; survive: number[] } | ((prev: { born: number[]; survive: number[] }) => { born: number[]; survive: number[] })) => void;
+  setTendrilsRules: (value: { born: number[]; survive: number[] }) => void;
   pulseSpeed: number;
   setPulseSpeed: (value: number) => void;
-  pulseDirection: string;
-  setPulseDirection: (value: string) => void;
+  pulseDirection: Direction;
+  setPulseDirection: (value: Direction) => void;
   pulseOvertakes: boolean;
   setPulseOvertakes: (value: boolean) => void;
-  directionalBias: string;
-  setDirectionalBias: (value: string) => void;
+  directionalBias: 'none' | Direction;
+  setDirectionalBias: (value: 'none' | Direction) => void;
   directionalBiasStrength: number;
   setDirectionalBiasStrength: (value: number) => void;
 
-  // Ref for walker reset
-  walkersRef?: React.MutableRefObject<{r: number, c: number, color: number}[]>;
 }
 
 export function GenerativeSettings(props: GenerativeSettingsProps) {
   const {
+    showGenerativeSettings,
+    setShowGenerativeSettings,
     spreadPattern,
+    spreadProbability,
     setSpreadPattern,
+    setSpreadProbability,
     resetGenerativeSettings,
-    panelTransparent,
-    isSavingColor,
-    customColor,
     palette,
     generativeColorIndices,
     handleGenerativeColorToggle,
-    setIsSavingColor,
-    setPalette,
-    setSelectedColor,
-    walkersRef
+    panelTransparent,
+    currentThemeConfig
   } = props;
 
   return (
@@ -101,7 +98,6 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
           <select
             value={spreadPattern}
             onChange={(e) => {
-              if (e.target.value === 'vein' && walkersRef) walkersRef.current = [];
               setSpreadPattern(e.target.value as SpreadPattern);
             }}
             style={{
@@ -295,7 +291,7 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
             </label>
             <select
               value={props.flowDirection}
-              onChange={(e) => props.setFlowDirection(e.target.value)}
+              onChange={(e) => props.setFlowDirection(e.target.value as Direction)}
               style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
             >
               <option value="down">Down</option>
@@ -442,7 +438,7 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
             </label>
             <select
               value={props.randomWalkMode}
-              onChange={(e) => props.setRandomWalkMode(e.target.value)}
+              onChange={(e) => props.setRandomWalkMode(e.target.value as 'any' | 'cardinal')}
               style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
             >
               <option value="any">8 Directions (Any)</option>
@@ -476,12 +472,12 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
           <RuleEditor
             label="Survive Counts"
             rules={props.conwayRules.survive}
-            onChange={(newSurvive) => props.setConwayRules(r => ({ ...r, survive: newSurvive }))}
+            onChange={(newSurvive) => props.setConwayRules({ ...props.conwayRules, survive: newSurvive })}
           />
           <RuleEditor
             label="Birth Counts"
             rules={props.conwayRules.born}
-            onChange={(newBorn) => props.setConwayRules(r => ({ ...r, born: newBorn }))}
+            onChange={(newBorn) => props.setConwayRules({ ...props.conwayRules, born: newBorn })}
           />
         </div>
       )}
@@ -491,12 +487,12 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
           <RuleEditor
             label="Survive Counts"
             rules={props.tendrilsRules.survive}
-            onChange={(newSurvive) => props.setTendrilsRules(r => ({ ...r, survive: newSurvive }))}
+            onChange={(newSurvive) => props.setTendrilsRules({ ...props.tendrilsRules, survive: newSurvive })}
           />
           <RuleEditor
             label="Birth Counts"
             rules={props.tendrilsRules.born}
-            onChange={(newBorn) => props.setTendrilsRules(r => ({ ...r, born: newBorn }))}
+            onChange={(newBorn) => props.setTendrilsRules({ ...props.tendrilsRules, born: newBorn })}
           />
         </div>
       )}
@@ -527,7 +523,7 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
             </label>
             <select
               value={props.pulseDirection}
-              onChange={(e) => props.setPulseDirection(e.target.value)}
+              onChange={(e) => props.setPulseDirection(e.target.value as Direction)}
               style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
             >
               <option value="top-left">Top-Left</option>
@@ -558,7 +554,7 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
             </label>
             <select
               value={props.directionalBias}
-              onChange={(e) => props.setDirectionalBias(e.target.value)}
+              onChange={(e) => props.setDirectionalBias(e.target.value as 'none' | Direction)}
               style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
             >
               <option value="up">Up</option>
@@ -610,29 +606,13 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
                 cursor: 'pointer',
                 padding: '2px',
                 borderRadius: '0',
-                outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
-                outlineOffset: '2px',
-                transition: 'outline 0.2s',
               }}
-              title={isSavingColor ? `Save ${customColor} to this slot` : `Toggle color for generation`}
-              onClick={(e) => {
-                if (isSavingColor) {
-                  e.preventDefault();
-                  setPalette(p => {
-                    const newPalette = [...p];
-                    newPalette[colorIndex] = customColor;
-                    return newPalette;
-                  });
-                  setIsSavingColor(false);
-                  setSelectedColor(colorIndex);
-                }
-              }}
+              title="Toggle color for generation"
             >
               <input
                 type="checkbox"
                 checked={generativeColorIndices.includes(colorIndex)}
                 onChange={() => handleGenerativeColorToggle(colorIndex)}
-                style={{ pointerEvents: isSavingColor ? 'none' : 'auto' }}
               />
               <div style={{ width: '20px', height: '20px', background: color, borderRadius: '4px' }} />
             </label>

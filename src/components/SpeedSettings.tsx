@@ -1,27 +1,33 @@
 import React from 'react';
 
 interface SpeedSettingsProps {
-  spreadProbability: number;
+  showSpeedSettings: boolean;
+  setShowSpeedSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
   autoSpreadSpeed: number;
   autoDotsSpeed: number;
   autoShapesSpeed: number;
-  setSpreadProbability: (value: number) => void;
+  spreadProbability: number;
   setAutoSpreadSpeed: (value: number) => void;
   setAutoDotsSpeed: (value: number) => void;
   setAutoShapesSpeed: (value: number) => void;
+  setSpreadProbability: (value: number) => void;
   panelTransparent: boolean;
+  currentThemeConfig: any;
 }
 
 export function SpeedSettings({
-  spreadProbability,
+  showSpeedSettings,
+  setShowSpeedSettings,
   autoSpreadSpeed,
   autoDotsSpeed,
   autoShapesSpeed,
-  setSpreadProbability,
+  spreadProbability,
   setAutoSpreadSpeed,
   setAutoDotsSpeed,
   setAutoShapesSpeed,
+  setSpreadProbability,
   panelTransparent,
+  currentThemeConfig,
 }: SpeedSettingsProps) {
   const settings = [
     { label: 'Spread Rate', value: spreadProbability, min: 0, max: 1, step: 0.01, setter: setSpreadProbability, unit: '%', isRate: true },

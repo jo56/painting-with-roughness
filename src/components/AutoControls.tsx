@@ -1,6 +1,8 @@
 import React from 'react';
 
 interface AutoControlsProps {
+  showAutoControls: boolean;
+  setShowAutoControls: (value: boolean | ((prev: boolean) => boolean)) => void;
   autoSpreading: boolean;
   autoDots: boolean;
   autoShapes: boolean;
@@ -10,11 +12,16 @@ interface AutoControlsProps {
   toggleAutoSpread: () => void;
   toggleAutoDots: () => void;
   toggleAutoShapes: () => void;
-  setIsSavingColor: (value: boolean | ((prev: boolean) => boolean)) => void;
-  themeConfig: any;
+  setAutoSpreadEnabled: (value: boolean) => void;
+  setAutoDotsEnabled: (value: boolean) => void;
+  setAutoShapesEnabled: (value: boolean) => void;
+  setIsSavingColor: (value: boolean) => void;
+  currentThemeConfig: any;
 }
 
 export function AutoControls({
+  showAutoControls,
+  setShowAutoControls,
   autoSpreading,
   autoDots,
   autoShapes,
@@ -24,8 +31,11 @@ export function AutoControls({
   toggleAutoSpread,
   toggleAutoDots,
   toggleAutoShapes,
+  setAutoSpreadEnabled,
+  setAutoDotsEnabled,
+  setAutoShapesEnabled,
   setIsSavingColor,
-  themeConfig,
+  currentThemeConfig,
 }: AutoControlsProps) {
   // Compute derived values
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
@@ -47,8 +57,8 @@ export function AutoControls({
     <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
       <button
         onClick={() => {
-          toggleAutoSpread();
           setIsSavingColor(false);
+          toggleAutoSpread();
         }}
         disabled={!autoSpreadEnabled}
         style={{
@@ -58,7 +68,7 @@ export function AutoControls({
           transition: 'all 0.2s ease',
           minWidth: '80px',
           textAlign: 'center' as const,
-          ...themeConfig.autoButton(autoSpreading, autoSpreadEnabled)
+          ...currentThemeConfig.autoButton(autoSpreading, autoSpreadEnabled)
         }}
       >
         {autoSpreading ? 'Stop Spread' : 'Start Spread'}
@@ -80,8 +90,8 @@ export function AutoControls({
         <button
           key={label}
           onClick={() => {
-            onClick();
             setIsSavingColor(false);
+            onClick();
           }}
           disabled={!enabled}
           style={{
@@ -91,7 +101,7 @@ export function AutoControls({
             transition: 'all 0.2s ease',
             minWidth: '80px',
             textAlign: 'center' as const,
-            ...themeConfig.autoButton(active, enabled)
+            ...currentThemeConfig.autoButton(active, enabled)
           }}
         >
           {label}
@@ -99,8 +109,8 @@ export function AutoControls({
       ))}
       <button
         onClick={() => {
-          isAnyRunning ? stopAll() : startAllEnabled();
           setIsSavingColor(false);
+          isAnyRunning ? stopAll() : startAllEnabled();
         }}
         disabled={!anyEnabled && !isAnyRunning}
         style={{
@@ -110,7 +120,7 @@ export function AutoControls({
           transition: 'all 0.2s ease',
           minWidth: '80px',
           textAlign: 'center' as const,
-          ...themeConfig.autoButton(isAnyRunning, anyEnabled || isAnyRunning)
+          ...currentThemeConfig.autoButton(isAnyRunning, anyEnabled || isAnyRunning)
         }}
       >
         {isAnyRunning ? 'Stop All' : 'Start All'}

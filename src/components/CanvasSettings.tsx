@@ -1,6 +1,8 @@
 import React from 'react';
 
 interface CanvasSettingsProps {
+  showCanvasSettings: boolean;
+  setShowCanvasSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
   brushSize: number;
   cellSize: number;
   rows: number;
@@ -10,9 +12,12 @@ interface CanvasSettingsProps {
   handleRowsChange: (value: number) => void;
   handleColsChange: (value: number) => void;
   panelTransparent: boolean;
+  currentThemeConfig: any;
 }
 
 export function CanvasSettings({
+  showCanvasSettings,
+  setShowCanvasSettings,
   brushSize,
   cellSize,
   rows,
@@ -22,6 +27,7 @@ export function CanvasSettings({
   handleRowsChange,
   handleColsChange,
   panelTransparent,
+  currentThemeConfig,
 }: CanvasSettingsProps) {
   const settings = [
     { label: 'Brush Size', value: brushSize, min: 1, max: 100, step: 1, setter: setBrushSize, unit: '', isEditable: false },

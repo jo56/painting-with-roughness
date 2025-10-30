@@ -11,7 +11,7 @@ export interface UseRecordingReturn {
   stopRecording: () => void;
 }
 
-export function useRecording(canvasRef: React.RefObject<HTMLCanvasElement>): UseRecordingReturn {
+export function useRecording(canvasRef: React.RefObject<HTMLCanvasElement | null>): UseRecordingReturn {
   const [recordEnabled, setRecordEnabled] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingFilename, setRecordingFilename] = useState("grid-recording");
