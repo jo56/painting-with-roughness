@@ -29,7 +29,7 @@ export function useRecording(canvasRef: React.RefObject<HTMLCanvasElement | null
       return;
     }
 
-    const fps = 30;
+    const fps = 60;
     const stream: MediaStream | null = (canvas as any).captureStream
       ? canvas.captureStream(fps)
       : (canvas as any).mozCaptureStream
@@ -97,7 +97,7 @@ export function useRecording(canvasRef: React.RefObject<HTMLCanvasElement | null
     };
 
     try {
-      recorder.start(1000);
+      recorder.start(100);
       setIsRecording(true);
       setRecordingToast("Recording started (press R to stop)");
     } catch (e) {
