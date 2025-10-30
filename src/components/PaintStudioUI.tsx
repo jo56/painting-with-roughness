@@ -53,6 +53,7 @@ export function PaintStudioUI(props: PaintStudioUIProps) {
       <div style={{
         width: '100%',
         minHeight: '100vh',
+        height: '100%',
         background: 'black',
         display: 'flex',
         flexDirection: uiState.isMobile ? 'column' : 'row',
