@@ -10,10 +10,6 @@ export interface UsePaintingInteractionsReturn {
   handleMouseMove: (e: React.MouseEvent, canvasRef: React.RefObject<HTMLCanvasElement | null>) => void;
 }
 
-/**
- * Hook to handle painting interactions on the canvas
- * Reads from paint and canvas stores
- */
 export function usePaintingInteractions(): UsePaintingInteractionsReturn {
   const isMouseDown = useRef(false);
 

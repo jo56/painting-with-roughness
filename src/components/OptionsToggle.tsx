@@ -1,4 +1,5 @@
 import React from 'react';
+import { Theme } from '../types/ui';
 
 interface OptionsToggleProps {
   showOptions: boolean;
@@ -13,7 +14,7 @@ interface OptionsToggleProps {
   setShowVisualSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
   setShowGenerativeSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
   setShowStepControls: (value: boolean | ((prev: boolean) => boolean)) => void;
-  currentThemeConfig: any;
+  currentThemeConfig: Theme;
 }
 
 export function OptionsToggle({
@@ -51,7 +52,7 @@ export function OptionsToggle({
             whiteSpace: 'nowrap',
             cursor: 'pointer',
             minWidth: '70px',
-            textAlign: 'center' as const,
+            textAlign: 'center',
             transition: 'all 0.2s ease',
             ...currentThemeConfig.optionButton(active)
           }}

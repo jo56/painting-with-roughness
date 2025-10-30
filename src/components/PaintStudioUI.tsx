@@ -229,34 +229,6 @@ export function PaintStudioUI(props: PaintStudioUIProps) {
           </div>
         )}
 
-        {uiState.showOptions && uiState.showVisualSettings && (
-          <VisualSettings
-              showVisualSettings={uiState.showVisualSettings}
-              setShowVisualSettings={uiState.setShowVisualSettings}
-              backgroundColor={canvasState.backgroundColor}
-              showGrid={canvasState.showGrid}
-              brushType={paintState.brushType}
-              blendMode={paintState.blendMode}
-              diagonalThickness={paintState.diagonalThickness}
-              sprayDensity={paintState.sprayDensity}
-              palette={paintState.palette}
-              recordEnabled={uiState.recordEnabled}
-              recordingFilename={uiState.recordingFilename}
-              panelTransparent={uiState.panelTransparent}
-              setBackgroundColor={canvasState.setBackgroundColor}
-              setShowGrid={canvasState.setShowGrid}
-              setBrushType={paintState.setBrushType}
-              setBlendMode={paintState.setBlendMode}
-              setDiagonalThickness={paintState.setDiagonalThickness}
-              setSprayDensity={paintState.setSprayDensity}
-              setPalette={paintState.setPalette}
-              setRecordEnabled={uiState.setRecordEnabled}
-              setRecordingFilename={uiState.setRecordingFilename}
-              setPanelTransparent={uiState.setPanelTransparent}
-              currentThemeConfig={currentThemeConfig}
-            />
-        )}
-
         {uiState.showOptions && uiState.showGenerativeSettings && (
           <GenerativeSettings
               showGenerativeSettings={uiState.showGenerativeSettings}
@@ -314,6 +286,34 @@ export function PaintStudioUI(props: PaintStudioUIProps) {
               handleGenerativeColorToggle={generativeState.handleGenerativeColorToggle}
               resetGenerativeSettings={generativeState.resetGenerativeSettings}
               panelTransparent={uiState.panelTransparent}
+              currentThemeConfig={currentThemeConfig}
+            />
+        )}
+
+        {uiState.showOptions && uiState.showVisualSettings && (
+          <VisualSettings
+              showVisualSettings={uiState.showVisualSettings}
+              setShowVisualSettings={uiState.setShowVisualSettings}
+              backgroundColor={canvasState.backgroundColor}
+              showGrid={canvasState.showGrid}
+              brushType={paintState.brushType}
+              blendMode={paintState.blendMode}
+              diagonalThickness={paintState.diagonalThickness}
+              sprayDensity={paintState.sprayDensity}
+              palette={paintState.palette}
+              recordEnabled={uiState.recordEnabled}
+              recordingFilename={uiState.recordingFilename}
+              panelTransparent={uiState.panelTransparent}
+              setBackgroundColor={canvasState.setBackgroundColor}
+              setShowGrid={canvasState.setShowGrid}
+              setBrushType={paintState.setBrushType}
+              setBlendMode={paintState.setBlendMode}
+              setDiagonalThickness={paintState.setDiagonalThickness}
+              setSprayDensity={paintState.setSprayDensity}
+              setPalette={paintState.setPalette}
+              setRecordEnabled={uiState.setRecordEnabled}
+              setRecordingFilename={uiState.setRecordingFilename}
+              setPanelTransparent={uiState.setPanelTransparent}
               currentThemeConfig={currentThemeConfig}
             />
         )}

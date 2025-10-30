@@ -7,14 +7,6 @@ import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
 import { useDirectionalControls } from './hooks/useDirectionalControls';
 import { useRecording } from './hooks/useRecording';
 
-/**
- * Main App Component - Refactored with Zustand
- *
- * This component is now dramatically simpler:
- * - No state management (handled by stores)
- * - No prop drilling (components access stores directly)
- * - Clean separation of concerns
- */
 export default function ModularSettingsPaintStudio() {
   // Canvas rendering and refs
   const { canvasRef, canvasContainerRef, clearButtonRef } = useCanvasRendering();

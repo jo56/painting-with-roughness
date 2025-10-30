@@ -1,17 +1,15 @@
-// Pattern-related types - using exact naming from original working code
-
 export type Direction =
   | 'up'
   | 'down'
   | 'left'
   | 'right'
-  | 'top-left'      // kebab-case, not camelCase
-  | 'top-right'     // kebab-case, not camelCase
-  | 'bottom-left'   // kebab-case, not camelCase
-  | 'bottom-right'; // kebab-case, not camelCase
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right';
 
 export type SpreadPattern =
-  | 'random'        // NOT 'randomWalk' - this is critical
+  | 'random'
   | 'conway'
   | 'pulse'
   | 'directional'
@@ -26,7 +24,7 @@ export type SpreadPattern =
   | 'scramble'
   | 'ripple';
 
-export type RandomWalkMode = 'any' | 'cardinal'; // NOT 'all' - this is critical
+export type RandomWalkMode = 'any' | 'cardinal';
 
 export type BrushType =
   | 'square'
@@ -34,6 +32,6 @@ export type BrushType =
   | 'diagonal'
   | 'spray';
 
-export type Tool = 'brush' | 'eraser';
+export type Tool = 'brush' | 'fill' | 'eraser';
 
-export type BlendMode = 'replace' | 'add';
+export type BlendMode = 'replace' | 'overlay';

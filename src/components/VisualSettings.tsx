@@ -1,5 +1,6 @@
 import React from 'react';
 import type { BrushType } from '../types';
+import { Theme } from '../types/ui';
 
 interface VisualSettingsProps {
   showVisualSettings: boolean;
@@ -24,7 +25,7 @@ interface VisualSettingsProps {
   setRecordEnabled: (value: boolean) => void;
   setRecordingFilename: (value: string) => void;
   setPanelTransparent: (value: boolean) => void;
-  currentThemeConfig: any;
+  currentThemeConfig: Theme;
 }
 
 export function VisualSettings({

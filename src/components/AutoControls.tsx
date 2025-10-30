@@ -1,4 +1,5 @@
 import React from 'react';
+import { Theme } from '../types/ui';
 
 interface AutoControlsProps {
   showAutoControls: boolean;
@@ -16,7 +17,7 @@ interface AutoControlsProps {
   setAutoDotsEnabled: (value: boolean) => void;
   setAutoShapesEnabled: (value: boolean) => void;
   setIsSavingColor: (value: boolean) => void;
-  currentThemeConfig: any;
+  currentThemeConfig: Theme;
 }
 
 export function AutoControls({
@@ -67,7 +68,7 @@ export function AutoControls({
           whiteSpace: 'nowrap',
           transition: 'all 0.2s ease',
           minWidth: '80px',
-          textAlign: 'center' as const,
+          textAlign: 'center',
           ...currentThemeConfig.autoButton(autoSpreading, autoSpreadEnabled)
         }}
       >
@@ -100,7 +101,7 @@ export function AutoControls({
             whiteSpace: 'nowrap',
             transition: 'all 0.2s ease',
             minWidth: '80px',
-            textAlign: 'center' as const,
+            textAlign: 'center',
             ...currentThemeConfig.autoButton(active, enabled)
           }}
         >
@@ -119,7 +120,7 @@ export function AutoControls({
           whiteSpace: 'nowrap',
           transition: 'all 0.2s ease',
           minWidth: '80px',
-          textAlign: 'center' as const,
+          textAlign: 'center',
           ...currentThemeConfig.autoButton(isAnyRunning, anyEnabled || isAnyRunning)
         }}
       >

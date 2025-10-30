@@ -1,4 +1,5 @@
 import React from 'react';
+import { Theme } from '../types/ui';
 
 interface CanvasSettingsProps {
   showCanvasSettings: boolean;
@@ -12,7 +13,7 @@ interface CanvasSettingsProps {
   handleRowsChange: (value: number) => void;
   handleColsChange: (value: number) => void;
   panelTransparent: boolean;
-  currentThemeConfig: any;
+  currentThemeConfig: Theme;
 }
 
 export function CanvasSettings({

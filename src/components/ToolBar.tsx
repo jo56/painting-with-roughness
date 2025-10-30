@@ -1,10 +1,13 @@
+import React from 'react';
+import { Theme } from '../types/ui';
+
 interface ToolBarProps {
   tool: string;
   setTool: (tool: string) => void;
   setIsSavingColor: (value: boolean) => void;
   showAutoControls: boolean;
   setShowAutoControls: (value: boolean | ((prev: boolean) => boolean)) => void;
-  currentThemeConfig: any;
+  currentThemeConfig: Theme;
   clearButtonRef: React.RefObject<HTMLButtonElement | null>;
   clear: () => void;
   clearButtonColor: string;
@@ -37,7 +40,7 @@ export function ToolBar({
               cursor: 'pointer',
               fontSize: '0.9rem',
               minWidth: '60px',
-              textAlign: 'center' as const,
+              textAlign: 'center',
               transition: 'all 0.2s ease',
               ...currentThemeConfig.button(tool === value, value)
             }}

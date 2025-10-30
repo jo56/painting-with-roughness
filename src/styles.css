@@ -32,3 +32,22 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
 }
+
+.scrollable-settings::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollable-settings {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+select option {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+select:focus option:checked {
+  background: #333333 !important;
+  color: #ffffff !important;
+}

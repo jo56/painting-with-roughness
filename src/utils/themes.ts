@@ -44,7 +44,7 @@ export const THEMES = {
       border: 'none',
       borderRadius: '0',
       fontFamily: 'monospace',
-      textTransform: 'none',
+      textTransform: 'none' as const,
       fontWeight: '400',
       textShadow: 'none',
       boxShadow: 'none',

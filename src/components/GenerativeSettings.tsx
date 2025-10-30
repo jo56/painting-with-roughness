@@ -1,6 +1,14 @@
 import React from 'react';
 import type { SpreadPattern, Direction } from '../types';
+import { Theme } from '../types/ui';
 import { RuleEditor } from './RuleEditor';
+import {
+  LABEL_STYLE,
+  VALUE_DISPLAY_STYLE,
+  SLIDER_CONTAINER_STYLE,
+  SLIDER_INPUT_STYLE,
+  SETTINGS_SECTION_STYLE
+} from '../constants/componentStyles';
 
 interface GenerativeSettingsProps {
   showGenerativeSettings: boolean;
@@ -14,7 +22,7 @@ interface GenerativeSettingsProps {
   generativeColorIndices: number[];
   handleGenerativeColorToggle: (colorIndex: number) => void;
   panelTransparent: boolean;
-  currentThemeConfig: any;
+  currentThemeConfig: Theme;
 
   // Pattern-specific settings
   rippleChance: number;
@@ -196,13 +204,13 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
       )}
 
       {spreadPattern === 'vortex' && (
-        <div style={{ background: 'transparent', padding: '8px', borderRadius: '0', border: 'none' }}>
+        <div style={SETTINGS_SECTION_STYLE}>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
+            <div style={SLIDER_CONTAINER_STYLE}>
+              <label style={LABEL_STYLE}>
                 Vortex Count:
               </label>
-              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>
+              <span style={VALUE_DISPLAY_STYLE}>
                 {props.vortexCount}
               </span>
             </div>
@@ -212,20 +220,21 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
               max={50}
               value={props.vortexCount}
               onChange={(e) => props.setVortexCount(Number(e.target.value))}
-              style={{ width: '100%', height: '6px' }}
+              style={SLIDER_INPUT_STYLE}
             />
           </div>
         </div>
       )}
 
+      {/* Note: 'strobe' pattern not yet available in dropdown but implementation ready */}
       {spreadPattern === 'strobe' && (
-        <div style={{ background: 'transparent', padding: '8px', borderRadius: '0', border: 'none' }}>
+        <div style={SETTINGS_SECTION_STYLE}>
           <div style={{ marginBottom: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
+            <div style={SLIDER_CONTAINER_STYLE}>
+              <label style={LABEL_STYLE}>
                 Expand Threshold:
               </label>
-              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>
+              <span style={VALUE_DISPLAY_STYLE}>
                 {props.strobeExpandThreshold} Neighbors
               </span>
             </div>
@@ -235,15 +244,15 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
               max={8}
               value={props.strobeExpandThreshold}
               onChange={(e) => props.setStrobeExpandThreshold(Number(e.target.value))}
-              style={{ width: '100%', height: '6px' }}
+              style={SLIDER_INPUT_STYLE}
             />
           </div>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
+            <div style={SLIDER_CONTAINER_STYLE}>
+              <label style={LABEL_STYLE}>
                 Contract Threshold:
               </label>
-              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>
+              <span style={VALUE_DISPLAY_STYLE}>
                 {props.strobeContractThreshold} Neighbors
               </span>
             </div>
@@ -253,20 +262,20 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
               max={8}
               value={props.strobeContractThreshold}
               onChange={(e) => props.setStrobeContractThreshold(Number(e.target.value))}
-              style={{ width: '100%', height: '6px' }}
+              style={SLIDER_INPUT_STYLE}
             />
           </div>
         </div>
       )}
 
       {spreadPattern === 'jitter' && (
-        <div style={{ background: 'transparent', padding: '8px', borderRadius: '0', border: 'none' }}>
+        <div style={SETTINGS_SECTION_STYLE}>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
+            <div style={SLIDER_CONTAINER_STYLE}>
+              <label style={LABEL_STYLE}>
                 Jitter Chance:
               </label>
-              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>
+              <span style={VALUE_DISPLAY_STYLE}>
                 {Math.round(props.jitterChance * 100)}%
               </span>
             </div>

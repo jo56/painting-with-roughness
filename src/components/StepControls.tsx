@@ -1,4 +1,5 @@
 import React from 'react';
+import { Theme } from '../types/ui';
 
 interface StepControlsProps {
   showStepControls: boolean;
@@ -7,7 +8,7 @@ interface StepControlsProps {
   addRandomDots: () => void;
   addRandomShapes: () => void;
   setIsSavingColor: (value: boolean) => void;
-  currentThemeConfig: any;
+  currentThemeConfig: Theme;
 }
 
 export function StepControls({

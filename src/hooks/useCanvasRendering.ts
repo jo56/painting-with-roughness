@@ -6,11 +6,8 @@ import { rgbToHex } from '../utils/color';
 import { THEMES } from '../utils/themes';
 
 const GRID_COLOR = '#27272a';
+const CLEAR_BUTTON_UPDATE_DELAY = 100;
 
-/**
- * Hook to handle canvas rendering and DOM-specific operations
- * This hook doesn't own state - it reads from stores and renders
- */
 export function useCanvasRendering() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
@@ -108,7 +105,7 @@ export function useCanvasRendering() {
   }, [draw]);
 
   useEffect(() => {
-    const timeoutId = setTimeout(updateClearButtonColor, 100);
+    const timeoutId = setTimeout(updateClearButtonColor, CLEAR_BUTTON_UPDATE_DELAY);
     return () => clearTimeout(timeoutId);
   }, [grid, updateClearButtonColor]);
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Theme } from '../types/ui';
 
 interface MainPanelProps {
   panelRef: React.RefObject<HTMLDivElement | null>;
@@ -7,7 +8,7 @@ interface MainPanelProps {
   panelVisible: boolean;
   panelMinimized: boolean;
   setPanelMinimized: (minimized: boolean | ((prev: boolean) => boolean)) => void;
-  currentThemeConfig: any;
+  currentThemeConfig: Theme;
   handleHeaderMouseDown: (e: React.MouseEvent) => void;
   children: React.ReactNode;
 }
@@ -42,10 +43,7 @@ export function MainPanel({
       <div
         onMouseDown={handleHeaderMouseDown}
         style={{
-          fontWeight: '400',
-          fontFamily: 'monospace',
-          color: '#ffffff',
-          letterSpacing: '0.3px',
+          ...currentThemeConfig.header,
           marginBottom: '16px',
           cursor: 'move',
           padding: '8px 12px',
@@ -55,7 +53,6 @@ export function MainPanel({
           justifyContent: 'center',
           alignItems: 'center',
           position: 'relative',
-          ...currentThemeConfig.header,
         }}
       >
         <span>painting-with-roughness</span>
@@ -90,25 +87,6 @@ export function MainPanel({
         }}
         className="scrollable-settings"
       >
-        <style>
-          {`
-            .scrollable-settings::-webkit-scrollbar {
-              display: none;
-            }
-            .scrollable-settings {
-              -ms-overflow-style: none;
-              scrollbar-width: none;
-            }
-            select option {
-              background: #1a1a1a !important;
-              color: #ffffff !important;
-            }
-            select:focus option:checked {
-              background: #333333 !important;
-              color: #ffffff !important;
-            }
-          `}
-        </style>
         <div
           style={{
             opacity: panelMinimized ? 0 : 1,

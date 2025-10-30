@@ -1,3 +1,5 @@
+import React from 'react';
+
 interface RuleEditorProps {
   label: string;
   rules: number[];
