@@ -5,7 +5,7 @@ import type { Direction, SpreadPattern, BrushType } from './types';
 import * as movementAlgorithms from './algorithms/movement';
 import * as cellularAlgorithms from './algorithms/cellular';
 import * as chaosAlgorithms from './algorithms/chaos';
-import { RuleEditor } from './components/RuleEditor';
+import { PaintStudioUI } from './components/PaintStudioUI';
 import * as drawingUtils from './utils/drawing';
 
 const GRID_COLOR = '#27272a';
@@ -1382,1112 +1382,168 @@ if (e.key === 't' || e.key === 'T') {
   const isAnyRunning = autoSpreading || autoDots || autoShapes;
   const anyEnabled = autoSpreadEnabled || autoDotsEnabled || autoShapesEnabled;
 
-  
-  
-
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '100vh',
-      background: 'black',
-      display: 'flex',
-      flexDirection: isMobile ? 'column' : 'row',
-      alignItems: 'flex-start',
-      color: '#fff'
-    }}>
-      <div ref={canvasContainerRef} style={{ padding: '10px', display: 'inline-block' }}>
-        <canvas
-          ref={canvasRef}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseUp}
-          style={{ 
-            display: 'block', 
-            cursor: tool === 'fill' ? 'pointer' : 'crosshair', 
-            background: backgroundColor 
-          }}
-        />
-      </div>
+    <PaintStudioUI
+      // Canvas refs
+      canvasRef={canvasRef}
+      canvasContainerRef={canvasContainerRef}
+      panelRef={panelRef}
+      clearButtonRef={clearButtonRef}
 
+      // Mouse handlers
+      handleMouseDown={handleMouseDown}
+      handleMouseUp={handleMouseUp}
+      handleMouseMove={handleMouseMove}
+      handleHeaderMouseDown={handleHeaderMouseDown}
 
-      {recordingToast && (
-        <div style={{ position: 'fixed', top: 12, right: 12, background: 'rgba(0,0,0,0.8)', color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px', padding: '8px 12px', borderRadius: '0', fontSize: '0.9rem', zIndex: 2000 }}>
-          {recordingToast}
-        </div>
-      )}
+      // UI state
+      isMobile={isMobile}
+      tool={tool}
+      backgroundColor={backgroundColor}
+      panelVisible={panelVisible}
+      panelPos={panelPos}
+      panelMinimized={panelMinimized}
+      recordingToast={recordingToast}
+      showAutoControls={showAutoControls}
+      showOptions={showOptions}
+      showSpeedSettings={showSpeedSettings}
+      showCanvasSettings={showCanvasSettings}
+      showVisualSettings={showVisualSettings}
+      showGenerativeSettings={showGenerativeSettings}
+      showStepControls={showStepControls}
+      isSavingColor={isSavingColor}
+      clearButtonColor={clearButtonColor}
+      panelTransparent={panelTransparent}
 
+      // Settings state
+      selectedColor={selectedColor}
+      palette={palette}
+      customColor={customColor}
+      brushSize={brushSize}
+      brushType={brushType}
+      blendMode={blendMode}
+      rows={rows}
+      cols={cols}
+      cellSize={cellSize}
+      showGrid={showGrid}
+      spreadPattern={spreadPattern}
+      autoSpreading={autoSpreading}
+      autoDots={autoDots}
+      autoShapes={autoShapes}
+      autoSpreadSpeed={autoSpreadSpeed}
+      autoDotsSpeed={autoDotsSpeed}
+      autoShapesSpeed={autoShapesSpeed}
 
-      <div
-        ref={panelRef}
-        style={{
-          position: isMobile ? 'relative' : 'fixed',
-          top: isMobile ? undefined : panelPos.y,
-          left: isMobile ? undefined : panelPos.x,
-          margin: isMobile ? '0 auto' : undefined,
-          padding: '20px',
-          width: isMobile ? 'calc(100% - 20px)': 'auto',
-          maxWidth: '480px',
-          zIndex: 10,
-          display: panelVisible ? 'block' : 'none',
-          ...currentThemeConfig.panel
-        }}
-      >
-        <div
-          onMouseDown={handleHeaderMouseDown}
-          style={{
-            fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px',
-            marginBottom: '16px',
-            cursor: 'move',
-            padding: '8px 12px',
-            fontSize: '18px',
-            userSelect: 'none',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            position: 'relative',
-            ...currentThemeConfig.header
-          }}
-        >
-          <span>painting-with-roughness</span>
-          <button
-            onClick={() => setPanelMinimized(prev => !prev)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
-              cursor: 'pointer',
-              fontSize: '1.2rem',
-              width: '24px',
-              height: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0',
-              marginLeft: '4px',
-            }}
-          >
-            {panelMinimized ? '+' : '-'}
-          </button>
-        </div>
+      // Pattern-specific settings
+      rippleChance={rippleChance}
+      scrambleSwaps={scrambleSwaps}
+      vortexCount={vortexCount}
+      strobeExpandThreshold={strobeExpandThreshold}
+      strobeContractThreshold={strobeContractThreshold}
+      jitterChance={jitterChance}
+      flowDirection={flowDirection}
+      flowChance={flowChance}
+      veinSeekStrength={veinSeekStrength}
+      veinBranchChance={veinBranchChance}
+      crystallizeThreshold={crystallizeThreshold}
+      erosionRate={erosionRate}
+      erosionSolidity={erosionSolidity}
+      pulseDirection={pulseDirection}
+      pulseOvertakes={pulseOvertakes}
+      pulseSpeed={pulseSpeed}
+      spreadProbability={spreadProbability}
+      randomWalkMode={randomWalkMode}
+      randomWalkSpreadCount={randomWalkSpreadCount}
+      directionalBias={directionalBias}
+      directionalBiasStrength={directionalBiasStrength}
+      diagonalThickness={diagonalThickness}
+      sprayDensity={sprayDensity}
+      conwayRules={conwayRules}
+      tendrilsRules={tendrilsRules}
+      recordEnabled={recordEnabled}
+      recordingFilename={recordingFilename}
+      isRecording={isRecording}
+      generativeColorIndices={generativeColorIndices}
+      autoSpreadEnabled={autoSpreadEnabled}
+      autoDotsEnabled={autoDotsEnabled}
+      autoShapesEnabled={autoShapesEnabled}
 
-        <div style={{
-          maxHeight: panelMinimized ? '0px' : '80vh',
-          overflow: panelMinimized ? 'hidden' : 'auto',
-          transition: 'max-height 0.3s ease'
-        }} className="scrollable-settings">
-          <style>
-            {`
-              .scrollable-settings::-webkit-scrollbar {
-                display: none;
-              }
-              .scrollable-settings {
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-              }
-              select option {
-                background: #1a1a1a !important;
-                color: #ffffff !important;
-              }
-              select:focus option:checked {
-                background: #333333 !important;
-                color: #ffffff !important;
-              }
-            `}
-          </style>
-          <div style={{
-            opacity: panelMinimized ? 0 : 1,
-            transition: 'opacity 0.3s ease',
-            pointerEvents: panelMinimized ? 'none' : 'auto'
-          }}>
-            
-            <div style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {[
-                  { label: 'Brush', value: 'brush' },
-                  { label: 'Fill', value: 'fill' },
-                  { label: 'Eraser', value: 'eraser' }
-                ].map(({ label, value }) => (
-                  <button
-                    key={value}
-                    onClick={() => { setTool(value); setIsSavingColor(false); }}
-                    style={{
-                      padding: '4px 8px',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem',
-                      minWidth: '60px',
-                      textAlign: 'center' as const,
-                      transition: 'all 0.2s ease',
-                      ...currentThemeConfig.button(tool === value, value)
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setShowAutoControls(prev => !prev)}
-                  style={{
-                    padding: '4px 8px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    minWidth: '50px',
-                    textAlign: 'center' as const,
-                    transition: 'all 0.2s ease',
-                    ...currentThemeConfig.button(showAutoControls, 'auto')
-                  }}
-                >
-                  Auto
-                </button>
-                <button
-                  onClick={() => setShowOptions(prev => !prev)}
-                  style={{
-                    padding: '4px 8px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    minWidth: '65px',
-                    textAlign: 'center' as const,
-                    transition: 'all 0.2s ease',
-                    ...currentThemeConfig.button(showOptions, 'options')
-                  }}
-                >
-                  Options
-                </button>
-                <button
-                  ref={clearButtonRef}
-                  onClick={() => { clear(); setIsSavingColor(false); }}
-                  style={{
-                    ...currentThemeConfig.clear,
-                    color: clearButtonColor,
-                    padding: '4px 8px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    minWidth: '50px',
-                    textAlign: 'center' as const,
-                    transition: 'all 0.2s ease',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
+      // Setters
+      setTool={setTool}
+      setIsSavingColor={setIsSavingColor}
+      setShowAutoControls={setShowAutoControls}
+      setPanelMinimized={setPanelMinimized}
+      setShowOptions={setShowOptions}
+      setShowSpeedSettings={setShowSpeedSettings}
+      setShowCanvasSettings={setShowCanvasSettings}
+      setShowVisualSettings={setShowVisualSettings}
+      setShowGenerativeSettings={setShowGenerativeSettings}
+      setShowStepControls={setShowStepControls}
+      setSelectedColor={setSelectedColor}
+      setCustomColor={setCustomColor}
+      setBrushSize={setBrushSize}
+      setBrushType={setBrushType}
+      setBlendMode={setBlendMode}
+      setCellSize={setCellSize}
+      setShowGrid={setShowGrid}
+      setBackgroundColor={setBackgroundColor}
+      setPanelTransparent={setPanelTransparent}
+      setSpreadPattern={setSpreadPattern}
+      setAutoSpreadSpeed={setAutoSpreadSpeed}
+      setAutoDotsSpeed={setAutoDotsSpeed}
+      setAutoShapesSpeed={setAutoShapesSpeed}
+      setRippleChance={setRippleChance}
+      setScrambleSwaps={setScrambleSwaps}
+      setVortexCount={setVortexCount}
+      setStrobeExpandThreshold={setStrobeExpandThreshold}
+      setStrobeContractThreshold={setStrobeContractThreshold}
+      setJitterChance={setJitterChance}
+      setFlowDirection={setFlowDirection}
+      setFlowChance={setFlowChance}
+      setVeinSeekStrength={setVeinSeekStrength}
+      setVeinBranchChance={setVeinBranchChance}
+      setCrystallizeThreshold={setCrystallizeThreshold}
+      setErosionRate={setErosionRate}
+      setErosionSolidity={setErosionSolidity}
+      setPulseDirection={setPulseDirection}
+      setPulseOvertakes={setPulseOvertakes}
+      setPulseSpeed={setPulseSpeed}
+      setSpreadProbability={setSpreadProbability}
+      setRandomWalkMode={setRandomWalkMode}
+      setRandomWalkSpreadCount={setRandomWalkSpreadCount}
+      setDirectionalBias={setDirectionalBias}
+      setDirectionalBiasStrength={setDirectionalBiasStrength}
+      setDiagonalThickness={setDiagonalThickness}
+      setSprayDensity={setSprayDensity}
+      setConwayRules={setConwayRules}
+      setTendrilsRules={setTendrilsRules}
+      setRecordEnabled={setRecordEnabled}
+      setRecordingFilename={setRecordingFilename}
+      setGenerativeColorIndices={setGenerativeColorIndices}
+      setAutoSpreadEnabled={setAutoSpreadEnabled}
+      setAutoDotsEnabled={setAutoDotsEnabled}
+      setAutoShapesEnabled={setAutoShapesEnabled}
+      setPalette={setPalette}
 
+      // Functions
+      clear={clear}
+      toggleAutoSpread={toggleAutoSpread}
+      toggleAutoDots={toggleAutoDots}
+      toggleAutoShapes={toggleAutoShapes}
+      handlePaletteClick={handlePaletteClick}
+      colorSpread={colorSpread}
+      addRandomDots={addRandomDots}
+      addRandomShapes={addRandomShapes}
+      handleRowsChange={handleRowsChange}
+      handleColsChange={handleColsChange}
+      resetGenerativeSettings={resetGenerativeSettings}
+      handleGenerativeColorToggle={handleGenerativeColorToggle}
 
-            <div style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', padding: '4px' }}>
-                {palette.slice(1).map((color, index) => (
-                  <button
-                      key={index + 1}
-                      onClick={() => handlePaletteClick(index + 1)}
-                      title={isSavingColor ? `Save ${customColor} to this slot` : `Select ${color}`}
-                      style={{
-                      width: '32px',
-                      height: '32px',
-                      background: color,
-                      border: selectedColor === index + 1 ? '2px solid #fff' : '1px solid #666',
-                      borderRadius: '0',
-                      cursor: 'pointer',
-                      outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
-                      outlineOffset: '2px',
-                      transition: 'outline 0.2s'
-                      }}
-                  />
-                ))}
+      // Theme
+      currentThemeConfig={currentThemeConfig}
 
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <div
-                    style={{
-                      position: 'relative',
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '0',
-                      border: selectedColor === palette.length ? '2px solid #fff' : '1px solid #666',
-                      background: `linear-gradient(135deg, ${customColor} 25%, transparent 25%, transparent 50%, ${customColor} 50%, ${customColor} 75%, transparent 75%)`,
-                      cursor: 'pointer',
-                      overflow: 'hidden',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    onClick={() => {
-                        const colorInput = panelRef.current?.querySelector('input[type="color"]') as HTMLInputElement;
-                        if (colorInput) {
-                            colorInput.click();
-                        }
-                        setSelectedColor(palette.length);
-                        setIsSavingColor(false);
-                    }}
-                  >
-                    <input
-                      type="color"
-                      value={customColor}
-                      onChange={(e) => setCustomColor(e.target.value)}
-                      style={{
-                        position: 'absolute',
-                        top: '-10px',
-                        left: '-10px',
-                        width: '52px',
-                        height: '52px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        opacity: 0,
-                        pointerEvents: 'none'
-                      }}
-                    />
-                  </div>
-                  <button
-                    onClick={() => setIsSavingColor(prev => !prev)}
-                    title={isSavingColor ? "Cancel saving" : "Save this color to a slot"}
-                    style={{
-                        visibility: selectedColor === palette.length ? 'visible' : 'hidden',
-                        padding: '4px 8px',
-                        height: '32px',
-                        borderRadius: '0',
-                        background: 'transparent',
-                        color: isSavingColor ? '#ffffff' : '#666666',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '0.9rem',
-                        fontFamily: 'monospace',
-                        fontWeight: 'normal',
-                        whiteSpace: 'nowrap',
-                        minWidth: '75px',
-                        textAlign: 'center',
-                        outline: 'none',
-                        textDecoration: isSavingColor ? 'underline' : 'none',
-                        textUnderlineOffset: isSavingColor ? '4px' : '0'
-                    }}
-                  >
-                    {isSavingColor ? 'Cancel' : 'Save'}
-                  </button>
-                </div>
-              </div>
-              {isSavingColor && <div style={{fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace', marginTop: '6px'}}>Select a color slot to replace it.</div>}
-            </div>
-
-            {showAutoControls && (
-              <>
-                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <button
-                    onClick={() => { toggleAutoSpread(); setIsSavingColor(false); }}
-                    disabled={!autoSpreadEnabled}
-                    style={{
-                      padding: '4px 8px',
-                      fontSize: '0.9rem',
-                      whiteSpace: 'nowrap',
-                      transition: 'all 0.2s ease',
-                      minWidth: '80px',
-                      textAlign: 'center' as const,
-                      ...currentThemeConfig.autoButton(autoSpreading, autoSpreadEnabled)
-                    }}
-                  >
-                    {autoSpreading ? 'Stop Spread' : 'Start Spread'}
-                  </button>
-                  {[
-                    { 
-                      label: autoDots ? 'Stop Dots' : 'Start Dots', 
-                      onClick: toggleAutoDots, 
-                      active: autoDots,
-                      enabled: autoDotsEnabled
-                    },
-                    { 
-                      label: autoShapes ? 'Stop Shapes' : 'Start Shapes', 
-                      onClick: toggleAutoShapes, 
-                      active: autoShapes,
-                      enabled: autoShapesEnabled
-                    }
-                  ].map(({ label, onClick, active, enabled }) => (
-                    <button
-                      key={label}
-                      onClick={() => { onClick(); setIsSavingColor(false); }}
-                      disabled={!enabled}
-                      style={{
-                        padding: '4px 8px',
-                        fontSize: '0.9rem',
-                        whiteSpace: 'nowrap',
-                        transition: 'all 0.2s ease',
-                        minWidth: '80px',
-                        textAlign: 'center' as const,
-                        ...currentThemeConfig.autoButton(active, enabled)
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => { isAnyRunning ? stopAll() : startAllEnabled(); setIsSavingColor(false); }}
-                    disabled={!anyEnabled && !isAnyRunning}
-                    style={{
-                      padding: '4px 8px',
-                      fontSize: '0.9rem',
-                      whiteSpace: 'nowrap',
-                      transition: 'all 0.2s ease',
-                      minWidth: '80px',
-                      textAlign: 'center' as const,
-                      ...currentThemeConfig.autoButton(isAnyRunning, anyEnabled || isAnyRunning)
-                    }}
-                  >
-                    {isAnyRunning ? 'Stop All' : 'Start All'}
-                  </button>
-                </div>
-              </>
-            )}
-
-            {showOptions && (
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {[
-                  { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), bg: showSpeedSettings ? '#52525b' : '#3a3a3c' },
-                  { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), bg: showCanvasSettings ? '#52525b' : '#3a3a3c' },
-                  { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), bg: showVisualSettings ? '#52525b' : '#3a3a3c' },
-                  { label: 'Generative', onClick: () => setShowGenerativeSettings(prev => !prev), bg: showGenerativeSettings ? '#52525b' : '#3a3a3c' },
-                  { label: 'Steps', onClick: () => setShowStepControls(prev => !prev), bg: showStepControls ? '#52525b' : '#3a3a3c' }
-                ].map(({ label, onClick, bg }) => {
-                  const active = bg === '#52525b';
-                  return (
-                  <button
-                    key={label}
-                    onClick={onClick}
-                    style={{
-                      padding: '4px 8px',
-                      fontSize: '0.9rem',
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer',
-                      minWidth: '70px',
-                      textAlign: 'center' as const,
-                      transition: 'all 0.2s ease',
-                      ...currentThemeConfig.optionButton(active)
-                    }}
-                  >
-                    {label}
-                  </button>
-                  )
-                })}
-              </div>
-            )}
-            
-            {showOptions && showStepControls && (
-              <div style={{
-                display: 'flex',
-                gap: '6px',
-                marginBottom: '6px',
-                flexWrap: 'wrap'
-              }}>
-                {[
-                  { label: 'Spread Once', onClick: colorSpread },
-                  { label: 'Add Dots', onClick: addRandomDots },
-                  { label: 'Add Shapes', onClick: addRandomShapes }
-                ].map(({ label, onClick }) => (
-                  <button
-                    key={label}
-                    onClick={() => { onClick(); setIsSavingColor(false); }}
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: '0',
-                      background: 'transparent',
-                      color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontWeight: 'normal',
-                      fontSize: '0.9rem',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {showOptions && (showSpeedSettings || showCanvasSettings) && (
-              <div className="scrollable-settings" style={{
-                display: 'grid',
-                gridTemplateColumns: showSpeedSettings && showCanvasSettings ? 'repeat(2, 1fr)' : '1fr',
-                gap: '12px',
-                marginBottom: '12px',
-                maxHeight: '300px',
-                overflowY: 'auto'
-              }}>
-                {showSpeedSettings && (
-                  <div style={{
-                    background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.5)',
-                    border: 'none',
-                    borderRadius: '0',
-                    padding: '8px'
-                  }}>
-                    <label style={{
-                      fontWeight: '400',
-                      marginBottom: '8px',
-                      display: 'block',
-                      fontSize: '1rem',
-                      color: '#ffffff',
-                      fontFamily: 'monospace',
-                      letterSpacing: '0.5px',
-                      textTransform: 'uppercase'
-                    }}>
-                      Speed Controls
-                    </label>
-                    {[
-                      ['Spread Rate', spreadProbability, 0, 1, 0.01, setSpreadProbability, '%'],
-                      ['Spread Speed', autoSpreadSpeed, 0.25, 100, 0.25, setAutoSpreadSpeed, '/s'],
-                      ['Dots Speed', autoDotsSpeed, 0.1, 100, 0.1, setAutoDotsSpeed, '/s'],
-                      ['Shapes Speed', autoShapesSpeed, 0.1, 100, 0.1, setAutoShapesSpeed, '/s']
-                    ].map(([label, value, min, max, step, setter, unit], idx) => (
-                      <div key={idx} style={{ marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{
-                            fontSize: '0.85rem',
-                            fontWeight: '400',
-                            fontFamily: 'monospace',
-                            color: '#ffffff',
-                            letterSpacing: '0.3px'
-                          }}>{label}:</label>
-                          <span style={{
-                            fontSize: '0.8rem',
-                            color: '#666666',
-                            fontFamily: 'monospace'
-                          }}>
-                            {label === 'Spread Rate' ? `${Math.round((value as number) * 100)}${unit}` : `${value}${unit}`}
-                          </span>
-                        </div>
-                        <input
-                          type="range"
-                          min={min as number}
-                          max={max as number}
-                          step={step as number}
-                          value={value as number}
-                          onChange={(e) => (setter as any)(Number(e.target.value))}
-                          style={{ width: '100%', height: '6px' }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-{showCanvasSettings && (
-  <div style={{
-    background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.5)',
-    border: 'none',
-    borderRadius: '0',
-    padding: '8px'
-  }}>
-    <label style={{
-      fontWeight: '400',
-      marginBottom: '8px',
-      display: 'block',
-      fontSize: '1rem',
-      color: '#ffffff',
-      fontFamily: 'monospace',
-      letterSpacing: '0.5px',
-      textTransform: 'uppercase'
-    }}>
-      Canvas Settings
-    </label>
-    {[
-      ['Brush Size', brushSize, 1, 100, 1, setBrushSize, ''],
-      ['Cell Size', cellSize, 1, 30, 1, setCellSize, ' px'],
-      ['Rows', rows, 10, 2000, 1, handleRowsChange, ''],
-      ['Cols', cols, 10, 2000, 1, handleColsChange, '']
-    ].map(([label, value, min, max, step, setter, unit], idx) => (
-      <div key={idx} style={{ marginBottom: '8px' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '2px'
-          }}
-        >
-          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
-            {label}:
-          </label>
-
-          {/* Rows/Cols: editable number input instead of static span */}
-          {label === 'Rows' || label === 'Cols' ? (
-            <input
-              type="number"
-              min={min as number}
-              max={max as number}
-              step={step as number}
-              value={value as number}
-              onChange={(e) => {
-                let newValue = Number(e.target.value);
-                if (isNaN(newValue)) return;
-                // Clamp immediately while typing
-                if (newValue < (min as number)) newValue = min as number;
-                if (newValue > (max as number)) newValue = max as number;
-                (setter as any)(newValue);
-              }}
-              style={{
-                width: '60px',
-                fontSize: '0.8rem',
-                color: '#666666', fontFamily: 'monospace',
-                textAlign: 'right',
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                appearance: 'textfield',
-                MozAppearance: 'textfield'
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.color = '#fff';
-                e.currentTarget.style.background = '#1f2937';
-                e.currentTarget.style.border = '1px solid #4b5563';
-                e.currentTarget.style.borderRadius = '4px';
-                e.currentTarget.style.padding = '2px 4px';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.color = '#9ca3af';
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.border = 'none';
-                e.currentTarget.style.padding = '0';
-              }}
-            />
-          ) : (
-            <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>
-              {`${value}${unit}`}
-            </span>
-          )}
-        </div>
-
-        {/* Slider stays for all */}
-        <input
-          type="range"
-          min={min as number}
-          max={max as number}
-          step={step as number}
-          value={value as number}
-          onChange={(e) => (setter as any)(Number(e.target.value))}
-          style={{ width: '100%', height: '6px' }}
-        />
-      </div>
-    ))}
-  </div>
-)}
-
-
-              </div>
-            )}
-            
-            {showOptions && showGenerativeSettings && (
-              <div className="scrollable-settings" style={{
-                marginBottom: '12px',
-                padding: '8px',
-                maxHeight: '400px',
-                overflowY: 'auto',
-                background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.5)',
-                border: 'none',
-                borderRadius: '0'
-              }}>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '10px' }}>
-                  <div style={{ flexGrow: 1}}>
-                    <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', fontSize: '0.95rem' }}>Spread Pattern:</label>
-                    <select
-                      value={spreadPattern}
-                      onChange={(e) => {
-                          if (e.target.value === 'vein') walkers.current = []; // Reset walkers
-                          setSpreadPattern(e.target.value as any);
-                      }}
-                      style={{
-                        padding: '4px 8px',
-                        borderRadius: '0',
-                        background: '#1a1a1a',
-                        color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
-                        border: '1px solid #333333',
-                        width: '100%'
-                      }}
-                    >
-                      <option value="random">Random Walk</option>
-                      <option value="conway">Game of Life</option>
-                      <option value="tendrils">Tendrils</option>
-                      <option value="pulse">Current</option>
-                      <option value="directional">Directional</option>
-                      <option value="vein">Vein Growth</option>
-                      <option value="crystallize">Crystallize</option>
-                      <option value="erosion">Erosion</option>
-                      <option value="flow">Flow</option>
-                      <option value="jitter">Jitter</option>
-                      <option value="vortex">Vortex</option>
-                      <option value="scramble">Scramble</option>
-                      <option value="ripple">Ripple</option>
-                    </select>
-                  </div>
-                   <button
-                    onClick={resetGenerativeSettings}
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: '0',
-                      background: 'transparent',
-                      color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      alignSelf: 'flex-end',
-                      fontSize: '0.9rem',
-                      height: '29px'
-                    }}
-                    title="Reset generative settings to default"
-                  >
-                    Reset
-                  </button>
-                </div>
-                
-                {spreadPattern === 'ripple' && (
-                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                      <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Ripple Chance:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(rippleChance*100)}%</span>
-                          </div>
-                          <input type="range" min={0.01} max={0.5} step={0.01} value={rippleChance} onChange={(e) => setRippleChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                      </div>
-                  </div>
-                )}
-
-                {spreadPattern === 'scramble' && (
-                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                      <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Swaps per Step:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{scrambleSwaps}</span>
-                          </div>
-                          <input type="range" min={1} max={100} value={scrambleSwaps} onChange={(e) => setScrambleSwaps(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                      </div>
-                  </div>
-                )}
-                
-                {spreadPattern === 'vortex' && (
-                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                      <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Vortex Count:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{vortexCount}</span>
-                          </div>
-                          <input type="range" min={1} max={50} value={vortexCount} onChange={(e) => setVortexCount(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                      </div>
-                  </div>
-                )}
-
-                {spreadPattern === 'strobe' && (
-                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                      <div style={{ marginBottom: '8px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Expand Threshold:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{strobeExpandThreshold} Neighbors</span>
-                          </div>
-                          <input type="range" min={1} max={8} value={strobeExpandThreshold} onChange={(e) => setStrobeExpandThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                      </div>
-                      <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Contract Threshold:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{strobeContractThreshold} Neighbors</span>
-                          </div>
-                          <input type="range" min={1} max={8} value={strobeContractThreshold} onChange={(e) => setStrobeContractThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                      </div>
-                  </div>
-                )}
-                
-                {spreadPattern === 'jitter' && (
-                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                      <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Jitter Chance:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(jitterChance*100)}%</span>
-                          </div>
-                          <input type="range" min={0} max={1} step={0.05} value={jitterChance} onChange={(e) => setJitterChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                      </div>
-                  </div>
-                )}
-                
-                {spreadPattern === 'flow' && (
-                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                      <div style={{ marginBottom: '10px' }}>
-                          <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
-                          <select
-                              value={flowDirection}
-                              onChange={(e) => setFlowDirection(e.target.value as any)}
-                              style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
-                          >
-                              <option value="down">Down</option>
-                              <option value="up">Up</option>
-                              <option value="left">Left</option>
-                              <option value="right">Right</option>
-                          </select>
-                      </div>
-                      <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Flow Chance:</label>
-                              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(flowChance*100)}%</span>
-                          </div>
-                          <input type="range" min={0} max={1} step={0.05} value={flowChance} onChange={(e) => setFlowChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                      </div>
-                  </div>
-                )}
-
-                {spreadPattern === 'vein' && (
-                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                    <div style={{ marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Seek Strength:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(veinSeekStrength*100)}%</span>
-                        </div>
-                        <input type="range" min={0} max={1} step={0.05} value={veinSeekStrength} onChange={(e) => setVeinSeekStrength(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                    </div>
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Branching Chance:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(veinBranchChance*100)}%</span>
-                        </div>
-                        <input type="range" min={0} max={0.5} step={0.01} value={veinBranchChance} onChange={(e) => setVeinBranchChance(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                    </div>
-                  </div>
-                )}
-
-                {spreadPattern === 'crystallize' && (
-                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Growth Threshold:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{crystallizeThreshold} Neighbors</span>
-                        </div>
-                        <input type="range" min={1} max={8} value={crystallizeThreshold} onChange={(e) => setCrystallizeThreshold(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                    </div>
-                  </div>
-                )}
-                
-                {spreadPattern === 'erosion' && (
-                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                     <div style={{ marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Erosion Rate:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(erosionRate*100)}%</span>
-                        </div>
-                        <input type="range" min={0.01} max={1} step={0.01} value={erosionRate} onChange={(e) => setErosionRate(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                    </div>
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Core Protection:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{erosionSolidity} Neighbors</span>
-                        </div>
-                        <input type="range" min={1} max={8} value={erosionSolidity} onChange={(e) => setErosionSolidity(Number(e.target.value))} style={{ width: '100%', height: '6px' }} />
-                    </div>
-                  </div>
-                )}
-
-                {spreadPattern === 'random' && (
-                    <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                        <div style={{ marginBottom: '10px' }}>
-                            <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Walk Mode:</label>
-                            <select
-                                value={randomWalkMode}
-                                onChange={(e) => setRandomWalkMode(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
-                            >
-                                <option value="any">8 Directions (Any)</option>
-                                <option value="cardinal">4 Directions (Cardinal)</option>
-                            </select>
-                        </div>
-                        <div style={{ marginBottom: '8px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Spread Count:</label>
-                            <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{randomWalkSpreadCount}</span>
-                            </div>
-                            <input
-                            type="range" min={1} max={8} step={1} value={randomWalkSpreadCount}
-                            onChange={(e) => setRandomWalkSpreadCount(Number(e.target.value))}
-                            style={{ width: '100%', height: '6px' }}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {spreadPattern === 'conway' && (
-                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                    <RuleEditor label="Survive Counts" rules={conwayRules.survive} onChange={(newSurvive) => setConwayRules(r => ({ ...r, survive: newSurvive }))} />
-
-                    <RuleEditor label="Birth Counts" rules={conwayRules.born} onChange={(newBorn) => setConwayRules(r => ({ ...r, born: newBorn }))} />
-                  </div>
-                )}
-                
-                {spreadPattern === 'tendrils' && (
-                  <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                     <RuleEditor label="Survive Counts" rules={tendrilsRules.survive} onChange={(newSurvive) => setTendrilsRules(r => ({ ...r, survive: newSurvive }))} />
-
-                     <RuleEditor label="Birth Counts" rules={tendrilsRules.born} onChange={(newBorn) => setTendrilsRules(r => ({ ...r, born: newBorn }))} />
-                  </div>
-                )}
-                
-                {spreadPattern === 'pulse' && (
-                    <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                        <div style={{ marginBottom: '8px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Pulse Speed:</label>
-                            <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{pulseSpeed}</span>
-                            </div>
-                            <input
-                            type="range" min={1} max={60} value={pulseSpeed}
-                            onChange={(e) => setPulseSpeed(Number(e.target.value))}
-                            style={{ width: '100%', height: '6px' }}
-                            />
-                        </div>
-                        <div style={{ marginBottom: '10px' }}>
-                            <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Flow Direction:</label>
-                            <select
-                                value={pulseDirection}
-                                onChange={(e) => setPulseDirection(e.target.value as any)}
-                                style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
-                            >
-                                <option value="top-left">Top-Left</option>
-                                <option value="top-right">Top-Right</option>
-                                <option value="bottom-left">Bottom-Left</option>
-                                <option value="bottom-right">Bottom-Right</option>
-                            </select>
-                        </div>
-                        <div style={{ fontWeight: 500, marginTop: '10px', fontSize: '0.85rem' }}>
-                            <label>
-                                <input 
-                                    type="checkbox" 
-                                    checked={pulseOvertakes} 
-                                    onChange={e => setPulseOvertakes(e.target.checked)} 
-                                    style={{ marginRight: '6px' }}
-                                /> 
-                                New Drops Overtake Existing
-                            </label>
-                        </div>
-                    </div>
-                )}
-
-                {spreadPattern === 'directional' && (
-                    <div style={{background: 'transparent', padding: '8px', borderRadius: '0', border: 'none'}}>
-                      <div style={{ marginBottom: '10px' }}>
-                          <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>Bias Direction:</label>
-                          <select
-                              value={directionalBias}
-                              onChange={(e) => setDirectionalBias(e.target.value as any)}
-                              style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
-                          >
-                                <option value="up">Up</option>
-                                <option value="down">Down</option>
-                                <option value="left">Left</option>
-                                <option value="right">Right</option>
-                                <option value="top-left">Top-Left</option>
-                                <option value="top-right">Top-Right</option>
-                                <option value="bottom-left">Bottom-Left</option>
-                                <option value="bottom-right">Bottom-Right</option>
-                          </select>
-                      </div>
-                      <div style={{ marginBottom: '8px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Bias Strength:</label>
-                          <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>{Math.round(directionalBiasStrength * 100)}%</span>
-                          </div>
-                          <input
-                          type="range" min={0} max={1} step={0.05} value={directionalBiasStrength}
-                          onChange={(e) => setDirectionalBiasStrength(Number(e.target.value))}
-                          style={{ width: '100%', height: '6px' }}
-                          />
-                      </div>
-                    </div>
-                )}
-
-                <label style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '8px', display: 'block', fontSize: '0.95rem', marginTop: '12px' }}>
-                    Allowed Random Colors
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '8px' }}>
-                    {palette.slice(1).map((color, index) => {
-                        const colorIndex = index + 1;
-                        
-  
-
-  return (
-                            <label 
-                                key={colorIndex} 
-                                style={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    gap: '4px', 
-                                    cursor: 'pointer',
-                                    padding: '2px',
-                                    borderRadius: '0',
-                                    outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
-                                    outlineOffset: '2px',
-                                    transition: 'outline 0.2s',
-                                }}
-                                title={isSavingColor ? `Save ${customColor} to this slot` : `Toggle color for generation`}
-                                onClick={(e) => {
-                                    if (isSavingColor) {
-                                        e.preventDefault();
-                                        setPalette(p => {
-                                            const newPalette = [...p];
-                                            newPalette[colorIndex] = customColor;
-                                            return newPalette;
-                                        });
-                                        setIsSavingColor(false);
-                                        setSelectedColor(colorIndex);
-                                    }
-                                }}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={generativeColorIndices.includes(colorIndex)}
-                                    onChange={() => handleGenerativeColorToggle(colorIndex)}
-                                    style={{ pointerEvents: isSavingColor ? 'none' : 'auto' }}
-                                />
-                                <div style={{ width: '20px', height: '20px', background: color, borderRadius: '4px' }} />
-                            </label>
-                        );
-                    })}
-                </div>
-              </div>
-            )}
-
-            {showOptions && showVisualSettings && (
-              <div className="scrollable-settings" style={{
-                maxHeight: '400px',
-                overflowY: 'auto',
-                background: panelTransparent ? 'transparent' : 'rgba(10, 10, 10, 0.3)',
-                border: 'none',
-                borderRadius: '0',
-                padding: '8px',
-                marginBottom: '12px'
-              }}>
-                <>
-                <div style={{ marginBottom: '10px' }}>
-                  
-        <div style={{ marginBottom: '12px' }}> {/* BRUSH PATCH */}
-          <label style={{ fontSize: '0.95rem', fontWeight: '400', display: 'block', marginBottom: '6px', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px' }}>Brush Type</label>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {(['square', 'circle', 'diagonal', 'spray'] as BrushType[]).map(type => (
-              <button
-                key={type}
-                onClick={() => setBrushType(type)}
-                style={{ padding: '4px 8px', borderRadius: '0', background: 'transparent', color: brushType === type ? '#ffffff' : '#666666', border: 'none', fontFamily: 'monospace', letterSpacing: '0.3px', cursor: 'pointer', fontSize: '0.9rem', textDecoration: brushType === type ? 'underline' : 'none', textUnderlineOffset: brushType === type ? '4px' : '0' }}
-              >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        
-        {brushType === 'spray' && (
-          <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
-            <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Spray Density: {sprayDensity.toFixed(2)}</label>
-            <input type="range" step={0.05} min={0.01} max={1} value={sprayDensity} onChange={e => setSprayDensity(Number(e.target.value))} />
-          </div>
-        )}
-        {brushType === 'diagonal' && (
-          <div style={{ marginBottom: '10px' }}> {/* BRUSH PATCH */}
-            <label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Diagonal Thickness: {diagonalThickness}</label>
-            <input type="range" min={1} max={100} value={diagonalThickness} onChange={e => setDiagonalThickness(Number(e.target.value))} />
-          </div>
-        )}
-<label style={{ fontWeight: '400', marginBottom: '6px', display: 'block', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px', fontSize: '0.9rem' }}>Blend Mode:</label>
-                  <select
-                    value={blendMode}
-                    onChange={(e) => setBlendMode(e.target.value)}
-                    style={{ 
-                      padding: '4px 8px', 
-                      borderRadius: '0', 
-                      background: 'transparent', 
-                      color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px', 
-                      border: 'none',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="replace">Replace</option>
-                    <option value="overlay">Overlay</option>
-                  </select>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                  <label style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>Background:</label>
-                  <input 
-                    type="color" 
-                    value={backgroundColor} 
-                    onChange={e => setBackgroundColor(e.target.value)}
-                    style={{ marginLeft: '8px' }}
-                  />
-                </div>
-
-                
-
-<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
-  <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-    <input 
-      type="checkbox" 
-      checked={showGrid} 
-      onChange={e => setShowGrid(e.target.checked)} 
-      style={{ cursor: 'pointer' }}
+      // Optional refs
+      walkersRef={walkers}
     />
-    <span style={{ minWidth: '90px' }}>Show Grid</span>
-  </label>
-</div>
-
-<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
-  <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-    <input
-      type="checkbox"
-      checked={panelTransparent}
-      onChange={(e) => setPanelTransparent(e.target.checked)}
-      style={{ cursor: 'pointer' }}
-    />
-    <span style={{ minWidth: '90px' }}>Transparent Toolbox</span>
-  </label>
-</div>
-
-            {/* Recording (Visual Settings) - clean */}
-            
-<div style={{ fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', marginBottom: '10px', fontSize: '0.9rem' }}>
-  <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-    <input
-      type="checkbox"
-      checked={recordEnabled}
-      onChange={(e) => setRecordEnabled(e.target.checked)}
-      style={{ cursor: 'pointer' }}
-    />
-    <span style={{ minWidth: '90px' }}>Recording</span>
-  </label>
-</div>
-
-{recordEnabled && (
-  <div style={{ marginBottom: '10px' }}>
-    <label
-      style={{
-        display: 'block',
-        fontSize: '0.8rem',
-        color: '#d1d5db',
-        marginBottom: '6px',
-      }}
-    >
-      Filename:
-    </label>
-    <input
-      type="text"
-      value={recordingFilename}
-      onChange={(e) => setRecordingFilename(e.target.value)}
-      placeholder="Enter filename (no extension)"
-      style={{
-        width: '100%',
-        padding: '4px 8px',
-        borderRadius: '0',
-        border: '1px solid #333333',
-        background: '#1a1a1a',
-        color: '#ffffff', fontFamily: 'monospace', letterSpacing: '0.3px',
-        fontSize: '0.9rem',
-      }}
-    />
-    <div style={{ fontSize: '0.75rem', color: '#666666', fontFamily: 'monospace', marginTop: '4px' }}>
-      Press <strong>R</strong> to start/stop recording
-    </div>
-  </div>
-)}
-
-
-                </>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
