@@ -26,8 +26,8 @@ interface CanvasState {
 
 const defaults = {
   cellSize: 10,
-  rows: 100,
-  cols: 165,
+  rows: 80,
+  cols: 168,
   showGrid: false,
   backgroundColor: '#0a0a0a',
 };
