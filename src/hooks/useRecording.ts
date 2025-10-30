@@ -55,10 +55,10 @@ export function useRecording(canvasRef: React.RefObject<HTMLCanvasElement | null
 
     let recorder: MediaRecorder;
     try {
-      // High quality settings: 10 Mbps video bitrate
+      // Ultra quality settings: 20 Mbps video bitrate
       const options: MediaRecorderOptions = mimeType
-        ? { mimeType, videoBitsPerSecond: 10000000 }
-        : { videoBitsPerSecond: 10000000 };
+        ? { mimeType, videoBitsPerSecond: 20000000 }
+        : { videoBitsPerSecond: 20000000 };
       recorder = new MediaRecorder(stream, options);
     } catch (e) {
       setRecordingToast("Failed to start recorder");
