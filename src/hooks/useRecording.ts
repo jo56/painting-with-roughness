@@ -1,20 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useUIStore } from '../stores/uiStore';
 
 export interface UseRecordingReturn {
-  recordEnabled: boolean;
   isRecording: boolean;
-  recordingFilename: string;
   recordingToast: string | null;
-  setRecordEnabled: (enabled: boolean) => void;
-  setRecordingFilename: (filename: string) => void;
   startRecording: () => void;
   stopRecording: () => void;
 }
 
 export function useRecording(canvasRef: React.RefObject<HTMLCanvasElement | null>): UseRecordingReturn {
-  const [recordEnabled, setRecordEnabled] = useState(true);
+  const { recordEnabled, recordingFilename } = useUIStore();
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingFilename, setRecordingFilename] = useState("grid-recording");
   const [recordingToast, setRecordingToast] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -139,12 +135,8 @@ export function useRecording(canvasRef: React.RefObject<HTMLCanvasElement | null
   }, [recordingToast]);
 
   return {
-    recordEnabled,
     isRecording,
-    recordingFilename,
     recordingToast,
-    setRecordEnabled,
-    setRecordingFilename,
     startRecording,
     stopRecording,
   };
