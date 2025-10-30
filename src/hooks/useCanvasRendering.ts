@@ -101,7 +101,18 @@ export function useCanvasRendering() {
   }, [panelVisible, currentThemeConfig, setClearButtonColor]);
 
   useEffect(() => {
-    draw();
+    let animationFrameId: number;
+
+    const animate = () => {
+      draw();
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
   }, [draw]);
 
   useEffect(() => {
