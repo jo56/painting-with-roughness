@@ -1,164 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createEmptyGrid, cloneGrid } from './utils/grid';
+import { componentToHex, rgbToHex } from './utils/color';
+import type { Direction, SpreadPattern, BrushType } from './types';
+import * as movementAlgorithms from './algorithms/movement';
+import * as cellularAlgorithms from './algorithms/cellular';
+import * as chaosAlgorithms from './algorithms/chaos';
+import { RuleEditor } from './components/RuleEditor';
+import * as drawingUtils from './utils/drawing';
 
 const GRID_COLOR = '#27272a';
-
-function createEmptyGrid(rows: number, cols: number): number[][] {
-  const g: number[][] = [];
-  for (let r = 0; r < rows; r++) {
-    g[r] = new Array(cols).fill(0);
-  }
-  return g;
-}
-
-function cloneGrid(grid: number[][]): number[][] {
-  return grid.map(row => [...row]);
-}
-
-// Helper function to convert RGB color data to a hex string
-function componentToHex(c: number): string {
-  const hex = c.toString(16);
-  return hex.length === 1 ? "0" + hex : hex;
-}
-
-function rgbToHex(r: number, g: number, b: number): string {
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-}
-
-
-function RuleEditor({ label, rules, onChange }: { label: string, rules: number[], onChange: (rules: number[]) => void }) {
-    const numbers = [1, 2, 3, 4, 5, 6, 7, 8];
-
-    const handleToggle = (num: number) => {
-        const newRules = rules.includes(num)
-            ? rules.filter(r => r !== num)
-            : [...rules, num];
-        onChange(newRules.sort((a, b) => a - b));
-    };
-
-    
-  
-  // === Recording functions (clean) ===
-  const startRecording = () => {
-    if (!recordEnabled) {
-      setRecordingToast("Enable recording in Visual Settings first");
-      return;
-    }
-    const canvas = canvasRef.current as HTMLCanvasElement | null;
-    if (!canvas) {
-      setRecordingToast("Canvas not ready");
-      return;
-    }
-
-    const fps = 30;
-    const stream: MediaStream | null = (canvas as any).captureStream
-      ? canvas.captureStream(fps)
-      : (canvas as any).mozCaptureStream
-      ? (canvas as any).mozCaptureStream(fps)
-      : null;
-
-    if (!stream) {
-      setRecordingToast("Recording not supported in this browser");
-      return;
-    }
-
-    const candidates = [
-      "video/webm;codecs=vp9",
-      "video/webm;codecs=vp8",
-      "video/webm"
-    ];
-    let mimeType = "";
-    if (typeof MediaRecorder !== "undefined") {
-      for (const type of candidates) {
-        if ((MediaRecorder as any).isTypeSupported?.(type)) { mimeType = type; break; }
-      }
-    }
-
-    let recorder: MediaRecorder;
-    try {
-      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-    } catch (e) {
-      setRecordingToast("Failed to start recorder");
-      return;
-    }
-    mediaRecorderRef.current = recorder;
-    recordedChunksRef.current = [];
-
-    recorder.ondataavailable = (e: BlobEvent) => {
-      if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
-    };
-    recorder.onerror = () => {
-      setRecordingToast("Recording error");
-    };
-    recorder.onstop = () => {
-      try {
-        if (recordedChunksRef.current.length === 0) {
-          setRecordingToast("No data captured");
-        } else {
-          const outType = recorder.mimeType || "video/webm";
-          const blob = new Blob(recordedChunksRef.current, { type: outType });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${sanitizeFilename(recordingFilename || "grid-recording")}-${Date.now()}.webm`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          setRecordingToast("Recording saved");
-        }
-      } finally {
-        // Always stop stream tracks
-        stream.getTracks().forEach(t => t.stop());
-        setIsRecording(false);
-      }
-    };
-
-    try {
-      recorder.start(1000); // 1s timeslice ensures dataavailable fires
-      setIsRecording(true);
-      setRecordingToast("Recording started (press R to stop)");
-    } catch (e) {
-      setRecordingToast("Recorder start failed");
-    }
-  };
-
-  const stopRecording = () => {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state !== "inactive") {
-      try {
-        rec.requestData?.();
-      } catch {}
-      rec.stop();
-      setRecordingToast("Stopping recording…");
-    }
-  };
-  // === End Recording functions (clean) ===
-
-  return (
-        <div style={{ marginBottom: '8px' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.4px', display: 'block', marginBottom: '4px' }}>{label}:</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                {numbers.map(num => (
-                    <label key={num} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: '#404040', padding: '4px 8px', borderRadius: '4px', userSelect: 'none' }}>
-                        <input
-                            type="checkbox"
-                            checked={rules.includes(num)}
-                            onChange={() => handleToggle(num)}
-                            style={{ marginRight: '6px', cursor: 'pointer' }}
-                        />
-                        {num}
-                    </label>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-type Direction = 'up' | 'down' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-type SpreadPattern = 'random' | 'conway' | 'pulse' | 'directional' | 'tendrils' | 'vein' | 'crystallize' | 'erosion' | 'flow' | 'jitter' | 'vortex' | 'strobe' | 'scramble' | 'ripple';
-
-type BrushType = 'square' | 'circle' | 'diagonal' | 'spray'; // BRUSH PATCH
-
 
 export default function ModularSettingsPaintStudio(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -281,8 +131,104 @@ useEffect(() => { autoShapesEnabledRef.current = autoShapesEnabled; }, [autoShap
   const [recordingToast, setRecordingToast] = useState<string | null>(null);
 
   const sanitizeFilename = (name: string) => name.replace(/[^a-z0-9-_]+/gi, "_");
-  // === End Recording state & refs ===
-  // === End Recording state & refs ===
+
+  // === Recording functions (FIXED - properly scoped with useCallback) ===
+  const startRecording = useCallback(() => {
+    if (!recordEnabled) {
+      setRecordingToast("Enable recording in Visual Settings first");
+      return;
+    }
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      setRecordingToast("Canvas not ready");
+      return;
+    }
+
+    const fps = 30;
+    const stream: MediaStream | null = (canvas as any).captureStream
+      ? canvas.captureStream(fps)
+      : (canvas as any).mozCaptureStream
+      ? (canvas as any).mozCaptureStream(fps)
+      : null;
+
+    if (!stream) {
+      setRecordingToast("Recording not supported in this browser");
+      return;
+    }
+
+    const candidates = [
+      "video/webm;codecs=vp9",
+      "video/webm;codecs=vp8",
+      "video/webm"
+    ];
+    let mimeType = "";
+    if (typeof MediaRecorder !== "undefined") {
+      for (const type of candidates) {
+        if ((MediaRecorder as any).isTypeSupported?.(type)) { mimeType = type; break; }
+      }
+    }
+
+    let recorder: MediaRecorder;
+    try {
+      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+    } catch (e) {
+      setRecordingToast("Failed to start recorder");
+      return;
+    }
+    mediaRecorderRef.current = recorder;
+    recordedChunksRef.current = [];
+
+    recorder.ondataavailable = (e: BlobEvent) => {
+      if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
+    };
+    recorder.onerror = () => {
+      setRecordingToast("Recording error");
+    };
+    recorder.onstop = () => {
+      try {
+        if (recordedChunksRef.current.length === 0) {
+          setRecordingToast("No data captured");
+        } else {
+          const outType = recorder.mimeType || "video/webm";
+          const blob = new Blob(recordedChunksRef.current, { type: outType });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${sanitizeFilename(recordingFilename || "grid-recording")}-${Date.now()}.webm`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          setRecordingToast("Recording saved");
+        }
+      } finally {
+        // Always stop stream tracks
+        stream.getTracks().forEach(t => t.stop());
+        setIsRecording(false);
+      }
+    };
+
+    try {
+      recorder.start(1000); // 1s timeslice ensures dataavailable fires
+      setIsRecording(true);
+      setRecordingToast("Recording started (press R to stop)");
+    } catch (e) {
+      setRecordingToast("Recorder start failed");
+    }
+  }, [recordEnabled, recordingFilename]);
+
+  const stopRecording = useCallback(() => {
+    const rec = mediaRecorderRef.current;
+    if (rec && rec.state !== "inactive") {
+      try {
+        rec.requestData?.();
+      } catch {}
+      rec.stop();
+      setRecordingToast("Stopping recording…");
+    }
+  }, []);
+  // === End Recording functions ===
+
 const [showGenerativeSettings, setShowGenerativeSettings] = useState(false);
   const [showStepControls, setShowStepControls] = useState(false);
   const [showAutoControls, setShowAutoControls] = useState(true);
@@ -684,106 +630,8 @@ const [panelPos, setPanelPos] = useState(() => {
     };
     window.addEventListener('resize', handleResize);
     handleResize();
-    
-  
-  // === Recording functions (clean) ===
-  const startRecording = () => {
-    if (!recordEnabled) {
-      setRecordingToast("Enable recording in Visual Settings first");
-      return;
-    }
-    const canvas = canvasRef.current as HTMLCanvasElement | null;
-    if (!canvas) {
-      setRecordingToast("Canvas not ready");
-      return;
-    }
 
-    const fps = 30;
-    const stream: MediaStream | null = (canvas as any).captureStream
-      ? canvas.captureStream(fps)
-      : (canvas as any).mozCaptureStream
-      ? (canvas as any).mozCaptureStream(fps)
-      : null;
-
-    if (!stream) {
-      setRecordingToast("Recording not supported in this browser");
-      return;
-    }
-
-    const candidates = [
-      "video/webm;codecs=vp9",
-      "video/webm;codecs=vp8",
-      "video/webm"
-    ];
-    let mimeType = "";
-    if (typeof MediaRecorder !== "undefined") {
-      for (const type of candidates) {
-        if ((MediaRecorder as any).isTypeSupported?.(type)) { mimeType = type; break; }
-      }
-    }
-
-    let recorder: MediaRecorder;
-    try {
-      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-    } catch (e) {
-      setRecordingToast("Failed to start recorder");
-      return;
-    }
-    mediaRecorderRef.current = recorder;
-    recordedChunksRef.current = [];
-
-    recorder.ondataavailable = (e: BlobEvent) => {
-      if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
-    };
-    recorder.onerror = () => {
-      setRecordingToast("Recording error");
-    };
-    recorder.onstop = () => {
-      try {
-        if (recordedChunksRef.current.length === 0) {
-          setRecordingToast("No data captured");
-        } else {
-          const outType = recorder.mimeType || "video/webm";
-          const blob = new Blob(recordedChunksRef.current, { type: outType });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${sanitizeFilename(recordingFilename || "grid-recording")}-${Date.now()}.webm`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          setRecordingToast("Recording saved");
-        }
-      } finally {
-        // Always stop stream tracks
-        stream.getTracks().forEach(t => t.stop());
-        setIsRecording(false);
-      }
-    };
-
-    try {
-      recorder.start(1000); // 1s timeslice ensures dataavailable fires
-      setIsRecording(true);
-      setRecordingToast("Recording started (press R to stop)");
-    } catch (e) {
-      setRecordingToast("Recorder start failed");
-    }
-  };
-
-  const stopRecording = () => {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state !== "inactive") {
-      try {
-        rec.requestData?.();
-      } catch {}
-      rec.stop();
-      setRecordingToast("Stopping recording…");
-    }
-  };
-  // === End Recording functions (clean) ===
-
-  return () => window.removeEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -841,105 +689,6 @@ const [panelPos, setPanelPos] = useState(() => {
     
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-
-    
-  
-  // === Recording functions (clean) ===
-  const startRecording = () => {
-    if (!recordEnabled) {
-      setRecordingToast("Enable recording in Visual Settings first");
-      return;
-    }
-    const canvas = canvasRef.current as HTMLCanvasElement | null;
-    if (!canvas) {
-      setRecordingToast("Canvas not ready");
-      return;
-    }
-
-    const fps = 30;
-    const stream: MediaStream | null = (canvas as any).captureStream
-      ? canvas.captureStream(fps)
-      : (canvas as any).mozCaptureStream
-      ? (canvas as any).mozCaptureStream(fps)
-      : null;
-
-    if (!stream) {
-      setRecordingToast("Recording not supported in this browser");
-      return;
-    }
-
-    const candidates = [
-      "video/webm;codecs=vp9",
-      "video/webm;codecs=vp8",
-      "video/webm"
-    ];
-    let mimeType = "";
-    if (typeof MediaRecorder !== "undefined") {
-      for (const type of candidates) {
-        if ((MediaRecorder as any).isTypeSupported?.(type)) { mimeType = type; break; }
-      }
-    }
-
-    let recorder: MediaRecorder;
-    try {
-      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-    } catch (e) {
-      setRecordingToast("Failed to start recorder");
-      return;
-    }
-    mediaRecorderRef.current = recorder;
-    recordedChunksRef.current = [];
-
-    recorder.ondataavailable = (e: BlobEvent) => {
-      if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
-    };
-    recorder.onerror = () => {
-      setRecordingToast("Recording error");
-    };
-    recorder.onstop = () => {
-      try {
-        if (recordedChunksRef.current.length === 0) {
-          setRecordingToast("No data captured");
-        } else {
-          const outType = recorder.mimeType || "video/webm";
-          const blob = new Blob(recordedChunksRef.current, { type: outType });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${sanitizeFilename(recordingFilename || "grid-recording")}-${Date.now()}.webm`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          setRecordingToast("Recording saved");
-        }
-      } finally {
-        // Always stop stream tracks
-        stream.getTracks().forEach(t => t.stop());
-        setIsRecording(false);
-      }
-    };
-
-    try {
-      recorder.start(1000); // 1s timeslice ensures dataavailable fires
-      setIsRecording(true);
-      setRecordingToast("Recording started (press R to stop)");
-    } catch (e) {
-      setRecordingToast("Recorder start failed");
-    }
-  };
-
-  const stopRecording = () => {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state !== "inactive") {
-      try {
-        rec.requestData?.();
-      } catch {}
-      rec.stop();
-      setRecordingToast("Stopping recording…");
-    }
-  };
-  // === End Recording functions (clean) ===
 
   return () => {
         window.removeEventListener('keydown', handleKeyDown);
@@ -1060,79 +809,21 @@ const [panelPos, setPanelPos] = useState(() => {
   // === End Recording shortcut + toast (clean) ===
 
   const paintCell = (r: number, c: number, color: number) => {
-    if (r < 0 || r >= rows || c < 0 || c >= cols) return;
-    
-    setGrid(g => {
-      const ng = cloneGrid(g);
-      for (let dr = -Math.floor(brushSize/2); dr <= Math.floor(brushSize/2); dr++) {
-        for (let dc = -Math.floor(brushSize/2); dc <= Math.floor(brushSize/2); dc++) {
-          const nr = r + dr;
-          const nc = c + dc;
-          if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-            let shouldPaint = false; // BRUSH PATCH
-            switch (brushTypeRef.current) { // BRUSH PATCH
-              case 'square':
-                shouldPaint = true;
-                break;
-              case 'circle': {
-  const radius = Math.floor(brushSize / 2);
-  shouldPaint = dr * dr + dc * dc <= radius * radius;
-  break;
-}
-              case 'diagonal':
-                shouldPaint = Math.abs(dr) === Math.abs(dc) && Math.abs(dr) <= diagonalThicknessRef.current;
-                break;
-              case 'spray':
-                shouldPaint = Math.random() < sprayDensityRef.current;
-                break;
-            }
-            if (!shouldPaint) continue;
-
-            if (blendMode === 'replace' || ng[nr][nc] === 0) {
-              ng[nr][nc] = color;
-            } else if (blendMode === 'overlay' && color > 0) {
-              ng[nr][nc] = color;
-            }
-          }
-        }
-      }
-      return ng;
-    });
+    setGrid(g => drawingUtils.paintCell({
+      grid: g,
+      r,
+      c,
+      color,
+      brushSize,
+      brushType: brushTypeRef.current,
+      blendMode,
+      diagonalThickness: diagonalThicknessRef.current,
+      sprayDensity: sprayDensityRef.current,
+    }));
   };
 
   const floodFill = (startR: number, startC: number, newColor: number) => {
-    setGrid(g => {
-      const ng = cloneGrid(g);
-      const originalColor = g[startR][startC];
-      
-      if (originalColor === newColor) return ng;
-      
-      const queue: [number, number][] = [[startR, startC]];
-      const visited = new Set<string>();
-      
-      while (queue.length > 0) {
-        const [r, c] = queue.shift()!;
-        const key = `${r},${c}`;
-        
-        if (r < 0 || r >= rows || c < 0 || c >= cols || visited.has(key)) {
-          continue;
-        }
-        
-        if (ng[r][c] !== originalColor) {
-          continue;
-        }
-        
-        ng[r][c] = newColor;
-        visited.add(key);
-        
-        queue.push([r - 1, c]);
-        queue.push([r + 1, c]);
-        queue.push([r, c - 1]);
-        queue.push([r, c + 1]);
-      }
-      
-      return ng;
-    });
+    setGrid(g => drawingUtils.floodFill({ grid: g, startR, startC, newColor }));
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -1180,550 +871,88 @@ const [panelPos, setPanelPos] = useState(() => {
 
   const colorSpread = useCallback(() => {
     const pattern = spreadPatternRef.current;
-    const currentRows = rowsRef.current;
-    const currentCols = colsRef.current;
 
     setGrid(g => {
-        let ng = cloneGrid(g);
+        let ng = g;
 
         switch (pattern) {
             case 'ripple': {
-                // Update existing ripples
-                ripplesRef.current.forEach(ripple => {
-                    const r = Math.round(ripple.radius);
-                    for (let i = 0; i < 360; i += 5) {
-                        const angle = i * Math.PI / 180;
-                        const nr = Math.round(ripple.r + r * Math.sin(angle));
-                        const nc = Math.round(ripple.c + r * Math.cos(angle));
-                        if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && ng[nr][nc] === 0) {
-                            ng[nr][nc] = ripple.color;
-                        }
-                    }
-                    ripple.radius += 0.5;
-                });
-                
-                // Filter out old ripples
-                ripplesRef.current = ripplesRef.current.filter(r => r.radius <= r.maxRadius);
-
-                // Create new ripples
-                const chance = rippleChanceRef.current;
-                for (let r = 0; r < currentRows; r++) {
-                    for (let c = 0; c < currentCols; c++) {
-                        if (g[r][c] > 0 && Math.random() < chance) {
-                            ripplesRef.current.push({
-                                r, c, color: g[r][c], radius: 1, maxRadius: Math.max(currentRows, currentCols) / 3
-                            });
-                        }
-                    }
-                }
+                const result = movementAlgorithms.ripple(g, ripplesRef.current, rippleChanceRef.current);
+                ng = result.newGrid;
+                ripplesRef.current = result.newRipples;
                 break;
             }
             case 'scramble': {
-                const coloredCells: {r: number, c: number, color: number}[] = [];
-                for (let r = 0; r < currentRows; r++) {
-                    for (let c = 0; c < currentCols; c++) {
-                        if (g[r][c] > 0) {
-                            coloredCells.push({r, c, color: g[r][c]});
-                        }
-                    }
-                }
-                if (coloredCells.length < 2) break;
-
-                const swaps = Math.min(scrambleSwapsRef.current, Math.floor(coloredCells.length / 2));
-                for (let i = 0; i < swaps; i++) {
-                    const idx1 = Math.floor(Math.random() * coloredCells.length);
-                    let idx2 = Math.floor(Math.random() * coloredCells.length);
-                    while (idx1 === idx2) {
-                        idx2 = Math.floor(Math.random() * coloredCells.length);
-                    }
-                    const cell1 = coloredCells[idx1];
-                    const cell2 = coloredCells[idx2];
-                    
-                    if (cell1 && cell2) {
-                        const color1 = ng[cell1.r][cell1.c];
-                        const color2 = ng[cell2.r][cell2.c];
-                        ng[cell1.r][cell1.c] = color2;
-                        ng[cell2.r][cell2.c] = color1;
-                    }
-                }
+                ng = chaosAlgorithms.scramble(g, scrambleSwapsRef.current);
                 break;
             }
             case 'vortex': {
-                const count = vortexCountRef.current;
-                for (let i = 0; i < count; i++) {
-                    const r = 1 + Math.floor(Math.random() * (currentRows - 2));
-                    const c = 1 + Math.floor(Math.random() * (currentCols - 2));
-                    
-                    const neighborsCoords = [
-                        [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
-                        [r, c + 1], [r + 1, c + 1], [r + 1, c],
-                        [r + 1, c - 1], [r, c - 1]
-                    ];
-                    
-                    const originalColors = neighborsCoords.map(([nr, nc]) => g[nr][nc]);
-                    
-                    // Clockwise rotation
-                    neighborsCoords.forEach(([nr, nc], idx) => {
-                        const sourceIndex = (idx + 7) % 8; // (idx - 1 + 8) % 8
-                        ng[nr][nc] = originalColors[sourceIndex];
-                    });
-                }
+                ng = movementAlgorithms.vortex(g, vortexCountRef.current);
                 break;
             }
             case 'strobe': {
                 strobeStateRef.current = !strobeStateRef.current;
-            
-                if (strobeStateRef.current) { // EXPAND
-                    const expandThreshold = strobeExpandThresholdRef.current;
-                    const locationsToColor = new Map<string, number>();
-                    for (let r = 0; r < currentRows; r++) {
-                        for (let c = 0; c < currentCols; c++) {
-                            if (g[r][c] === 0) {
-                                const neighborColors: number[] = [];
-                                for (let dr = -1; dr <= 1; dr++) {
-                                    for (let dc = -1; dc <= 1; dc++) {
-                                        if (dr === 0 && dc === 0) continue;
-                                        const nr = r + dr, nc = c + dc;
-                                        if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] > 0) {
-                                            neighborColors.push(g[nr][nc]);
-                                        }
-                                    }
-                                }
-            
-                                if (neighborColors.length >= expandThreshold) {
-                                    const colorCounts = neighborColors.reduce((acc, color) => {
-                                        acc[color] = (acc[color] || 0) + 1;
-                                        return acc;
-                                    }, {} as Record<number, number>);
-                                    
-                                    let dominantColor = 0;
-                                    let maxCount = 0;
-                                    for (const color in colorCounts) {
-                                        if (colorCounts[color] > maxCount) {
-                                            maxCount = colorCounts[color];
-                                            dominantColor = parseInt(color);
-                                        }
-                                    }
-                                    if(dominantColor > 0) {
-                                        locationsToColor.set(`${r},${c}`, dominantColor);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    locationsToColor.forEach((color, key) => {
-                        const [r, c] = key.split(',').map(Number);
-                        ng[r][c] = color;
-                    });
-            
-                } else { // CONTRACT
-                    const contractThreshold = strobeContractThresholdRef.current;
-                    for (let r = 0; r < currentRows; r++) {
-                        for (let c = 0; c < currentCols; c++) {
-                            if (g[r][c] > 0) {
-                                let emptyNeighbors = 0;
-                                for (let dr = -1; dr <= 1; dr++) {
-                                    for (let dc = -1; dc <= 1; dc++) {
-                                        if (dr === 0 && dc === 0) continue;
-                                        const nr = r + dr, nc = c + dc;
-                                        if (nr < 0 || nr >= currentRows || nc < 0 || nc >= currentCols || g[nr][nc] === 0) {
-                                            emptyNeighbors++;
-                                        }
-                                    }
-                                }
-                                if (emptyNeighbors >= contractThreshold) {
-                                    ng[r][c] = 0;
-                                }
-                            }
-                        }
-                    }
-                }
+                ng = chaosAlgorithms.strobe(
+                    g,
+                    strobeStateRef.current,
+                    strobeExpandThresholdRef.current,
+                    strobeContractThresholdRef.current
+                );
                 break;
             }
             case 'jitter': {
-                const changes = new Map<string, number>();
-                const empties = new Set<string>();
-                const chance = jitterChanceRef.current;
-
-                for (let r = 0; r < currentRows; r++) {
-                    for (let c = 0; c < currentCols; c++) {
-                        const color = g[r]?.[c];
-                        if (color > 0 && Math.random() < chance) {
-                            const emptyNeighbors = [];
-                            for (let dr = -1; dr <= 1; dr++) {
-                                for (let dc = -1; dc <= 1; dc++) {
-                                    if (dr === 0 && dc === 0) continue;
-                                    const nr = r + dr, nc = c + dc;
-                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] === 0) {
-                                        emptyNeighbors.push({nr, nc});
-                                    }
-                                }
-                            }
-                            if (emptyNeighbors.length > 0) {
-                                const target = emptyNeighbors[Math.floor(Math.random() * emptyNeighbors.length)];
-                                const key = `${target.nr},${target.nc}`;
-                                if (!changes.has(key) && !empties.has(`${r},${c}`)) {
-                                    changes.set(key, color);
-                                    empties.add(`${r},${c}`);
-                                }
-                            }
-                        }
-                    }
-                }
-                 empties.forEach(key => {
-                    const [r, c] = key.split(',').map(Number);
-                    if (!changes.has(key)) ng[r][c] = 0;
-                });
-                changes.forEach((color, key) => {
-                    const [r, c] = key.split(',').map(Number);
-                    ng[r][c] = color;
-                });
+                ng = chaosAlgorithms.jitter(g, jitterChanceRef.current);
                 break;
             }
             case 'flow': {
-                const changes = new Map<string, number>();
-                const empties = new Set<string>();
-                const dir = flowDirectionRef.current;
-                const chance = flowChanceRef.current;
-                
-                let r_start = 0, r_end = currentRows, r_inc = 1;
-                let c_start = 0, c_end = currentCols, c_inc = 1;
-        
-                if (dir.includes('down')) { r_start = currentRows - 1; r_end = -1; r_inc = -1; }
-                if (dir.includes('right')) { c_start = currentCols - 1; c_end = -1; c_inc = -1; }
-        
-                for (let r = r_start; r !== r_end; r += r_inc) {
-                    for (let c = c_start; c !== c_end; c += c_inc) {
-                        const color = g[r]?.[c];
-                        if (color > 0 && Math.random() < chance) {
-                            let dr = 0, dc = 0;
-                            if (dir.includes('up')) dr = -1;
-                            if (dir.includes('down')) dr = 1;
-                            if (dir.includes('left')) dc = -1;
-                            if (dir.includes('right')) dc = 1;
-        
-                            const nr = r + dr;
-                            const nc = c + dc;
-        
-                            if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] === 0) {
-                                if (!changes.has(`${nr},${nc}`)) {
-                                    changes.set(`${nr},${nc}`, color);
-                                    empties.add(`${r},${c}`);
-                                }
-                            }
-                        }
-                    }
-                }
-        
-                empties.forEach(key => {
-                    const [r, c] = key.split(',').map(Number);
-                    if (!changes.has(key)) ng[r][c] = 0;
-                });
-                changes.forEach((color, key) => {
-                    const [r, c] = key.split(',').map(Number);
-                    ng[r][c] = color;
-                });
+                ng = movementAlgorithms.flow(g, flowDirectionRef.current as Direction, flowChanceRef.current);
                 break;
             }
             case 'vein': {
-                if (walkers.current.length === 0) {
-                    for(let r = 0; r < currentRows; r++) {
-                        for(let c = 0; c < currentCols; c++) {
-                            if(g[r][c] > 0 && Math.random() < 0.1) {
-                                walkers.current.push({r, c, color: g[r][c]});
-                            }
-                        }
-                    }
-                    if (walkers.current.length === 0 && g.flat().some(cell => cell > 0)) {
-                         let r=0, c=0;
-                         while(g[r][c] === 0) { r = Math.floor(Math.random()*currentRows); c = Math.floor(Math.random()*currentCols); }
-                         walkers.current.push({r,c, color: g[r][c]});
-                    }
-                }
-
-                const foodSources: {r: number, c: number}[] = [];
-                 for(let r = 0; r < currentRows; r++) {
-                    for(let c = 0; c < currentCols; c++) {
-                        if (g[r][c] > 0) foodSources.push({r, c});
-                    }
-                }
-
-                walkers.current.forEach(walker => {
-                    let bestDir = { dr: 0, dc: 0 };
-                    let bestDist = Infinity;
-
-                    if (foodSources.length > 0 && Math.random() < veinSeekStrengthRef.current) {
-                        foodSources.forEach(food => {
-                            const dist = Math.hypot(walker.r - food.r, walker.c - food.c);
-                            if (dist < bestDist && dist > 1) {
-                                bestDist = dist;
-                                bestDir = { dr: Math.sign(food.r - walker.r), dc: Math.sign(food.c - walker.c) };
-                            }
-                        });
-                    } else {
-                        bestDir = { dr: Math.floor(Math.random() * 3) - 1, dc: Math.floor(Math.random() * 3) - 1 };
-                    }
-                    
-                    walker.r += bestDir.dr;
-                    walker.c += bestDir.dc;
-                    walker.r = Math.max(0, Math.min(currentRows - 1, walker.r));
-                    walker.c = Math.max(0, Math.min(currentCols - 1, walker.c));
-
-                    const r_int = Math.round(walker.r);
-                    const c_int = Math.round(walker.c);
-                    ng[r_int][c_int] = walker.color;
-                    
-                    if (Math.random() < veinBranchChanceRef.current) {
-                        walkers.current.push({...walker});
-                    }
-                });
-
-                walkers.current = walkers.current.slice(0, 200); // Limit walker count
+                const result = cellularAlgorithms.vein(
+                    g,
+                    walkers.current,
+                    veinSeekStrengthRef.current,
+                    veinBranchChanceRef.current
+                );
+                ng = result.newGrid;
+                walkers.current = result.newWalkers;
                 break;
             }
             case 'crystallize': {
-                for(let r = 0; r < currentRows; r++) {
-                    for(let c = 0; c < currentCols; c++) {
-                       if (g[r][c] === 0) { // Can only grow into empty space
-                           const neighbors: number[] = [];
-                           for (let dr = -1; dr <= 1; dr++) {
-                               for (let dc = -1; dc <= 1; dc++) {
-                                   if (dr === 0 && dc === 0) continue;
-                                   const nr = r + dr, nc = c + dc;
-                                   if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr][nc] > 0) {
-                                       neighbors.push(g[nr][nc]);
-                                   }
-                               }
-                           }
-                           
-                           if (neighbors.length > 0) {
-                               const counts: {[key:number]: number} = {};
-                               neighbors.forEach(n => { counts[n] = (counts[n] || 0) + 1; });
-                               
-                               for(const color in counts) {
-                                   if (counts[color] >= crystallizeThresholdRef.current) {
-                                       ng[r][c] = parseInt(color);
-                                       break;
-                                   }
-                               }
-                           }
-                       }
-                    }
-                }
+                ng = cellularAlgorithms.crystallize(g, crystallizeThresholdRef.current);
                 break;
             }
             case 'erosion': {
-                for(let r = 0; r < currentRows; r++) {
-                    for(let c = 0; c < currentCols; c++) {
-                        if (g[r][c] > 0 && Math.random() < erosionRateRef.current) {
-                            let emptyNeighbors = 0;
-                            for (let dr = -1; dr <= 1; dr++) {
-                                for (let dc = -1; dc <= 1; dc++) {
-                                    if (dr === 0 && dc === 0) continue;
-                                    const nr = r + dr, nc = c + dc;
-                                    if (nr < 0 || nr >= currentRows || nc < 0 || nc >= currentCols || g[nr][nc] === 0) {
-                                        emptyNeighbors++;
-                                    }
-                                }
-                            }
-                            if (emptyNeighbors >= erosionSolidityRef.current) {
-                                ng[r][c] = 0;
-                            }
-                        }
-                    }
-                }
+                ng = chaosAlgorithms.erosion(g, erosionRateRef.current, erosionSolidityRef.current);
                 break;
             }
             case 'tendrils':
             case 'conway': {
                 const rules = pattern === 'conway' ? conwayRulesRef.current : tendrilsRulesRef.current;
-                const BORN = rules.born;
-                const SURVIVE = rules.survive;
-                
-                for (let r = 0; r < currentRows; r++) {
-                    for (let c = 0; c < currentCols; c++) {
-                        let liveNeighbors = 0;
-                        const neighborColors: number[] = [];
-                        for (let dr = -1; dr <= 1; dr++) {
-                            for (let dc = -1; dc <= 1; dc++) {
-                                if (dr === 0 && dc === 0) continue;
-                                const nr = r + dr;
-                                const nc = c + dc;
-                                if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && g[nr]?.[nc] > 0) {
-                                    liveNeighbors++;
-                                    neighborColors.push(g[nr][nc]);
-                                }
-                            }
-                        }
-
-                        const isAlive = g[r]?.[c] > 0;
-                        if (isAlive && !SURVIVE.includes(liveNeighbors)) {
-                            ng[r][c] = 0;
-                        } else if (!isAlive && BORN.includes(liveNeighbors)) {
-                           const colorCounts = neighborColors.reduce((acc, color) => {
-                                acc[color] = (acc[color] || 0) + 1;
-                                return acc;
-                            }, {} as Record<number, number>);
-                            
-                            let dominantColor = 0;
-                            let maxCount = 0;
-                            for (const color in colorCounts) {
-                                if (colorCounts[color] > maxCount) {
-                                    maxCount = colorCounts[color];
-                                    dominantColor = parseInt(color);
-                                }
-                            }
-                            ng[r][c] = dominantColor > 0 ? dominantColor : (generativeColorIndicesRef.current[0] || 1);
-                        }
-                    }
-                }
+                ng = cellularAlgorithms.conway(g, rules, generativeColorIndicesRef.current);
                 break;
             }
             case 'pulse': {
-                const changes = new Map<string, number>();
-                const direction = pulseDirectionRef.current;
-                let r_start = 0, r_end = currentRows, r_inc = 1;
-                let c_start = 0, c_end = currentCols, c_inc = 1;
-
-                switch (direction) {
-                    case 'up':
-                        r_start = currentRows - 1; r_end = -1; r_inc = -1;
-                        break;
-                    case 'down':
-                        break;
-                    case 'left':
-                        c_start = currentCols - 1; c_end = -1; c_inc = -1;
-                        break;
-                    case 'right':
-                        break;
-                    case 'top-left':
-                        r_start = currentRows - 1; r_end = -1; r_inc = -1;
-                        c_start = currentCols - 1; c_end = -1; c_inc = -1;
-                        break;
-                    case 'top-right':
-                        r_start = currentRows - 1; r_end = -1; r_inc = -1;
-                        break;
-                    case 'bottom-left':
-                        c_start = currentCols - 1; c_end = -1; c_inc = -1;
-                        break;
-                    case 'bottom-right':
-                        break;
-                }
-
-                for (let r = r_start; r !== r_end; r += r_inc) {
-                    for (let c = c_start; c !== c_end; c += c_inc) {
-                        const currentColor = g[r]?.[c];
-                        if (currentColor > 0) {
-                            for (let dr = -1; dr <= 1; dr++) {
-                                for (let dc = -1; dc <= 1; dc++) {
-                                    if (dr === 0 && dc === 0) continue;
-                                    const nr = r + dr;
-                                    const nc = c + dc;
-                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols && (g[nr]?.[nc] === 0 || pulseOvertakesRef.current)) {
-                                        const key = `${nr},${nc}`;
-                                        changes.set(key, currentColor);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                changes.forEach((color, key) => {
-                    const [r, c] = key.split(',').map(Number);
-                    ng[r][c] = color;
-                });
+                ng = movementAlgorithms.pulse(g, pulseDirectionRef.current, pulseOvertakesRef.current);
                 break;
             }
             case 'random': {
-                for (let r = 0; r < currentRows; r++) {
-                    for (let c = 0; c < currentCols; c++) {
-                        const currentColor = g[r]?.[c];
-                        if (currentColor === undefined || currentColor === 0) continue;
-
-                        if (Math.random() < spreadProbabilityRef.current) {
-                            let neighbors: { r: number, c: number }[] = [];
-                            const mode = randomWalkModeRef.current;
-
-                            for (let dr = -1; dr <= 1; dr++) {
-                                for (let dc = -1; dc <= 1; dc++) {
-                                    if (dr === 0 && dc === 0) continue;
-                                    if (mode === 'cardinal' && dr !== 0 && dc !== 0) continue;
-                                    
-                                    const nr = r + dr;
-                                    const nc = c + dc;
-                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols) {
-                                        neighbors.push({ r: nr, c: nc });
-                                    }
-                                }
-                            }
-                            
-                            if (neighbors.length > 0) {
-                                for (let i = neighbors.length - 1; i > 0; i--) {
-                                    const j = Math.floor(Math.random() * (i + 1));
-                                    [neighbors[i], neighbors[j]] = [neighbors[j], neighbors[i]];
-                                }
-                                
-                                const count = randomWalkSpreadCountRef.current;
-                                for(let i=0; i < Math.min(count, neighbors.length); i++) {
-                                    const randomNeighbor = neighbors[i];
-                                    ng[randomNeighbor.r][randomNeighbor.c] = currentColor;
-                                }
-                            }
-                        }
-                    }
-                }
+                ng = chaosAlgorithms.randomWalk(
+                    g,
+                    spreadProbabilityRef.current,
+                    randomWalkModeRef.current,
+                    randomWalkSpreadCountRef.current
+                );
                 break;
             }
             case 'directional': {
-                for (let r = 0; r < currentRows; r++) {
-                    for (let c = 0; c < currentCols; c++) {
-                        const currentColor = g[r]?.[c];
-                        if (currentColor === undefined || currentColor === 0) continue;
-
-                        if (Math.random() < spreadProbabilityRef.current) {
-                            let neighbors: { r: number, c: number }[] = [];
-                            for (let dr = -1; dr <= 1; dr++) {
-                                for (let dc = -1; dc <= 1; dc++) {
-                                    if (dr === 0 && dc === 0) continue;
-                                    const nr = r + dr;
-                                    const nc = c + dc;
-                                    if (nr >= 0 && nr < currentRows && nc >= 0 && nc < currentCols) {
-                                        neighbors.push({ r: nr, c: nc });
-                                    }
-                                }
-                            }
-
-                            if (directionalBiasRef.current !== 'none' && Math.random() < directionalBiasStrengthRef.current) {
-                                const bias = directionalBiasRef.current;
-                                let dr = 0, dc = 0;
-                                
-                                switch (bias) {
-                                    case 'up':          dr = -1; dc =  0; break;
-                                    case 'down':        dr =  1; dc =  0; break;
-                                    case 'left':        dr =  0; dc = -1; break;
-                                    case 'right':       dr =  0; dc =  1; break;
-                                    case 'top-left':    dr = -1; dc = -1; break;
-                                    case 'top-right':   dr = -1; dc =  1; break;
-                                    case 'bottom-left': dr =  1; dc = -1; break;
-                                    case 'bottom-right':dr =  1; dc =  1; break;
-                                }
-        
-                                const biasedNeighbor = { r: r + dr, c: c + dc };
-                                
-                                if (biasedNeighbor.r >= 0 && biasedNeighbor.r < currentRows && biasedNeighbor.c >= 0 && biasedNeighbor.c < currentCols) {
-                                    ng[biasedNeighbor.r][biasedNeighbor.c] = currentColor;
-                                    continue;
-                                }
-                            }
-
-                            if (neighbors.length > 0) {
-                                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
-                                ng[randomNeighbor.r][randomNeighbor.c] = currentColor;
-                            }
-                        }
-                    }
-                }
+                ng = movementAlgorithms.directional(
+                    g,
+                    spreadProbabilityRef.current,
+                    directionalBiasRef.current as Direction | "none",
+                    directionalBiasStrengthRef.current
+                );
                 break;
             }
         }
@@ -1733,71 +962,19 @@ const [panelPos, setPanelPos] = useState(() => {
 
   const addRandomDots = useCallback(() => {
     setGrid(g => {
-        const ng = cloneGrid(g);
-        const availableColors = generativeColorIndicesRef.current.length > 0 ? generativeColorIndicesRef.current : palette.slice(1).map((_, i) => i + 1);
-        if (availableColors.length === 0) return ng;
-
-        const numDots = Math.floor(Math.random() * 6) + 5;
-        for (let i = 0; i < numDots; i++) {
-            const r = Math.floor(Math.random() * rowsRef.current);
-            const c = Math.floor(Math.random() * colsRef.current);
-            const color = availableColors[Math.floor(Math.random() * availableColors.length)];
-            if(ng[r]) ng[r][c] = color;
-        }
-        
-        return ng;
+        const availableColors = generativeColorIndicesRef.current.length > 0
+          ? generativeColorIndicesRef.current
+          : palette.slice(1).map((_, i) => i + 1);
+        return drawingUtils.addRandomDots({ grid: g, availableColors });
     });
   }, [palette]);
 
   const addRandomShapes = useCallback(() => {
     setGrid(g => {
-        const ng = cloneGrid(g);
-        const availableColors = generativeColorIndicesRef.current.length > 0 ? generativeColorIndicesRef.current : palette.slice(1).map((_, i) => i + 1);
-        if (availableColors.length === 0) return ng;
-
-        const currentRows = rowsRef.current;
-        const currentCols = colsRef.current;
-
-        const numShapes = Math.floor(Math.random() * 2) + 1;
-        for (let i = 0; i < numShapes; i++) {
-            const color = availableColors[Math.floor(Math.random() * availableColors.length)];
-            const shapeType = Math.random() > 0.5 ? 'rect' : 'line';
-            
-            if (shapeType === 'rect') {
-                const startR = Math.floor(Math.random() * (currentRows - 5));
-                const startC = Math.floor(Math.random() * (currentCols - 5));
-                const width = Math.floor(Math.random() * 6) + 3;
-                const height = Math.floor(Math.random() * 6) + 3;
-                
-                for (let r = startR; r < Math.min(startR + height, currentRows); r++) {
-                    for (let c = startC; c < Math.min(startC + width, currentCols); c++) {
-                        if(ng[r]) ng[r][c] = color;
-                    }
-                }
-            } else {
-                const startR = Math.floor(Math.random() * currentRows);
-                const startC = Math.floor(Math.random() * currentCols);
-                const isHorizontal = Math.random() > 0.5;
-                const length = Math.floor(Math.random() * 10) + 5;
-                
-                for (let i = 0; i < length; i++) {
-                    let r = startR;
-                    let c = startC;
-                    
-                    if (isHorizontal) {
-                        c += i;
-                    } else {
-                        r += i;
-                    }
-                    
-                    if (r >= 0 && r < currentRows && c >= 0 && c < currentCols) {
-                        if(ng[r]) ng[r][c] = color;
-                    }
-                }
-            }
-        }
-        
-        return ng;
+        const availableColors = generativeColorIndicesRef.current.length > 0
+          ? generativeColorIndicesRef.current
+          : palette.slice(1).map((_, i) => i + 1);
+        return drawingUtils.addRandomShapes({ grid: g, availableColors });
     });
   }, [palette]);
 
@@ -2105,103 +1282,6 @@ if (e.key === 't' || e.key === 'T') {
     window.addEventListener('keydown', handleKeyDown);
     
     
-  
-  // === Recording functions (clean) ===
-  const startRecording = () => {
-    if (!recordEnabled) {
-      setRecordingToast("Enable recording in Visual Settings first");
-      return;
-    }
-    const canvas = canvasRef.current as HTMLCanvasElement | null;
-    if (!canvas) {
-      setRecordingToast("Canvas not ready");
-      return;
-    }
-
-    const fps = 30;
-    const stream: MediaStream | null = (canvas as any).captureStream
-      ? canvas.captureStream(fps)
-      : (canvas as any).mozCaptureStream
-      ? (canvas as any).mozCaptureStream(fps)
-      : null;
-
-    if (!stream) {
-      setRecordingToast("Recording not supported in this browser");
-      return;
-    }
-
-    const candidates = [
-      "video/webm;codecs=vp9",
-      "video/webm;codecs=vp8",
-      "video/webm"
-    ];
-    let mimeType = "";
-    if (typeof MediaRecorder !== "undefined") {
-      for (const type of candidates) {
-        if ((MediaRecorder as any).isTypeSupported?.(type)) { mimeType = type; break; }
-      }
-    }
-
-    let recorder: MediaRecorder;
-    try {
-      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-    } catch (e) {
-      setRecordingToast("Failed to start recorder");
-      return;
-    }
-    mediaRecorderRef.current = recorder;
-    recordedChunksRef.current = [];
-
-    recorder.ondataavailable = (e: BlobEvent) => {
-      if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
-    };
-    recorder.onerror = () => {
-      setRecordingToast("Recording error");
-    };
-    recorder.onstop = () => {
-      try {
-        if (recordedChunksRef.current.length === 0) {
-          setRecordingToast("No data captured");
-        } else {
-          const outType = recorder.mimeType || "video/webm";
-          const blob = new Blob(recordedChunksRef.current, { type: outType });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${sanitizeFilename(recordingFilename || "grid-recording")}-${Date.now()}.webm`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          setRecordingToast("Recording saved");
-        }
-      } finally {
-        // Always stop stream tracks
-        stream.getTracks().forEach(t => t.stop());
-        setIsRecording(false);
-      }
-    };
-
-    try {
-      recorder.start(1000); // 1s timeslice ensures dataavailable fires
-      setIsRecording(true);
-      setRecordingToast("Recording started (press R to stop)");
-    } catch (e) {
-      setRecordingToast("Recorder start failed");
-    }
-  };
-
-  const stopRecording = () => {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state !== "inactive") {
-      try {
-        rec.requestData?.();
-      } catch {}
-      rec.stop();
-      setRecordingToast("Stopping recording…");
-    }
-  };
-  // === End Recording functions (clean) ===
 
   return () => {
       window.removeEventListener('mousemove', handleMouseMove);
@@ -2304,102 +1384,6 @@ if (e.key === 't' || e.key === 'T') {
 
   
   
-  // === Recording functions (clean) ===
-  const startRecording = () => {
-    if (!recordEnabled) {
-      setRecordingToast("Enable recording in Visual Settings first");
-      return;
-    }
-    const canvas = canvasRef.current as HTMLCanvasElement | null;
-    if (!canvas) {
-      setRecordingToast("Canvas not ready");
-      return;
-    }
-
-    const fps = 30;
-    const stream: MediaStream | null = (canvas as any).captureStream
-      ? canvas.captureStream(fps)
-      : (canvas as any).mozCaptureStream
-      ? (canvas as any).mozCaptureStream(fps)
-      : null;
-
-    if (!stream) {
-      setRecordingToast("Recording not supported in this browser");
-      return;
-    }
-
-    const candidates = [
-      "video/webm;codecs=vp9",
-      "video/webm;codecs=vp8",
-      "video/webm"
-    ];
-    let mimeType = "";
-    if (typeof MediaRecorder !== "undefined") {
-      for (const type of candidates) {
-        if ((MediaRecorder as any).isTypeSupported?.(type)) { mimeType = type; break; }
-      }
-    }
-
-    let recorder: MediaRecorder;
-    try {
-      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-    } catch (e) {
-      setRecordingToast("Failed to start recorder");
-      return;
-    }
-    mediaRecorderRef.current = recorder;
-    recordedChunksRef.current = [];
-
-    recorder.ondataavailable = (e: BlobEvent) => {
-      if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
-    };
-    recorder.onerror = () => {
-      setRecordingToast("Recording error");
-    };
-    recorder.onstop = () => {
-      try {
-        if (recordedChunksRef.current.length === 0) {
-          setRecordingToast("No data captured");
-        } else {
-          const outType = recorder.mimeType || "video/webm";
-          const blob = new Blob(recordedChunksRef.current, { type: outType });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${sanitizeFilename(recordingFilename || "grid-recording")}-${Date.now()}.webm`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          setRecordingToast("Recording saved");
-        }
-      } finally {
-        // Always stop stream tracks
-        stream.getTracks().forEach(t => t.stop());
-        setIsRecording(false);
-      }
-    };
-
-    try {
-      recorder.start(1000); // 1s timeslice ensures dataavailable fires
-      setIsRecording(true);
-      setRecordingToast("Recording started (press R to stop)");
-    } catch (e) {
-      setRecordingToast("Recorder start failed");
-    }
-  };
-
-  const stopRecording = () => {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state !== "inactive") {
-      try {
-        rec.requestData?.();
-      } catch {}
-      rec.stop();
-      setRecordingToast("Stopping recording…");
-    }
-  };
-  // === End Recording functions (clean) ===
 
   return (
     <div style={{
@@ -3312,102 +2296,6 @@ if (e.key === 't' || e.key === 'T') {
                         const colorIndex = index + 1;
                         
   
-  // === Recording functions (clean) ===
-  const startRecording = () => {
-    if (!recordEnabled) {
-      setRecordingToast("Enable recording in Visual Settings first");
-      return;
-    }
-    const canvas = canvasRef.current as HTMLCanvasElement | null;
-    if (!canvas) {
-      setRecordingToast("Canvas not ready");
-      return;
-    }
-
-    const fps = 30;
-    const stream: MediaStream | null = (canvas as any).captureStream
-      ? canvas.captureStream(fps)
-      : (canvas as any).mozCaptureStream
-      ? (canvas as any).mozCaptureStream(fps)
-      : null;
-
-    if (!stream) {
-      setRecordingToast("Recording not supported in this browser");
-      return;
-    }
-
-    const candidates = [
-      "video/webm;codecs=vp9",
-      "video/webm;codecs=vp8",
-      "video/webm"
-    ];
-    let mimeType = "";
-    if (typeof MediaRecorder !== "undefined") {
-      for (const type of candidates) {
-        if ((MediaRecorder as any).isTypeSupported?.(type)) { mimeType = type; break; }
-      }
-    }
-
-    let recorder: MediaRecorder;
-    try {
-      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-    } catch (e) {
-      setRecordingToast("Failed to start recorder");
-      return;
-    }
-    mediaRecorderRef.current = recorder;
-    recordedChunksRef.current = [];
-
-    recorder.ondataavailable = (e: BlobEvent) => {
-      if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
-    };
-    recorder.onerror = () => {
-      setRecordingToast("Recording error");
-    };
-    recorder.onstop = () => {
-      try {
-        if (recordedChunksRef.current.length === 0) {
-          setRecordingToast("No data captured");
-        } else {
-          const outType = recorder.mimeType || "video/webm";
-          const blob = new Blob(recordedChunksRef.current, { type: outType });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${sanitizeFilename(recordingFilename || "grid-recording")}-${Date.now()}.webm`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          setRecordingToast("Recording saved");
-        }
-      } finally {
-        // Always stop stream tracks
-        stream.getTracks().forEach(t => t.stop());
-        setIsRecording(false);
-      }
-    };
-
-    try {
-      recorder.start(1000); // 1s timeslice ensures dataavailable fires
-      setIsRecording(true);
-      setRecordingToast("Recording started (press R to stop)");
-    } catch (e) {
-      setRecordingToast("Recorder start failed");
-    }
-  };
-
-  const stopRecording = () => {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state !== "inactive") {
-      try {
-        rec.requestData?.();
-      } catch {}
-      rec.stop();
-      setRecordingToast("Stopping recording…");
-    }
-  };
-  // === End Recording functions (clean) ===
 
   return (
                             <label 
