@@ -1,16 +1,12 @@
-import { useCallback, useRef, useState } from 'react';
-
-// Helper function to sanitize filenames
-const sanitizeFilename = (name: string) => name.replace(/[^a-z0-9-_]+/gi, "_");
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface UseRecordingReturn {
   recordEnabled: boolean;
-  setRecordEnabled: (enabled: boolean) => void;
   isRecording: boolean;
   recordingFilename: string;
-  setRecordingFilename: (filename: string) => void;
   recordingToast: string | null;
-  setRecordingToast: (toast: string | null) => void;
+  setRecordEnabled: (enabled: boolean) => void;
+  setRecordingFilename: (filename: string) => void;
   startRecording: () => void;
   stopRecording: () => void;
 }
@@ -24,8 +20,8 @@ export function useRecording(canvasRef: React.RefObject<HTMLCanvasElement>): Use
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
 
-  // CRITICAL: These functions are properly scoped at component level using useCallback
-  // They will be accessible to keyboard handlers and won't cause scope issues
+  const sanitizeFilename = (name: string) => name.replace(/[^a-z0-9-_]+/gi, "_");
+
   const startRecording = useCallback(() => {
     if (!recordEnabled) {
       setRecordingToast("Enable recording in Visual Settings first");
@@ -57,18 +53,13 @@ export function useRecording(canvasRef: React.RefObject<HTMLCanvasElement>): Use
     let mimeType = "";
     if (typeof MediaRecorder !== "undefined") {
       for (const type of candidates) {
-        if ((MediaRecorder as any).isTypeSupported?.(type)) {
-          mimeType = type;
-          break;
-        }
+        if ((MediaRecorder as any).isTypeSupported?.(type)) { mimeType = type; break; }
       }
     }
 
     let recorder: MediaRecorder;
     try {
-      recorder = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream);
+      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
     } catch (e) {
       setRecordingToast("Failed to start recorder");
       return;
@@ -100,14 +91,13 @@ export function useRecording(canvasRef: React.RefObject<HTMLCanvasElement>): Use
           setRecordingToast("Recording saved");
         }
       } finally {
-        // Always stop stream tracks
         stream.getTracks().forEach(t => t.stop());
         setIsRecording(false);
       }
     };
 
     try {
-      recorder.start(1000); // 1s timeslice ensures dataavailable fires
+      recorder.start(1000);
       setIsRecording(true);
       setRecordingToast("Recording started (press R to stop)");
     } catch (e) {
@@ -126,15 +116,36 @@ export function useRecording(canvasRef: React.RefObject<HTMLCanvasElement>): Use
     }
   }, []);
 
+  useEffect(() => {
+    const handleRecordingShortcut = (e: KeyboardEvent) => {
+      if (e.key && e.key.toLowerCase() === "r" && recordEnabled) {
+        e.preventDefault();
+        if (isRecording) {
+          stopRecording();
+        } else {
+          startRecording();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleRecordingShortcut);
+    return () => window.removeEventListener("keydown", handleRecordingShortcut);
+  }, [isRecording, recordEnabled, startRecording, stopRecording]);
+
+  useEffect(() => {
+    if (recordingToast) {
+      const t = setTimeout(() => setRecordingToast(null), 1400);
+      return () => clearTimeout(t);
+    }
+  }, [recordingToast]);
+
   return {
     recordEnabled,
-    setRecordEnabled,
     isRecording,
     recordingFilename,
-    setRecordingFilename,
     recordingToast,
-    setRecordingToast,
+    setRecordEnabled,
+    setRecordingFilename,
     startRecording,
-    stopRecording
+    stopRecording,
   };
 }
