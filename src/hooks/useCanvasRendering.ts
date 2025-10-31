@@ -129,6 +129,5 @@ export function useCanvasRendering() {
     canvasRef,
     canvasContainerRef,
     clearButtonRef,
-    updateClearButtonColor,
   };
 }

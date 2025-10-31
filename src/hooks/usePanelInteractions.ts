@@ -119,10 +119,6 @@ export function usePanelInteractions() {
 
   return {
     panelRef,
-    panelDimensions,
-    isDragging,
-    dragOffset,
-    mousePos,
     handleHeaderMouseDown,
   };
 }

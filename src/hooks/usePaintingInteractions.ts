@@ -5,7 +5,6 @@ import { usePaintStore } from '../stores/paintStore';
 import { rgbToHex } from '../utils/color';
 
 export interface UsePaintingInteractionsReturn {
-  isMouseDown: React.RefObject<boolean>;
   handleMouseDown: (e: React.MouseEvent, canvasRef: React.RefObject<HTMLCanvasElement | null>) => void;
   handleMouseUp: () => void;
   handleMouseMove: (e: React.MouseEvent, canvasRef: React.RefObject<HTMLCanvasElement | null>) => void;
@@ -129,7 +128,6 @@ export function usePaintingInteractions(): UsePaintingInteractionsReturn {
   };
 
   return {
-    isMouseDown,
     handleMouseDown,
     handleMouseUp,
     handleMouseMove,

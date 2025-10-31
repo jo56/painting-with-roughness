@@ -8,6 +8,29 @@ import { useCanvasStore } from './canvasStore';
 import { useGenerativeStore } from './generativeStore';
 import { usePaintStore } from './paintStore';
 
+/**
+ * Helper function to convert generative palette color indices to actual color indices.
+ * If the generative color matches the main palette color, use the palette index.
+ * Otherwise, create/get a custom color index.
+ */
+function convertToActualColorIndices(
+  colorIndices: number[],
+  generativePalette: string[],
+  mainPalette: string[],
+  getOrCreateCustomColorIndex: (color: string) => number
+): number[] {
+  return colorIndices.map(index => {
+    const genColor = generativePalette[index];
+    const mainColor = mainPalette[index];
+
+    if (genColor?.toLowerCase() === mainColor?.toLowerCase()) {
+      return index;
+    }
+
+    return getOrCreateCustomColorIndex(genColor);
+  });
+}
+
 interface AutomationState {
   // State
   autoSpreading: boolean;
@@ -144,19 +167,12 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
           const rules = pattern === 'conway' ? generativeState.conwayRules : generativeState.tendrilsRules;
           const paintState = usePaintStore.getState();
 
-          // Convert generative palette colors to actual color indices
-          const availableColors = generativeState.generativeColorIndices.map(index => {
-            const genColor = generativeState.generativePalette[index];
-            const mainColor = paintState.palette[index];
-
-            // If colors match, use the palette index
-            if (genColor?.toLowerCase() === mainColor?.toLowerCase()) {
-              return index;
-            }
-
-            // Otherwise, use custom color map
-            return canvasState.getOrCreateCustomColorIndex(genColor);
-          });
+          const availableColors = convertToActualColorIndices(
+            generativeState.generativeColorIndices,
+            generativeState.generativePalette,
+            paintState.palette,
+            canvasState.getOrCreateCustomColorIndex
+          );
 
           ng = cellularAlgorithms.conway(g, rules, availableColors);
           break;
@@ -198,19 +214,12 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
         ? generativeState.generativeColorIndices
         : paintState.palette.slice(1).map((_, i) => i + 1);
 
-      // Convert generative palette colors to actual color indices
-      const availableColors = colorIndices.map(index => {
-        const genColor = generativeState.generativePalette[index];
-        const mainColor = paintState.palette[index];
-
-        // If colors match, use the palette index
-        if (genColor?.toLowerCase() === mainColor?.toLowerCase()) {
-          return index;
-        }
-
-        // Otherwise, use custom color map
-        return canvasState.getOrCreateCustomColorIndex(genColor);
-      });
+      const availableColors = convertToActualColorIndices(
+        colorIndices,
+        generativeState.generativePalette,
+        paintState.palette,
+        canvasState.getOrCreateCustomColorIndex
+      );
 
       return drawingUtils.addRandomDots({ grid: g, availableColors });
     });
@@ -226,19 +235,12 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
         ? generativeState.generativeColorIndices
         : paintState.palette.slice(1).map((_, i) => i + 1);
 
-      // Convert generative palette colors to actual color indices
-      const availableColors = colorIndices.map(index => {
-        const genColor = generativeState.generativePalette[index];
-        const mainColor = paintState.palette[index];
-
-        // If colors match, use the palette index
-        if (genColor?.toLowerCase() === mainColor?.toLowerCase()) {
-          return index;
-        }
-
-        // Otherwise, use custom color map
-        return canvasState.getOrCreateCustomColorIndex(genColor);
-      });
+      const availableColors = convertToActualColorIndices(
+        colorIndices,
+        generativeState.generativePalette,
+        paintState.palette,
+        canvasState.getOrCreateCustomColorIndex
+      );
 
       return drawingUtils.addRandomShapes({ grid: g, availableColors });
     });

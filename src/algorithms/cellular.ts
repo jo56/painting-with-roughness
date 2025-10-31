@@ -1,6 +1,8 @@
 import type { FoodSource } from "../types";
 import { cloneGrid } from "../utils/grid";
 
+const MAX_WALKERS = 200;
+
 interface Walker {
   r: number;
   c: number;
@@ -194,7 +196,7 @@ export function vein(
     }
   });
 
-  const limitedWalkers = walkers.slice(0, 200);
+  const limitedWalkers = walkers.slice(0, MAX_WALKERS);
 
   return { newGrid: ng, newWalkers: limitedWalkers };
 }

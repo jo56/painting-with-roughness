@@ -115,7 +115,7 @@ export function flow(
     r_end = -1;
     r_inc = -1;
   }
-  if (direction.includes("Right")) {
+  if (direction.includes("right")) {
     c_start = cols - 1;
     c_end = -1;
     c_inc = -1;
