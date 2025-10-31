@@ -41,7 +41,7 @@ export function OptionsToggle({
   ];
 
   return (
-    <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+    <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start' }}>
       {sectionToggles.map(({ label, onClick, active }) => (
         <button
           key={label}

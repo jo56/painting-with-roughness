@@ -55,7 +55,7 @@ export function AutoControls({
   };
 
   return (
-    <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+    <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start' }}>
       <button
         onClick={() => {
           setIsSavingColor(false);
