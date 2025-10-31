@@ -7,6 +7,8 @@ interface CanvasState {
   rows: number;
   cols: number;
   grid: number[][];
+  customColorMap: Record<number, string>; // Maps grid indices to custom color hex values
+  nextCustomColorIndex: number;
   showGrid: boolean;
   backgroundColor: string;
   clearButtonColor: string;
@@ -22,6 +24,7 @@ interface CanvasState {
   handleRowsChange: (newRows: number) => void;
   handleColsChange: (newCols: number) => void;
   clear: () => void;
+  getOrCreateCustomColorIndex: (hexColor: string) => number;
 }
 
 const defaults = {
@@ -38,6 +41,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   rows: defaults.rows,
   cols: defaults.cols,
   grid: createEmptyGrid(defaults.rows, defaults.cols),
+  customColorMap: {},
+  nextCustomColorIndex: 1000, // Start custom color indices at 1000 to avoid conflicts with palette
   showGrid: defaults.showGrid,
   backgroundColor: defaults.backgroundColor,
   clearButtonColor: '#ff6b6b',
@@ -51,6 +56,25 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   setShowGrid: (showGrid) => set({ showGrid }),
   setBackgroundColor: (backgroundColor) => set({ backgroundColor }),
   setClearButtonColor: (clearButtonColor) => set({ clearButtonColor }),
+
+  getOrCreateCustomColorIndex: (hexColor: string) => {
+    const { customColorMap, nextCustomColorIndex } = get();
+
+    // Check if this color already has an index
+    for (const [index, color] of Object.entries(customColorMap)) {
+      if (color.toLowerCase() === hexColor.toLowerCase()) {
+        return parseInt(index);
+      }
+    }
+
+    // Create new index for this color
+    const newIndex = nextCustomColorIndex;
+    set({
+      customColorMap: { ...customColorMap, [newIndex]: hexColor },
+      nextCustomColorIndex: nextCustomColorIndex + 1
+    });
+    return newIndex;
+  },
 
   handleRowsChange: (newRows: number) => {
     const { cols, grid: currentGrid } = get();

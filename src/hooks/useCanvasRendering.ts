@@ -13,7 +13,7 @@ export function useCanvasRendering() {
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
   const clearButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const { grid, rows, cols, cellSize, backgroundColor, showGrid } = useCanvasStore();
+  const { grid, rows, cols, cellSize, backgroundColor, showGrid, customColorMap } = useCanvasStore();
   const { palette, customColor } = usePaintStore();
   const { panelVisible, currentTheme, panelTransparent } = useUIStore();
   const setClearButtonColor = useCanvasStore((state) => state.setClearButtonColor);
@@ -35,8 +35,13 @@ export function useCanvasRendering() {
         const colorIndex = grid[r]?.[c];
         if (colorIndex > 0) {
           if (colorIndex === palette.length) {
+            // Legacy: current custom color picker value
             ctx.fillStyle = customColor;
+          } else if (colorIndex >= 1000) {
+            // Custom color from map
+            ctx.fillStyle = customColorMap[colorIndex] || '#ffffff';
           } else {
+            // Palette color
             ctx.fillStyle = palette[colorIndex];
           }
           ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
@@ -60,7 +65,7 @@ export function useCanvasRendering() {
         ctx.stroke();
       }
     }
-  }, [grid, rows, cols, cellSize, backgroundColor, showGrid, palette, customColor]);
+  }, [grid, rows, cols, cellSize, backgroundColor, showGrid, palette, customColor, customColorMap]);
 
   const updateClearButtonColor = useCallback(() => {
     if (!clearButtonRef.current || !canvasRef.current || !panelVisible) {

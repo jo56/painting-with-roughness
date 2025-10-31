@@ -25,7 +25,7 @@ export function PaletteSection({
 }: PaletteSectionProps) {
   return (
     <div style={{ marginBottom: '12px' }}>
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', padding: '4px' }}>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
         {palette.slice(1).map((color, index) => (
           <button
             key={index + 1}
@@ -45,7 +45,7 @@ export function PaletteSection({
           />
         ))}
 
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
           <div
             style={{
               position: 'relative',

@@ -67,7 +67,7 @@ export function PaintStudioUI(props: PaintStudioUIProps) {
             onMouseUp={props.handleMouseUp}
             onMouseMove={props.handleMouseMove}
             style={{
-              cursor: paintState.tool === 'fill' ? 'pointer' : 'crosshair',
+              cursor: paintState.tool === 'fill' || paintState.tool === 'eyedropper' ? 'pointer' : 'crosshair',
               display: 'block'
             }}
           />
