@@ -1,10 +1,16 @@
+import React from 'react';
+import { Theme } from '../types/ui';
+
 interface ToolBarProps {
   tool: string;
   setTool: (tool: string) => void;
   setIsSavingColor: (value: boolean) => void;
   showAutoControls: boolean;
   setShowAutoControls: (value: boolean | ((prev: boolean) => boolean)) => void;
-  themeConfig: any;
+  currentThemeConfig: Theme;
+  clearButtonRef: React.RefObject<HTMLButtonElement | null>;
+  clear: () => void;
+  clearButtonColor: string;
 }
 
 export function ToolBar({
@@ -13,15 +19,19 @@ export function ToolBar({
   setIsSavingColor,
   showAutoControls,
   setShowAutoControls,
-  themeConfig,
+  currentThemeConfig,
+  clearButtonRef,
+  clear,
+  clearButtonColor,
 }: ToolBarProps) {
   return (
     <div style={{ marginBottom: '12px' }}>
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start' }}>
         {[
           { label: 'Brush', value: 'brush' },
           { label: 'Fill', value: 'fill' },
-          { label: 'Eraser', value: 'eraser' }
+          { label: 'Eraser', value: 'eraser' },
+          { label: 'Eyedrop', value: 'eyedropper' }
         ].map(({ label, value }) => (
           <button
             key={value}
@@ -31,9 +41,9 @@ export function ToolBar({
               cursor: 'pointer',
               fontSize: '0.9rem',
               minWidth: '60px',
-              textAlign: 'center' as const,
+              textAlign: 'center',
               transition: 'all 0.2s ease',
-              ...themeConfig.button(tool === value, value)
+              ...currentThemeConfig.button(tool === value, value)
             }}
           >
             {label}
@@ -48,10 +58,27 @@ export function ToolBar({
             minWidth: '50px',
             textAlign: 'center' as const,
             transition: 'all 0.2s ease',
-            ...themeConfig.button(showAutoControls, 'auto')
+            ...currentThemeConfig.button(showAutoControls, 'auto')
           }}
         >
           Auto
+        </button>
+        <button
+          ref={clearButtonRef}
+          onClick={() => { clear(); setIsSavingColor(false); }}
+          style={{
+            ...currentThemeConfig.clear,
+            color: clearButtonColor,
+            padding: '4px 8px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            minWidth: '50px',
+            textAlign: 'center' as const,
+            transition: 'all 0.2s ease',
+            fontWeight: 'bold',
+          }}
+        >
+          Clear
         </button>
       </div>
     </div>

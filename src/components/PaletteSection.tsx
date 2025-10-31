@@ -5,7 +5,7 @@ interface PaletteSectionProps {
   selectedColor: number;
   customColor: string;
   isSavingColor: boolean;
-  panelRef: React.RefObject<HTMLDivElement>;
+  panelRef: React.RefObject<HTMLDivElement | null>;
   handlePaletteClick: (index: number) => void;
   setCustomColor: (value: string) => void;
   setSelectedColor: (value: number) => void;
@@ -25,7 +25,7 @@ export function PaletteSection({
 }: PaletteSectionProps) {
   return (
     <div style={{ marginBottom: '12px' }}>
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', padding: '4px' }}>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
         {palette.slice(1).map((color, index) => (
           <button
             key={index + 1}
@@ -45,7 +45,7 @@ export function PaletteSection({
           />
         ))}
 
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
           <div
             style={{
               position: 'relative',
@@ -115,7 +115,7 @@ export function PaletteSection({
       </div>
       {isSavingColor && (
         <div style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace', marginTop: '6px' }}>
-          Select a color slot to replace it.
+          Select a palette or generative color slot to replace it.
         </div>
       )}
     </div>

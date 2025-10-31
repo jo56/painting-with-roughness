@@ -7,8 +7,9 @@
 
 /* Global Styles */
 html, body {
-  height: 100%;
+  min-height: 100%;
   width: 100%;
+  background: black;
 }
 
 body {
@@ -17,11 +18,11 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
+  overflow: auto;
 }
 
 #root {
-  height: 100%;
+  min-height: 100%;
   width: 100%;
 }
 
@@ -31,4 +32,23 @@ body {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+}
+
+.scrollable-settings::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollable-settings {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+select option {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+select:focus option:checked {
+  background: #333333 !important;
+  color: #ffffff !important;
 }

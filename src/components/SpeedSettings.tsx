@@ -1,27 +1,41 @@
 import React from 'react';
+import { Theme } from '../types/ui';
+import {
+  LABEL_STYLE,
+  VALUE_DISPLAY_STYLE,
+  SLIDER_CONTAINER_STYLE,
+  SLIDER_INPUT_STYLE,
+  SETTINGS_ITEM_STYLE
+} from '../constants/componentStyles';
 
 interface SpeedSettingsProps {
-  spreadProbability: number;
+  showSpeedSettings: boolean;
+  setShowSpeedSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
   autoSpreadSpeed: number;
   autoDotsSpeed: number;
   autoShapesSpeed: number;
-  setSpreadProbability: (value: number) => void;
+  spreadProbability: number;
   setAutoSpreadSpeed: (value: number) => void;
   setAutoDotsSpeed: (value: number) => void;
   setAutoShapesSpeed: (value: number) => void;
+  setSpreadProbability: (value: number) => void;
   panelTransparent: boolean;
+  currentThemeConfig: Theme;
 }
 
 export function SpeedSettings({
-  spreadProbability,
+  showSpeedSettings,
+  setShowSpeedSettings,
   autoSpreadSpeed,
   autoDotsSpeed,
   autoShapesSpeed,
-  setSpreadProbability,
+  spreadProbability,
   setAutoSpreadSpeed,
   setAutoDotsSpeed,
   setAutoShapesSpeed,
+  setSpreadProbability,
   panelTransparent,
+  currentThemeConfig,
 }: SpeedSettingsProps) {
   const settings = [
     { label: 'Spread Rate', value: spreadProbability, min: 0, max: 1, step: 0.01, setter: setSpreadProbability, unit: '%', isRate: true },
@@ -50,22 +64,12 @@ export function SpeedSettings({
         Speed Controls
       </label>
       {settings.map(({ label, value, min, max, step, setter, unit, isRate }) => (
-        <div key={label} style={{ marginBottom: '8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-            <label style={{
-              fontSize: '0.85rem',
-              fontWeight: '400',
-              fontFamily: 'monospace',
-              color: '#ffffff',
-              letterSpacing: '0.3px'
-            }}>
+        <div key={label} style={SETTINGS_ITEM_STYLE}>
+          <div style={SLIDER_CONTAINER_STYLE}>
+            <label style={LABEL_STYLE}>
               {label}:
             </label>
-            <span style={{
-              fontSize: '0.8rem',
-              color: '#666666',
-              fontFamily: 'monospace'
-            }}>
+            <span style={VALUE_DISPLAY_STYLE}>
               {isRate ? `${Math.round(value * 100)}${unit}` : `${value}${unit}`}
             </span>
           </div>
@@ -76,7 +80,7 @@ export function SpeedSettings({
             step={step}
             value={value}
             onChange={(e) => setter(Number(e.target.value))}
-            style={{ width: '100%', height: '6px' }}
+            style={SLIDER_INPUT_STYLE}
           />
         </div>
       ))}

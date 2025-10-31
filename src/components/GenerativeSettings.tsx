@@ -1,20 +1,33 @@
 import React from 'react';
-import type { SpreadPattern } from '../types';
+import type { SpreadPattern, Direction } from '../types';
+import { Theme } from '../types/ui';
 import { RuleEditor } from './RuleEditor';
+import {
+  LABEL_STYLE,
+  VALUE_DISPLAY_STYLE,
+  SLIDER_CONTAINER_STYLE,
+  SLIDER_INPUT_STYLE,
+  SETTINGS_SECTION_STYLE
+} from '../constants/componentStyles';
 
 interface GenerativeSettingsProps {
+  showGenerativeSettings: boolean;
+  setShowGenerativeSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
   spreadPattern: SpreadPattern;
+  spreadProbability: number;
   setSpreadPattern: (value: SpreadPattern) => void;
+  setSpreadProbability: (value: number) => void;
   resetGenerativeSettings: () => void;
-  panelTransparent: boolean;
-  isSavingColor: boolean;
-  customColor: string;
   palette: string[];
   generativeColorIndices: number[];
   handleGenerativeColorToggle: (colorIndex: number) => void;
+  isSavingColor: boolean;
+  customColor: string;
+  setPalette: (palette: string[] | ((prev: string[]) => string[])) => void;
+  setSelectedColor: (color: number | ((prev: number) => number)) => void;
   setIsSavingColor: (value: boolean | ((prev: boolean) => boolean)) => void;
-  setPalette: (value: string[] | ((prev: string[]) => string[])) => void;
-  setSelectedColor: (value: number) => void;
+  panelTransparent: boolean;
+  currentThemeConfig: Theme;
 
   // Pattern-specific settings
   rippleChance: number;
@@ -29,8 +42,8 @@ interface GenerativeSettingsProps {
   setStrobeContractThreshold: (value: number) => void;
   jitterChance: number;
   setJitterChance: (value: number) => void;
-  flowDirection: string;
-  setFlowDirection: (value: string) => void;
+  flowDirection: Direction;
+  setFlowDirection: (value: Direction) => void;
   flowChance: number;
   setFlowChance: (value: number) => void;
   veinSeekStrength: number;
@@ -43,44 +56,46 @@ interface GenerativeSettingsProps {
   setErosionRate: (value: number) => void;
   erosionSolidity: number;
   setErosionSolidity: (value: number) => void;
-  randomWalkMode: string;
-  setRandomWalkMode: (value: string) => void;
+  randomWalkMode: 'any' | 'cardinal';
+  setRandomWalkMode: (value: 'any' | 'cardinal') => void;
   randomWalkSpreadCount: number;
   setRandomWalkSpreadCount: (value: number) => void;
   conwayRules: { born: number[]; survive: number[] };
-  setConwayRules: (value: { born: number[]; survive: number[] } | ((prev: { born: number[]; survive: number[] }) => { born: number[]; survive: number[] })) => void;
+  setConwayRules: (value: { born: number[]; survive: number[] }) => void;
   tendrilsRules: { born: number[]; survive: number[] };
-  setTendrilsRules: (value: { born: number[]; survive: number[] } | ((prev: { born: number[]; survive: number[] }) => { born: number[]; survive: number[] })) => void;
+  setTendrilsRules: (value: { born: number[]; survive: number[] }) => void;
   pulseSpeed: number;
   setPulseSpeed: (value: number) => void;
-  pulseDirection: string;
-  setPulseDirection: (value: string) => void;
+  pulseDirection: Direction;
+  setPulseDirection: (value: Direction) => void;
   pulseOvertakes: boolean;
   setPulseOvertakes: (value: boolean) => void;
-  directionalBias: string;
-  setDirectionalBias: (value: string) => void;
+  directionalBias: 'none' | Direction;
+  setDirectionalBias: (value: 'none' | Direction) => void;
   directionalBiasStrength: number;
   setDirectionalBiasStrength: (value: number) => void;
 
-  // Ref for walker reset
-  walkersRef?: React.MutableRefObject<{r: number, c: number, color: number}[]>;
 }
 
 export function GenerativeSettings(props: GenerativeSettingsProps) {
   const {
+    showGenerativeSettings,
+    setShowGenerativeSettings,
     spreadPattern,
+    spreadProbability,
     setSpreadPattern,
+    setSpreadProbability,
     resetGenerativeSettings,
-    panelTransparent,
-    isSavingColor,
-    customColor,
     palette,
     generativeColorIndices,
     handleGenerativeColorToggle,
-    setIsSavingColor,
+    isSavingColor,
+    customColor,
     setPalette,
     setSelectedColor,
-    walkersRef
+    setIsSavingColor,
+    panelTransparent,
+    currentThemeConfig
   } = props;
 
   return (
@@ -101,7 +116,6 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
           <select
             value={spreadPattern}
             onChange={(e) => {
-              if (e.target.value === 'vein' && walkersRef) walkersRef.current = [];
               setSpreadPattern(e.target.value as SpreadPattern);
             }}
             style={{
@@ -200,13 +214,13 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
       )}
 
       {spreadPattern === 'vortex' && (
-        <div style={{ background: 'transparent', padding: '8px', borderRadius: '0', border: 'none' }}>
+        <div style={SETTINGS_SECTION_STYLE}>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
+            <div style={SLIDER_CONTAINER_STYLE}>
+              <label style={LABEL_STYLE}>
                 Vortex Count:
               </label>
-              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>
+              <span style={VALUE_DISPLAY_STYLE}>
                 {props.vortexCount}
               </span>
             </div>
@@ -216,20 +230,21 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
               max={50}
               value={props.vortexCount}
               onChange={(e) => props.setVortexCount(Number(e.target.value))}
-              style={{ width: '100%', height: '6px' }}
+              style={SLIDER_INPUT_STYLE}
             />
           </div>
         </div>
       )}
 
+      {/* Note: 'strobe' pattern not yet available in dropdown but implementation ready */}
       {spreadPattern === 'strobe' && (
-        <div style={{ background: 'transparent', padding: '8px', borderRadius: '0', border: 'none' }}>
+        <div style={SETTINGS_SECTION_STYLE}>
           <div style={{ marginBottom: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
+            <div style={SLIDER_CONTAINER_STYLE}>
+              <label style={LABEL_STYLE}>
                 Expand Threshold:
               </label>
-              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>
+              <span style={VALUE_DISPLAY_STYLE}>
                 {props.strobeExpandThreshold} Neighbors
               </span>
             </div>
@@ -239,15 +254,15 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
               max={8}
               value={props.strobeExpandThreshold}
               onChange={(e) => props.setStrobeExpandThreshold(Number(e.target.value))}
-              style={{ width: '100%', height: '6px' }}
+              style={SLIDER_INPUT_STYLE}
             />
           </div>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
+            <div style={SLIDER_CONTAINER_STYLE}>
+              <label style={LABEL_STYLE}>
                 Contract Threshold:
               </label>
-              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>
+              <span style={VALUE_DISPLAY_STYLE}>
                 {props.strobeContractThreshold} Neighbors
               </span>
             </div>
@@ -257,20 +272,20 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
               max={8}
               value={props.strobeContractThreshold}
               onChange={(e) => props.setStrobeContractThreshold(Number(e.target.value))}
-              style={{ width: '100%', height: '6px' }}
+              style={SLIDER_INPUT_STYLE}
             />
           </div>
         </div>
       )}
 
       {spreadPattern === 'jitter' && (
-        <div style={{ background: 'transparent', padding: '8px', borderRadius: '0', border: 'none' }}>
+        <div style={SETTINGS_SECTION_STYLE}>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '400', fontFamily: 'monospace', color: '#ffffff', letterSpacing: '0.3px' }}>
+            <div style={SLIDER_CONTAINER_STYLE}>
+              <label style={LABEL_STYLE}>
                 Jitter Chance:
               </label>
-              <span style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace' }}>
+              <span style={VALUE_DISPLAY_STYLE}>
                 {Math.round(props.jitterChance * 100)}%
               </span>
             </div>
@@ -295,7 +310,7 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
             </label>
             <select
               value={props.flowDirection}
-              onChange={(e) => props.setFlowDirection(e.target.value)}
+              onChange={(e) => props.setFlowDirection(e.target.value as Direction)}
               style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
             >
               <option value="down">Down</option>
@@ -442,7 +457,7 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
             </label>
             <select
               value={props.randomWalkMode}
-              onChange={(e) => props.setRandomWalkMode(e.target.value)}
+              onChange={(e) => props.setRandomWalkMode(e.target.value as 'any' | 'cardinal')}
               style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
             >
               <option value="any">8 Directions (Any)</option>
@@ -476,12 +491,12 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
           <RuleEditor
             label="Survive Counts"
             rules={props.conwayRules.survive}
-            onChange={(newSurvive) => props.setConwayRules(r => ({ ...r, survive: newSurvive }))}
+            onChange={(newSurvive) => props.setConwayRules({ ...props.conwayRules, survive: newSurvive })}
           />
           <RuleEditor
             label="Birth Counts"
             rules={props.conwayRules.born}
-            onChange={(newBorn) => props.setConwayRules(r => ({ ...r, born: newBorn }))}
+            onChange={(newBorn) => props.setConwayRules({ ...props.conwayRules, born: newBorn })}
           />
         </div>
       )}
@@ -491,12 +506,12 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
           <RuleEditor
             label="Survive Counts"
             rules={props.tendrilsRules.survive}
-            onChange={(newSurvive) => props.setTendrilsRules(r => ({ ...r, survive: newSurvive }))}
+            onChange={(newSurvive) => props.setTendrilsRules({ ...props.tendrilsRules, survive: newSurvive })}
           />
           <RuleEditor
             label="Birth Counts"
             rules={props.tendrilsRules.born}
-            onChange={(newBorn) => props.setTendrilsRules(r => ({ ...r, born: newBorn }))}
+            onChange={(newBorn) => props.setTendrilsRules({ ...props.tendrilsRules, born: newBorn })}
           />
         </div>
       )}
@@ -527,7 +542,7 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
             </label>
             <select
               value={props.pulseDirection}
-              onChange={(e) => props.setPulseDirection(e.target.value)}
+              onChange={(e) => props.setPulseDirection(e.target.value as Direction)}
               style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
             >
               <option value="top-left">Top-Left</option>
@@ -558,7 +573,7 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
             </label>
             <select
               value={props.directionalBias}
-              onChange={(e) => props.setDirectionalBias(e.target.value)}
+              onChange={(e) => props.setDirectionalBias(e.target.value as 'none' | Direction)}
               style={{ padding: '4px 8px', borderRadius: '0', background: '#1a1a1a', color: '#ffffff', border: '1px solid #333333', fontFamily: 'monospace', letterSpacing: '0.3px', width: '100%' }}
             >
               <option value="up">Up</option>
@@ -610,31 +625,43 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
                 cursor: 'pointer',
                 padding: '2px',
                 borderRadius: '0',
-                outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
-                outlineOffset: '2px',
-                transition: 'outline 0.2s',
               }}
-              title={isSavingColor ? `Save ${customColor} to this slot` : `Toggle color for generation`}
-              onClick={(e) => {
-                if (isSavingColor) {
-                  e.preventDefault();
-                  setPalette(p => {
-                    const newPalette = [...p];
-                    newPalette[colorIndex] = customColor;
-                    return newPalette;
-                  });
-                  setIsSavingColor(false);
-                  setSelectedColor(colorIndex);
-                }
-              }}
+              title={isSavingColor ? `Save ${customColor} to this slot and enable for generative` : "Toggle color for generation"}
             >
               <input
                 type="checkbox"
                 checked={generativeColorIndices.includes(colorIndex)}
-                onChange={() => handleGenerativeColorToggle(colorIndex)}
-                style={{ pointerEvents: isSavingColor ? 'none' : 'auto' }}
+                onChange={() => {
+                  if (!isSavingColor) {
+                    handleGenerativeColorToggle(colorIndex);
+                  }
+                }}
               />
-              <div style={{ width: '20px', height: '20px', background: color, borderRadius: '4px' }} />
+              <div
+                onClick={(e) => {
+                  if (isSavingColor) {
+                    e.preventDefault();
+                    // Save custom color to this slot
+                    const newPalette = [...palette];
+                    newPalette[colorIndex] = customColor;
+                    setPalette(newPalette);
+                    setSelectedColor(colorIndex);
+                    // Enable for generative if not already
+                    if (!generativeColorIndices.includes(colorIndex)) {
+                      handleGenerativeColorToggle(colorIndex);
+                    }
+                    setIsSavingColor(false);
+                  }
+                }}
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  background: color,
+                  borderRadius: '4px',
+                  outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
+                  outlineOffset: '2px',
+                }}
+              />
             </label>
           );
         })}

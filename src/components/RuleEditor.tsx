@@ -1,3 +1,5 @@
+import React from 'react';
+
 interface RuleEditorProps {
   label: string;
   rules: number[];
@@ -41,6 +43,7 @@ export function RuleEditor({ label, rules, onChange }: RuleEditorProps) {
               padding: "4px 8px",
               borderRadius: "4px",
               userSelect: "none",
+              color: "#ffffff",
             }}
           >
             <input

@@ -1,6 +1,9 @@
 import React from 'react';
+import { Theme } from '../types/ui';
 
 interface OptionsToggleProps {
+  showOptions: boolean;
+  setShowOptions: (value: boolean | ((prev: boolean) => boolean)) => void;
   showSpeedSettings: boolean;
   showCanvasSettings: boolean;
   showVisualSettings: boolean;
@@ -11,10 +14,12 @@ interface OptionsToggleProps {
   setShowVisualSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
   setShowGenerativeSettings: (value: boolean | ((prev: boolean) => boolean)) => void;
   setShowStepControls: (value: boolean | ((prev: boolean) => boolean)) => void;
-  themeConfig: any;
+  currentThemeConfig: Theme;
 }
 
 export function OptionsToggle({
+  showOptions,
+  setShowOptions,
   showSpeedSettings,
   showCanvasSettings,
   showVisualSettings,
@@ -25,9 +30,9 @@ export function OptionsToggle({
   setShowVisualSettings,
   setShowGenerativeSettings,
   setShowStepControls,
-  themeConfig,
+  currentThemeConfig,
 }: OptionsToggleProps) {
-  const options = [
+  const sectionToggles = [
     { label: 'Speed', onClick: () => setShowSpeedSettings(prev => !prev), active: showSpeedSettings },
     { label: 'Canvas', onClick: () => setShowCanvasSettings(prev => !prev), active: showCanvasSettings },
     { label: 'Visual', onClick: () => setShowVisualSettings(prev => !prev), active: showVisualSettings },
@@ -36,8 +41,8 @@ export function OptionsToggle({
   ];
 
   return (
-    <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-      {options.map(({ label, onClick, active }) => (
+    <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start' }}>
+      {sectionToggles.map(({ label, onClick, active }) => (
         <button
           key={label}
           onClick={onClick}
@@ -47,9 +52,9 @@ export function OptionsToggle({
             whiteSpace: 'nowrap',
             cursor: 'pointer',
             minWidth: '70px',
-            textAlign: 'center' as const,
+            textAlign: 'center',
             transition: 'all 0.2s ease',
-            ...themeConfig.optionButton(active)
+            ...currentThemeConfig.optionButton(active)
           }}
         >
           {label}

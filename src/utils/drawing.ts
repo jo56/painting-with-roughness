@@ -64,9 +64,16 @@ export function paintCell({
         }
         if (!shouldPaint) continue;
 
-        if (blendMode === "replace" || ng[nr][nc] === 0) {
+        // Eraser always works
+        if (color === 0) {
           ng[nr][nc] = color;
-        } else if (blendMode === "overlay" && color > 0) {
+        }
+        // Replace mode: always paint
+        else if (blendMode === "replace") {
+          ng[nr][nc] = color;
+        }
+        // Overlay mode: only paint on empty cells
+        else if (blendMode === "overlay" && ng[nr][nc] === 0) {
           ng[nr][nc] = color;
         }
       }
