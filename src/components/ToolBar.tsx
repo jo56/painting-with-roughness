@@ -26,7 +26,7 @@ export function ToolBar({
 }: ToolBarProps) {
   return (
     <div style={{ marginBottom: '12px' }}>
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start' }}>
         {[
           { label: 'Brush', value: 'brush' },
           { label: 'Fill', value: 'fill' },
