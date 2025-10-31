@@ -21,6 +21,11 @@ interface GenerativeSettingsProps {
   palette: string[];
   generativeColorIndices: number[];
   handleGenerativeColorToggle: (colorIndex: number) => void;
+  isSavingColor: boolean;
+  customColor: string;
+  setPalette: (palette: string[] | ((prev: string[]) => string[])) => void;
+  setSelectedColor: (color: number | ((prev: number) => number)) => void;
+  setIsSavingColor: (value: boolean | ((prev: boolean) => boolean)) => void;
   panelTransparent: boolean;
   currentThemeConfig: Theme;
 
@@ -84,6 +89,11 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
     palette,
     generativeColorIndices,
     handleGenerativeColorToggle,
+    isSavingColor,
+    customColor,
+    setPalette,
+    setSelectedColor,
+    setIsSavingColor,
     panelTransparent,
     currentThemeConfig
   } = props;
@@ -616,14 +626,42 @@ export function GenerativeSettings(props: GenerativeSettingsProps) {
                 padding: '2px',
                 borderRadius: '0',
               }}
-              title="Toggle color for generation"
+              title={isSavingColor ? `Save ${customColor} to this slot and enable for generative` : "Toggle color for generation"}
             >
               <input
                 type="checkbox"
                 checked={generativeColorIndices.includes(colorIndex)}
-                onChange={() => handleGenerativeColorToggle(colorIndex)}
+                onChange={() => {
+                  if (!isSavingColor) {
+                    handleGenerativeColorToggle(colorIndex);
+                  }
+                }}
               />
-              <div style={{ width: '20px', height: '20px', background: color, borderRadius: '4px' }} />
+              <div
+                onClick={(e) => {
+                  if (isSavingColor) {
+                    e.preventDefault();
+                    // Save custom color to this slot
+                    const newPalette = [...palette];
+                    newPalette[colorIndex] = customColor;
+                    setPalette(newPalette);
+                    setSelectedColor(colorIndex);
+                    // Enable for generative if not already
+                    if (!generativeColorIndices.includes(colorIndex)) {
+                      handleGenerativeColorToggle(colorIndex);
+                    }
+                    setIsSavingColor(false);
+                  }
+                }}
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  background: color,
+                  borderRadius: '4px',
+                  outline: isSavingColor ? '2px dashed #54a0ff' : 'none',
+                  outlineOffset: '2px',
+                }}
+              />
             </label>
           );
         })}

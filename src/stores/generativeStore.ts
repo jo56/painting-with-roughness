@@ -6,6 +6,7 @@ interface GenerativeState {
   spreadProbability: number;
   spreadPattern: SpreadPattern;
   generativeColorIndices: number[];
+  generativePalette: string[];
   pulseSpeed: number;
   pulseOvertakes: boolean;
   pulseDirection: Direction;
@@ -33,6 +34,7 @@ interface GenerativeState {
   setSpreadProbability: (prob: number) => void;
   setSpreadPattern: (pattern: SpreadPattern) => void;
   setGenerativeColorIndices: (indices: number[] | ((prev: number[]) => number[])) => void;
+  setGenerativePalette: (palette: string[] | ((prev: string[]) => string[])) => void;
   setPulseSpeed: (speed: number) => void;
   setPulseOvertakes: (overtakes: boolean) => void;
   setPulseDirection: (direction: Direction) => void;
@@ -62,6 +64,10 @@ interface GenerativeState {
 const defaults = {
   spreadProbability: 0.2,
   spreadPattern: 'random' as SpreadPattern,
+  generativePalette: [
+    '#000000', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4',
+    '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'
+  ],
   pulseSpeed: 10,
   pulseOvertakes: true,
   pulseDirection: 'bottom-right' as Direction,
@@ -91,6 +97,7 @@ export const useGenerativeStore = create<GenerativeState>((set, get) => ({
   spreadProbability: defaults.spreadProbability,
   spreadPattern: defaults.spreadPattern,
   generativeColorIndices: [1, 2, 3, 4, 5, 6, 7, 8], // Default to all colors except black
+  generativePalette: defaults.generativePalette,
   pulseSpeed: defaults.pulseSpeed,
   pulseOvertakes: defaults.pulseOvertakes,
   pulseDirection: defaults.pulseDirection,
@@ -119,6 +126,8 @@ export const useGenerativeStore = create<GenerativeState>((set, get) => ({
   setSpreadPattern: (spreadPattern) => set({ spreadPattern }),
   setGenerativeColorIndices: (indices) =>
     set({ generativeColorIndices: typeof indices === 'function' ? indices(get().generativeColorIndices) : indices }),
+  setGenerativePalette: (palette) =>
+    set({ generativePalette: typeof palette === 'function' ? palette(get().generativePalette) : palette }),
   setPulseSpeed: (pulseSpeed) => set({ pulseSpeed }),
   setPulseOvertakes: (pulseOvertakes) => set({ pulseOvertakes }),
   setPulseDirection: (pulseDirection) => set({ pulseDirection }),

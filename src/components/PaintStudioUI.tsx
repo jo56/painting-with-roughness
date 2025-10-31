@@ -237,7 +237,12 @@ export function PaintStudioUI(props: PaintStudioUIProps) {
               spreadPattern={generativeState.spreadPattern}
               spreadProbability={generativeState.spreadProbability}
               generativeColorIndices={generativeState.generativeColorIndices}
-              palette={paintState.palette}
+              palette={generativeState.generativePalette}
+              isSavingColor={paintState.isSavingColor}
+              customColor={paintState.customColor}
+              setPalette={generativeState.setGenerativePalette}
+              setSelectedColor={paintState.setSelectedColor}
+              setIsSavingColor={paintState.setIsSavingColor}
               pulseSpeed={generativeState.pulseSpeed}
               pulseOvertakes={generativeState.pulseOvertakes}
               pulseDirection={generativeState.pulseDirection}

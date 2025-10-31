@@ -142,7 +142,23 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
         case 'tendrils':
         case 'conway': {
           const rules = pattern === 'conway' ? generativeState.conwayRules : generativeState.tendrilsRules;
-          ng = cellularAlgorithms.conway(g, rules, generativeState.generativeColorIndices);
+          const paintState = usePaintStore.getState();
+
+          // Convert generative palette colors to actual color indices
+          const availableColors = generativeState.generativeColorIndices.map(index => {
+            const genColor = generativeState.generativePalette[index];
+            const mainColor = paintState.palette[index];
+
+            // If colors match, use the palette index
+            if (genColor?.toLowerCase() === mainColor?.toLowerCase()) {
+              return index;
+            }
+
+            // Otherwise, use custom color map
+            return canvasState.getOrCreateCustomColorIndex(genColor);
+          });
+
+          ng = cellularAlgorithms.conway(g, rules, availableColors);
           break;
         }
         case 'pulse': {
@@ -178,9 +194,24 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
     const canvasState = useCanvasStore.getState();
 
     canvasState.setGrid((g) => {
-      const availableColors = generativeState.generativeColorIndices.length > 0
+      const colorIndices = generativeState.generativeColorIndices.length > 0
         ? generativeState.generativeColorIndices
         : paintState.palette.slice(1).map((_, i) => i + 1);
+
+      // Convert generative palette colors to actual color indices
+      const availableColors = colorIndices.map(index => {
+        const genColor = generativeState.generativePalette[index];
+        const mainColor = paintState.palette[index];
+
+        // If colors match, use the palette index
+        if (genColor?.toLowerCase() === mainColor?.toLowerCase()) {
+          return index;
+        }
+
+        // Otherwise, use custom color map
+        return canvasState.getOrCreateCustomColorIndex(genColor);
+      });
+
       return drawingUtils.addRandomDots({ grid: g, availableColors });
     });
   },
@@ -191,9 +222,24 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
     const canvasState = useCanvasStore.getState();
 
     canvasState.setGrid((g) => {
-      const availableColors = generativeState.generativeColorIndices.length > 0
+      const colorIndices = generativeState.generativeColorIndices.length > 0
         ? generativeState.generativeColorIndices
         : paintState.palette.slice(1).map((_, i) => i + 1);
+
+      // Convert generative palette colors to actual color indices
+      const availableColors = colorIndices.map(index => {
+        const genColor = generativeState.generativePalette[index];
+        const mainColor = paintState.palette[index];
+
+        // If colors match, use the palette index
+        if (genColor?.toLowerCase() === mainColor?.toLowerCase()) {
+          return index;
+        }
+
+        // Otherwise, use custom color map
+        return canvasState.getOrCreateCustomColorIndex(genColor);
+      });
+
       return drawingUtils.addRandomShapes({ grid: g, availableColors });
     });
   },

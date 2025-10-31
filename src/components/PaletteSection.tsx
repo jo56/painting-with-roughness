@@ -115,7 +115,7 @@ export function PaletteSection({
       </div>
       {isSavingColor && (
         <div style={{ fontSize: '0.8rem', color: '#666666', fontFamily: 'monospace', marginTop: '6px' }}>
-          Select a color slot to replace it.
+          Select a palette or generative color slot to replace it.
         </div>
       )}
     </div>
