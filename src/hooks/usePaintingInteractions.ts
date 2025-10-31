@@ -34,7 +34,11 @@ export function usePaintingInteractions(): UsePaintingInteractionsReturn {
     // Convert custom color slot to unique index
     let actualColor = color;
     if (color === palette.length) {
+      // Custom color from color picker
       actualColor = getOrCreateCustomColorIndex(customColor);
+    } else if (color > 0 && color < palette.length) {
+      // Palette color - freeze it to prevent retroactive changes when palette is modified
+      actualColor = getOrCreateCustomColorIndex(palette[color]);
     }
 
     setGrid((g) =>
@@ -56,7 +60,11 @@ export function usePaintingInteractions(): UsePaintingInteractionsReturn {
     // Convert custom color slot to unique index
     let actualColor = newColor;
     if (newColor === palette.length) {
+      // Custom color from color picker
       actualColor = getOrCreateCustomColorIndex(customColor);
+    } else if (newColor > 0 && newColor < palette.length) {
+      // Palette color - freeze it to prevent retroactive changes when palette is modified
+      actualColor = getOrCreateCustomColorIndex(palette[newColor]);
     }
 
     setGrid((g) => drawingUtils.floodFill({ grid: g, startR, startC, newColor: actualColor }));
