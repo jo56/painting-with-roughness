@@ -90,17 +90,8 @@ export function usePaintingInteractions(): UsePaintingInteractionsReturn {
         const pixelData = ctx.getImageData(pixelX, pixelY, 1, 1).data;
         const sampledHex = rgbToHex(pixelData[0], pixelData[1], pixelData[2]);
 
-        // Try to find color in palette
-        const paletteIndex = palette.findIndex(color => color.toLowerCase() === sampledHex.toLowerCase());
-
-        if (paletteIndex !== -1) {
-          // Found in palette - select that color
-          setSelectedColor(paletteIndex);
-        } else {
-          // Not in palette - set as custom color
-          setCustomColor(sampledHex);
-          setSelectedColor(palette.length);
-        }
+        setCustomColor(sampledHex);
+        setSelectedColor(palette.length);
       } catch (error) {
         console.error('Failed to sample color:', error);
       }
